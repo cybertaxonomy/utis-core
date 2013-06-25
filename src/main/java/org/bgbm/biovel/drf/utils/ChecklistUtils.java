@@ -1,0 +1,65 @@
+package org.bgbm.biovel.drf.utils;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.bgbm.biovel.drf.checklist.BaseChecklistClient.ChecklistInfo;
+import org.bgbm.biovel.drf.checklist.BgbmEditClient;
+import org.bgbm.biovel.drf.checklist.DRFChecklistException;
+import org.bgbm.biovel.drf.checklist.GBIFBetaBackboneClient;
+import org.bgbm.biovel.drf.checklist.Species2000ColClient;
+
+public class ChecklistUtils {
+	
+	public static String generateChecklistInfoList() throws DRFChecklistException {
+		String checklistInfoList = "[]";
+		List<ChecklistInfo> cilist = new ArrayList<ChecklistInfo>();
+		
+		Species2000ColClient col = new Species2000ColClient();
+		cilist.add(col.getChecklistInfo());
+		
+		BgbmEditClient bec = new BgbmEditClient();
+		cilist.add(bec.getChecklistInfo());
+		
+		GBIFBetaBackboneClient gbc = new GBIFBetaBackboneClient();
+		cilist.add(gbc.getChecklistInfo());
+		checklistInfoList = JSONUtils.convertObjectToJson(cilist);
+		return checklistInfoList;
+	}
+	
+	public static List<ChecklistInfo> convertStringToChecklistInfo(List<String> ciStrList) throws DRFChecklistException {
+		Map<String,ChecklistInfo> ciMap = new HashMap<String, ChecklistInfo>();
+		
+		Iterator<String> ciItr = ciStrList.iterator();
+		while(ciItr.hasNext()) {
+			String[] ciStrArray = ciItr.next().split(";",5);
+			if(ciStrArray.length == 5) {
+				String key = ciStrArray[0];			
+				ChecklistInfo ci = ciMap.get(ciStrArray[0]);
+				if(ci == null) {
+					if(key == Species2000ColClient.ID) {
+						ci = Species2000ColClient.CINFO;
+					}
+					if(key == BgbmEditClient.ID) {
+						ci = BgbmEditClient.CINFO;
+					}
+					if(key == GBIFBetaBackboneClient.ID) {
+						ci = GBIFBetaBackboneClient.CINFO;
+					}
+					if(ci != null) {
+						ciMap.put(key, ci);
+						ci.addSubChecklist(ChecklistInfo.create(Arrays.copyOfRange(ciStrArray, 1, 5)));
+					}
+				} else {
+					ci.addSubChecklist(ChecklistInfo.create(Arrays.copyOfRange(ciStrArray, 1, 5)));
+				}				
+			}						
+		}
+		return new ArrayList<ChecklistInfo>(ciMap.values());
+	}
+
+}

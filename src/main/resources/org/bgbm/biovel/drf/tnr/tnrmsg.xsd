@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://bgbm.org/biovel/drf/tnr/msg"
+	xmlns:tns="http://bgbm.org/biovel/drf/tnr/msg"
+	elementFormDefault="qualified">
+	<xsd:element name="tnrMsg">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="query" maxOccurs="unbounded"
+					minOccurs="1">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element name="tnrRequest">
+								<xsd:complexType>
+									<xsd:sequence>
+										<xsd:element name="taxonName"
+											type="tns:taxonNameType">
+										</xsd:element>
+									</xsd:sequence>
+								</xsd:complexType>
+							</xsd:element>
+							<xsd:element minOccurs="1"
+								maxOccurs="unbounded" ref="tns:tnrResponse">
+							</xsd:element>
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:complexType name="atomisedNameType">
+		<xsd:choice>
+			<xsd:element name="uninomial">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string" />
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="subGenus" minOccurs="1">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="genusPart">
+							<xsd:simpleType>
+								<xsd:restriction base="xsd:string" />
+							</xsd:simpleType>
+						</xsd:element>
+						<xsd:element name="infragenericEpithet" minOccurs="0">
+							<xsd:simpleType>
+								<xsd:restriction base="xsd:string" />
+							</xsd:simpleType>
+						</xsd:element>
+						<xsd:element name="specificEpithet" minOccurs="0">
+							<xsd:simpleType>
+								<xsd:restriction base="xsd:string" />
+							</xsd:simpleType>
+						</xsd:element>
+						<xsd:element name="infraspecificEpithet" minOccurs="0">
+							<xsd:simpleType>
+								<xsd:restriction base="xsd:string" />
+							</xsd:simpleType>
+						</xsd:element>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:choice>
+	</xsd:complexType>
+	<xsd:complexType name="nameType">
+		<xsd:sequence>
+			<xsd:element name="nameComplete">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string" />
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="nameCanonical" minOccurs="1">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string" />
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="nameLabel" maxOccurs="unbounded"
+				minOccurs="0">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string" />
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="atomisedName" type="tns:atomisedNameType"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="nameStatus" minOccurs="0">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string" />
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="taxonNameType">
+		<xsd:sequence>
+			<xsd:element name="authorship" maxOccurs="1" minOccurs="0">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string" />
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="name" type="tns:nameType"></xsd:element>
+			<xsd:element name="rank" minOccurs="0">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string" />
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="sourceType">
+		<xsd:sequence>
+			<xsd:element name="url">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string" />
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="datasetID">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string" />
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="datasetName">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string" />
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="name">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string" />
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="scrutinyType">
+		<xsd:sequence>
+			<xsd:element name="accordingTo" type="xsd:string">
+			</xsd:element>
+			<xsd:element name="modified" type="xsd:string">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:element name="tnrResponse">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element minOccurs="0" maxOccurs="1"
+					ref="tns:acceptedName">
+				</xsd:element>
+				<xsd:element minOccurs="0" maxOccurs="unbounded"
+					name="otherName">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element minOccurs="1" name="taxonName"
+								type="tns:taxonNameType">
+							</xsd:element>
+							<xsd:element minOccurs="0" name="info">
+								<xsd:complexType>
+									<xsd:sequence>
+										<xsd:element minOccurs="0"
+											name="url" type="xsd:string">
+										</xsd:element>
+										<xsd:element minOccurs="0"
+											name="acceptedNameUrl">
+											<xsd:complexType>
+												<xsd:sequence></xsd:sequence>
+											</xsd:complexType>
+										</xsd:element>
+									</xsd:sequence>
+								</xsd:complexType>
+							</xsd:element>
+							<xsd:element name="source"
+								type="tns:sourceType">
+							</xsd:element>
+							<xsd:element name="scrutiny"
+								type="tns:scrutinyType">
+							</xsd:element>
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
+				<xsd:element minOccurs="0" maxOccurs="unbounded"
+					name="synonym">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element minOccurs="1" name="taxonName"
+								type="tns:taxonNameType">
+							</xsd:element>
+							<xsd:element minOccurs="0" name="info">
+								<xsd:complexType>
+									<xsd:sequence>
+										<xsd:element minOccurs="0"
+											name="url" type="xsd:string">
+										</xsd:element>
+										<xsd:element minOccurs="0"
+											name="acceptedNameUrl">
+											<xsd:complexType>
+												<xsd:sequence></xsd:sequence>
+											</xsd:complexType>
+										</xsd:element>
+									</xsd:sequence>
+								</xsd:complexType>
+							</xsd:element>
+							<xsd:element name="source"
+								type="tns:sourceType">
+							</xsd:element>
+							<xsd:element name="scrutiny"
+								type="tns:scrutinyType">
+							</xsd:element>
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
+			</xsd:sequence>
+			<xsd:attribute use="required" name="checklist"
+				type="xsd:string">
+			</xsd:attribute>
+			<xsd:attribute use="required" name="checklist_url"
+				type="xsd:string">
+			</xsd:attribute>
+			<xsd:attribute use="required" name="checklist_version"
+				type="xsd:string">
+			</xsd:attribute>
+			<xsd:attribute use="required" name="checklist_citation"
+				type="xsd:string">
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="acceptedName">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element minOccurs="1" name="taxonName"
+					type="tns:taxonNameType">
+				</xsd:element>
+				<xsd:element minOccurs="0" name="info">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element minOccurs="0" name="url"
+								type="xsd:string">
+							</xsd:element>
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
+				<xsd:element minOccurs="0" name="classification">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element minOccurs="0" name="kingdom">
+								<xsd:simpleType>
+									<xsd:restriction
+										base="xsd:string">
+									</xsd:restriction>
+								</xsd:simpleType>
+							</xsd:element>
+							<xsd:element minOccurs="0" name="phylum">
+								<xsd:simpleType>
+									<xsd:restriction
+										base="xsd:string">
+									</xsd:restriction>
+								</xsd:simpleType>
+							</xsd:element>
+							<xsd:element minOccurs="0" name="class">
+								<xsd:simpleType>
+									<xsd:restriction
+										base="xsd:string">
+									</xsd:restriction>
+								</xsd:simpleType>
+							</xsd:element>
+							<xsd:element minOccurs="0" name="order">
+								<xsd:simpleType>
+									<xsd:restriction
+										base="xsd:string">
+									</xsd:restriction>
+								</xsd:simpleType>
+							</xsd:element>
+							<xsd:element minOccurs="0" name="family">
+								<xsd:simpleType>
+									<xsd:restriction
+										base="xsd:string">
+									</xsd:restriction>
+								</xsd:simpleType>
+							</xsd:element>
+							<xsd:element minOccurs="0" name="genus">
+								<xsd:simpleType>
+									<xsd:restriction
+										base="xsd:string">
+									</xsd:restriction>
+								</xsd:simpleType>
+							</xsd:element>
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
+				<xsd:element name="source" type="tns:sourceType"></xsd:element>
+				<xsd:element name="scrutiny" type="tns:scrutinyType"></xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>
