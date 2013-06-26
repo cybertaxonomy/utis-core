@@ -100,7 +100,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 		//http://ecat-dev.gbif.org/ws/usage/?rkey={datasetID}&q={sciName}&pagesize=100&searchType=canonical
 		while(itrKeys.hasNext()) {
 			ChecklistInfo checklistInfo = itrKeys.next();
-			if(checklistInfo.getUse()) {
+			//if(checklistInfo.getUse()) {
 				Map<String, String> paramMap = new HashMap<String, String>();
 				paramMap.put("rKey", checklistInfo.getId());		
 				paramMap.put("pageSize", "100");
@@ -114,7 +114,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 				String response = processRESTService(namesUri);
 
 				updateQueryWithResponse(query,response, paramMap, checklistInfo);
-			}
+			//}
 		}
 	}
 

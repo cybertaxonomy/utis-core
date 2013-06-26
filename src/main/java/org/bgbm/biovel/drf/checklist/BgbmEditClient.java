@@ -71,7 +71,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 		Iterator<ChecklistInfo> itrKeys = getChecklistInfo().getSubChecklists().iterator();
 		while(itrKeys.hasNext()) {
 			ChecklistInfo checklistInfo = itrKeys.next();
-			if(checklistInfo.getUse()) {
+			//if(checklistInfo.getUse()) {
 				URI namesUri = buildUriFromQueryList(queryList,
 						"/cdmserver/" + checklistInfo.getId() + "/name_catalogue.json",									
 						"query",
@@ -89,13 +89,8 @@ public class BgbmEditClient extends AggregateChecklistClient {
 					updateQueriesWithResponse(response, checklistInfo);
 				}
 
-//				try {
-//					System.out.println(TnrMsgUtils.convertTnrMsgToXML(tnrMsg));
-//				} catch (TnrMsgException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-			}
+
+			//}
 
 		}
 

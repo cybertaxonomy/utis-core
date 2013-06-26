@@ -79,83 +79,7 @@ public abstract class BaseChecklistClient {
 		return null;
 	}
 
-//	public String processRESTService(URI uri) throws DRFCheckListException {	
-//
-//		HttpGet httpget = new HttpGet(uri);
-//		httpget.setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-//		
-//		HttpParams params = new SyncBasicHttpParams();
-//		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-//		HttpProtocolParams.setContentCharset(params, "UTF-8");
-//		HttpProtocolParams.setUserAgent(params, "HttpComponents/1.1");
-//		//HttpProtocolParams.setUserAgent(params, "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:20.0) Gecko/20100101 Firefox/20.0");
-//		HttpProtocolParams.setUseExpectContinue(params, true);
-//
-//		HttpProcessor httpproc = new ImmutableHttpProcessor(new HttpRequestInterceptor[] {
-//				// Required protocol interceptors
-//				new RequestContent(),
-//				new RequestTargetHost(),
-//				// Recommended protocol interceptors
-//				new RequestConnControl(),
-//				new RequestUserAgent(),
-//				new RequestExpectContinue()});
-//
-//		HttpRequestExecutor httpexecutor = new HttpRequestExecutor();
-//
-//		HttpContext context = new BasicHttpContext(null);			
-//
-//		DefaultHttpClientConnection conn = new DefaultHttpClientConnection();
-//		ConnectionReuseStrategy connStrategy = new DefaultConnectionReuseStrategy();
-//
-//		context.setAttribute(ExecutionContext.HTTP_CONNECTION, conn);
-//		context.setAttribute(ExecutionContext.HTTP_TARGET_HOST, getHost());
-//
-//		try {
-//			if (!conn.isOpen()) {
-//				Socket socket = new Socket(getHost().getHostName(), getHost().getPort());
-//				conn.bind(socket, params);
-//			}
-//
-//			BasicHttpRequest request = new BasicHttpRequest("GET", uri.getPath());
-//			request.setParams(params);
-//			System.out.println(">> Request URI: " + request.getRequestLine().getUri());
-//
-//			
-//			httpexecutor.preProcess(request, httpproc, context);
-//			HttpResponse response = httpexecutor.execute(request, conn, context);
-//			response.setParams(params);
-//			httpexecutor.postProcess(response, httpproc, context);
-//
-//			String strResponse = EntityUtils.toString(response.getEntity());
-//			System.out.println("<< Response: " + response.getStatusLine());
-//			System.out.println(strResponse);
-//			System.out.println("==============");
-//								
-//			if (!connStrategy.keepAlive(response, context)) {
-//				conn.close();
-//			} else {
-//				System.out.println("Connection kept alive...");
-//			}		 
-//			return strResponse;
-//		} catch (UnknownHostException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (HttpException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} finally {
-//			try {
-//				conn.close();
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//		}		
-//		return null;
-//	}	
+
 	
 	public void queryChecklist(TnrMsg tnrMsg) throws DRFChecklistException {								
 		resolveNames(tnrMsg);					
@@ -349,6 +273,7 @@ public abstract class BaseChecklistClient {
 			}
 			return new ChecklistInfo(ciArray[0],ciArray[1],ciArray[2],ciArray[3]);
 		}
+		
 			
 	}
 
