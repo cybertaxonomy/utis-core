@@ -1,0 +1,132 @@
+<project>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>drf.plugin</groupId>
+	<artifactId>biovel-drf-taverna</artifactId>
+	<packaging>taverna-plugin</packaging>
+	<name>Biovel DRF Taverna plugin</name>
+	<version>1.0.2-SNAPSHOT</version>
+	<description>Handles dependencies for the Biovel</description>
+
+	<!-- The repository that your jars are deployed to -->
+	<repositories>
+		<repository>
+			<!-- The myGrid repository for Taverna dependencies -->
+			<releases />
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>mygrid-repository</id>
+			<name>myGrid Repository</name>
+			<url>http://www.mygrid.org.uk/maven/repository</url>
+		</repository>
+		<repository>
+			<id>EditRepository</id>
+			<name>EDIT Repository</name>
+			<url>http://wp5.e-taxonomy.eu/mavenrepo/</url>
+		</repository>
+		<repository>
+			<id>BiovelEditRepository</id>
+			<name>Biovel EDIT Repository</name>
+			<url>http://wp5.e-taxonomy.eu/mavenrepo/biovel</url>
+		</repository>
+	</repositories>
+
+	<!-- The repository for the Maven plugin -->
+	<pluginRepositories>
+		<pluginRepository>
+			<id>mygrid-repository</id>
+			<name>myGrid Repository</name>
+			<url>http://www.mygrid.org.uk/maven/repository</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<!-- Configure the Maven plugin -->
+	<build>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-scm</artifactId>
+				<version>1.0-beta-6</version>
+			</extension>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh</artifactId>
+				<version>1.0-beta-6</version>
+			</extension>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh-external</artifactId>
+				<version>1.0-beta-6</version>
+			</extension>
+			<extension>
+				<groupId>org.apache.maven.scm</groupId>
+				<artifactId>maven-scm-manager-plexus</artifactId>
+				<version>1.0</version>
+			</extension>
+			<extension>
+				<groupId>org.apache.maven.scm</groupId>
+				<artifactId>maven-scm-provider-svnexe</artifactId>
+				<version>1.0</version>
+			</extension>
+			<!-- WebDAV plugin to upload snapshots -->
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-webdav</artifactId>
+				<version>1.0-beta-2</version>
+			</extension>
+		</extensions>
+		<plugins>
+			<plugin>
+				<groupId>net.sf.taverna.t2.maven.plugins</groupId>
+				<artifactId>maven-taverna-plugin</artifactId>
+				<version>0.1.1</version>
+				<extensions>true</extensions>
+				<configuration>
+					<provider>bgbm.org</provider>
+					<tavernaVersion>2.4.0</tavernaVersion>
+					<identifier>org.bgbm.biovel.drf</identifier>
+					<version>${project.version}</version>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<!-- The location of your plugin site -->
+	<distributionManagement>
+		<repository>
+			<uniqueVersion>false</uniqueVersion>
+			<id>wp5.e-taxonomy.eu.biovel</id>
+			<name>Edit Maven Repository</name>
+			<url>scpexe://wp5.e-taxonomy.eu/var/www/wp5.e-taxonomy.eu/mavenrepo/biovel</url>
+			<layout>default</layout>
+		</repository>
+		<snapshotRepository>
+			<id>wp5.e-taxonomy.eu.biovel.snapshot</id>
+			<name>Edit Maven Snapshot Repository</name>
+			<url>scpexe://wp5.e-taxonomy.eu/var/www/wp5.e-taxonomy.eu/mavenrepo/biovel/snapshot</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>biovel.drf</groupId>
+			<artifactId>drf-workflow</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+	</dependencies>
+
+	<!-- The jars for your plugin code -->
+	<!-- <dependencies> -->
+	<!-- <dependency> -->
+	<!-- <groupId>com.example.taverna.activities</groupId> -->
+	<!-- <artifactId>my-activity</artifactId> -->
+	<!-- <version>0.3.2</version> -->
+	<!-- </dependency> -->
+	<!-- <dependency> -->
+	<!-- <groupId>com.example.taverna.ui-activities</groupId> -->
+	<!-- <artifactId>my-activity-ui</artifactId> -->
+	<!-- <version>0.3.2</version> -->
+	<!-- </dependency> -->
+	<!-- </dependencies> -->
+
+</project>
