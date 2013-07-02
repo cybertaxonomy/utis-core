@@ -33,7 +33,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 	public static final String LABEL = "EDIT Platform";
 	public static final String URL = "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html";
 	public static final String DATA_AGR_URL = "http://wp5.e-taxonomy.eu/cdmlib/license.html";
-	public static final ChecklistInfo CINFO = new ChecklistInfo(ID,LABEL,URL,DATA_AGR_URL);
+	
 	
 	private Map<String,Query> taxonIdQueryMap;
 
@@ -56,7 +56,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 	
 	@Override
 	protected ChecklistInfo buildChecklistInfo() {
-		ChecklistInfo checklistInfo = CINFO;
+		ChecklistInfo checklistInfo = new ChecklistInfo(ID,LABEL,URL,DATA_AGR_URL);
 		checklistInfo.addSubChecklist(new ChecklistInfo("col",
 				"EDIT - Catalogue Of Life",
 				"http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html",

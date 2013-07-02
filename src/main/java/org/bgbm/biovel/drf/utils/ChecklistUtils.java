@@ -44,13 +44,22 @@ public class ChecklistUtils {
 				ChecklistInfo ci = ciMap.get(ciStrArray[0]);
 				if(ci == null) {
 					if(key.equals(Species2000ColClient.ID)) {
-						ci = Species2000ColClient.CINFO;
+						ci = new ChecklistInfo(Species2000ColClient.ID,
+								Species2000ColClient.LABEL,
+								Species2000ColClient.URL,
+								Species2000ColClient.DATA_AGR_URL);
 					}
 					if(key.equals(BgbmEditClient.ID)) {
-						ci = BgbmEditClient.CINFO;
+						ci = new ChecklistInfo(BgbmEditClient.ID,
+								BgbmEditClient.LABEL,
+								BgbmEditClient.URL,
+								BgbmEditClient.DATA_AGR_URL);
 					}
 					if(key.equals(GBIFBetaBackboneClient.ID)) {
-						ci = GBIFBetaBackboneClient.CINFO;
+						ci = new ChecklistInfo(GBIFBetaBackboneClient.ID,
+								GBIFBetaBackboneClient.LABEL,
+								GBIFBetaBackboneClient.URL,
+								GBIFBetaBackboneClient.DATA_AGR_URL);
 					}
 					if(ci != null) {
 						ciMap.put(key, ci);

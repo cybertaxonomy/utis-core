@@ -37,6 +37,10 @@ public abstract class BaseChecklistClient {
 		checklistInfo = buildChecklistInfo();
 	}
 	
+	public BaseChecklistClient(String checklistInfoJson) throws DRFChecklistException {
+		setChecklistInfo(JSONUtils.convertJsonToObject(checklistInfoJson, BaseChecklistClient.ChecklistInfo.class));
+	}
+	
 	public ChecklistInfo getChecklistInfo() {
 		return checklistInfo;
 	}

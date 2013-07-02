@@ -30,7 +30,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 	public static final String LABEL = "GBIF Checklist Bank";
 	public static final String URL = "http://ecat-dev.gbif.org/";
 	public static final String DATA_AGR_URL = "http://data.gbif.org/tutorial/datauseagreement";
-	public static final ChecklistInfo CINFO = new ChecklistInfo(ID,LABEL,URL,DATA_AGR_URL);
+	
 	
 	public GBIFBetaBackboneClient() {
 		super();
@@ -49,7 +49,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 	
 	@Override
 	public ChecklistInfo buildChecklistInfo()  {
-		ChecklistInfo checklistInfo = CINFO;
+		ChecklistInfo checklistInfo = new ChecklistInfo(ID,LABEL,URL,DATA_AGR_URL);
 
 		URIBuilder uriBuilder = new URIBuilder();
 		uriBuilder.setScheme("http");

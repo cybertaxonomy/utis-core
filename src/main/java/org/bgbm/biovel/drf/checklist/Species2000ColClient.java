@@ -43,7 +43,7 @@ public class Species2000ColClient extends BaseChecklistClient {
 	public static final String LABEL = "Species2000 - Catalogue Of Life";
 	public static final String URL = "http://www.catalogueoflife.org";
 	public static final String DATA_AGR_URL = "http://www.catalogueoflife.org/col/info/copyright";
-	public static final ChecklistInfo CINFO = new ChecklistInfo(ID,LABEL,URL,DATA_AGR_URL);
+	
 		
 	public Species2000ColClient() {
 		super();
@@ -59,7 +59,7 @@ public class Species2000ColClient extends BaseChecklistClient {
 
 	@Override
 	protected ChecklistInfo buildChecklistInfo() {
-		ChecklistInfo checklistInfo = CINFO;
+		ChecklistInfo checklistInfo = new ChecklistInfo(ID,LABEL,URL,DATA_AGR_URL);
 		setChecklistInfo(checklistInfo);
 		return checklistInfo;
 	}
