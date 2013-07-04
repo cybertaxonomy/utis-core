@@ -87,7 +87,7 @@ if ("true".matches(loop)) {&#xD;
       <granularDepth>0</granularDepth>
     </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
   </outputs>
-  <presentationOrigin>http://ww2.bgbm.org/biovel/public/beta/webui/InputChooser.html</presentationOrigin>
+  <presentationOrigin>http://ww2.bgbm.org/biovel/public/webui/InputChooser.html</presentationOrigin>
   <interactionActivityType>LocallyPresentedHtml</interactionActivityType>
   <progressNotification>false</progressNotification>
 </net.sf.taverna.t2.activities.interaction.InteractionActivityConfigurationBean></configBean><annotations /></activity></activities><dispatchStack><dispatchLayer><raven><group>net.sf.taverna.t2.core</group><artifact>workflowmodel-impl</artifact><version>1.4</version></raven><class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Parallelize</class><configBean encoding="xstream"><net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ParallelizeConfig xmlns="">
@@ -4501,7 +4501,7 @@ Once the data is selected the user can return to Taverna with the intermediate '
       <granularDepth>0</granularDepth>
     </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
   </outputs>
-  <presentationOrigin>http://ww2.bgbm.org/biovel/public/beta/webui/SubWorkflowChooser.html</presentationOrigin>
+  <presentationOrigin>http://ww2.bgbm.org/biovel/public/webui/SubWorkflowChooser.html</presentationOrigin>
   <interactionActivityType>LocallyPresentedHtml</interactionActivityType>
   <progressNotification>false</progressNotification>
 </net.sf.taverna.t2.activities.interaction.InteractionActivityConfigurationBean></configBean><annotations /></activity></activities><dispatchStack><dispatchLayer><raven><group>net.sf.taverna.t2.core</group><artifact>workflowmodel-impl</artifact><version>1.4</version></raven><class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Parallelize</class><configBean encoding="xstream"><net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ParallelizeConfig xmlns="">
@@ -6180,7 +6180,7 @@ if(internalCSVData.size() == 1) {
     <net.sf.taverna.raven.repository.BasicArtifact>
       <groupId>biovel.drf</groupId>
       <artifactId>drf-workflow</artifactId>
-      <version>1.0.2-SNAPSHOT</version>
+      <version>1.0.2</version>
       <hashCode>-1793255443</hashCode>
     </net.sf.taverna.raven.repository.BasicArtifact>
   </artifactDependencies>
@@ -6307,7 +6307,7 @@ flatten(inputlist, outputlist, 1);</script>
     <net.sf.taverna.raven.repository.BasicArtifact>
       <groupId>biovel.drf</groupId>
       <artifactId>drf-workflow</artifactId>
-      <version>1.0.2-SNAPSHOT</version>
+      <version>1.0.2</version>
       <hashCode>-1793255443</hashCode>
     </net.sf.taverna.raven.repository.BasicArtifact>
   </artifactDependencies>
@@ -6343,7 +6343,7 @@ checklistJson = ChecklistUtils.generateChecklistInfoList();</script>
       <granularDepth>1</granularDepth>
     </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
   </outputs>
-  <presentationOrigin>http://ww2.bgbm.org/biovel/public/beta/webui/TaxonomicChecklistChooser.html</presentationOrigin>
+  <presentationOrigin>http://ww2.bgbm.org/biovel/public/webui/TaxonomicChecklistChooser.html</presentationOrigin>
   <interactionActivityType>LocallyPresentedHtml</interactionActivityType>
   <progressNotification>false</progressNotification>
 </net.sf.taverna.t2.activities.interaction.InteractionActivityConfigurationBean></configBean><annotations /></activity></activities><dispatchStack><dispatchLayer><raven><group>net.sf.taverna.t2.core</group><artifact>workflowmodel-impl</artifact><version>1.4</version></raven><class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Parallelize</class><configBean encoding="xstream"><net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ParallelizeConfig xmlns="">
@@ -6428,7 +6428,7 @@ checklistJson = ChecklistUtils.generateChecklistInfoList();</script>
     <net.sf.taverna.raven.repository.BasicArtifact>
       <groupId>biovel.drf</groupId>
       <artifactId>drf-workflow</artifactId>
-      <version>1.0.2-SNAPSHOT</version>
+      <version>1.0.2</version>
       <hashCode>-1793255443</hashCode>
     </net.sf.taverna.raven.repository.BasicArtifact>
   </artifactDependencies>
@@ -6493,7 +6493,7 @@ while(ciItr.hasNext()) {
       <granularDepth>1</granularDepth>
     </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
   </outputs>
-  <presentationOrigin>http://ww2.bgbm.org/biovel/public/beta/webui/TaxonomicConceptChooser.html</presentationOrigin>
+  <presentationOrigin>http://ww2.bgbm.org/biovel/public/webui/TaxonomicConceptChooser.html</presentationOrigin>
   <interactionActivityType>LocallyPresentedHtml</interactionActivityType>
   <progressNotification>false</progressNotification>
 </net.sf.taverna.t2.activities.interaction.InteractionActivityConfigurationBean></configBean><annotations /></activity></activities><dispatchStack><dispatchLayer><raven><group>net.sf.taverna.t2.core</group><artifact>workflowmodel-impl</artifact><version>1.4</version></raven><class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Parallelize</class><configBean encoding="xstream"><net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ParallelizeConfig xmlns="">
@@ -8339,7 +8339,7 @@ JSONParser parser=new JSONParser();
     <net.sf.taverna.raven.repository.BasicArtifact>
       <groupId>biovel.drf</groupId>
       <artifactId>drf-workflow</artifactId>
-      <version>1.0.2-SNAPSHOT</version>
+      <version>1.0.2</version>
       <hashCode>-1793255443</hashCode>
     </net.sf.taverna.raven.repository.BasicArtifact>
   </artifactDependencies>
@@ -19145,7 +19145,7 @@ sourceReader.close();
     <net.sf.taverna.raven.repository.BasicArtifact>
       <groupId>biovel.drf</groupId>
       <artifactId>drf-workflow</artifactId>
-      <version>1.0.2-SNAPSHOT</version>
+      <version>1.0.2</version>
       <hashCode>-1793255443</hashCode>
     </net.sf.taverna.raven.repository.BasicArtifact>
   </artifactDependencies>
