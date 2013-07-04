@@ -1868,7 +1868,6 @@ if ("true".matches(loop)) {&#xD;
     <net.sf.taverna.t2.annotation.AnnotationAssertionImpl>
       <annotationBean class="net.sf.taverna.t2.annotation.annotationbeans.FreeTextDescription">
         <text>This is a beta version of the Data Refinement Workflow and should be used only for review and testing.
-This version is configured to run only on the Workbench
 
 The aim of the (Taxonomic) Data Refinement Workflow is to provide a streamlined workflow environment for preparing observational and specimen data sets for use in scientific analysis on the Taverna platform. The workflow has been designed in a way that,
 • accepts input data in a recognized format, but originating from various sources (e.g. services, local user data sets),
