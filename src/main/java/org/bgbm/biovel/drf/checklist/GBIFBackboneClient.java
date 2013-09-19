@@ -28,20 +28,25 @@ import org.json.simple.JSONObject;
 
 public class GBIFBackboneClient extends AggregateChecklistClient {
 	
-	private static final String ID = "gbif";
-	private static final String LABEL = "GBIF Checklist Bank";
-	private static final String URL = "http://dev.gbif.org/wiki/display/POR/Webservice+API";
-	private static final String DATA_AGR_URL = "http://data.gbif.org/tutorial/datauseagreement";
+	public static final String ID = "gbif";
+	public static final String LABEL = "GBIF Checklist Bank";
+	public static final String URL = "http://portaldev.gbif.org/developer/species";
+	public static final String DATA_AGR_URL = "http://data.gbif.org/tutorial/datauseagreement";
+	private static final String MAX_PAGING_LIMIT = "1000";
 	public static final ChecklistInfo CINFO = new ChecklistInfo(ID,LABEL,URL,DATA_AGR_URL);
 
 	public GBIFBackboneClient(List<String> checklistKeys) {
 		super();		
 	}
 	
+	public GBIFBackboneClient(String checklistInfoJson) throws DRFChecklistException {
+		super(checklistInfoJson);
+	}
+	
 	@Override
 	public HttpHost getHost() {
 		// TODO Auto-generated method stub
-		return new HttpHost("api.gbif.org",80);
+		return new HttpHost("apidev.gbif.org",80);
 	}
 
 	
@@ -55,7 +60,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 		uriBuilder.setHost(getHost().getHostName());
 		uriBuilder.setPath("/dataset/search");
 		uriBuilder.setParameter("type", "CHECKLIST");
-		uriBuilder.setParameter("limit", "20");
+		uriBuilder.setParameter("limit", MAX_PAGING_LIMIT);
 		uriBuilder.setParameter("offset", "0");
 		URI uri;
 		boolean endOfRecords = false;
@@ -73,13 +78,13 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 					JSONObject result = itrResults.next();
 					String key = (String)result.get("key");
 					String title = (String)result.get("title");
-					String url =  "http://api.gbif.org/dataset/" + key;
+					String url =  "http://portaldev.gbif.org/dataset/" + key;
 					checklistInfo.addSubChecklist(new ChecklistInfo(key, title,  url));
 				}
 				
 				endOfRecords = (Boolean) jsonResponse.get("endOfRecords");
 				
-				offset = offset + 20;
+				offset = offset + Integer.parseInt(MAX_PAGING_LIMIT);
 			} while(!endOfRecords);			
 		} catch (URISyntaxException e) {
 			// TODO Auto-generated catch block
@@ -111,19 +116,20 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 			ChecklistInfo checklistInfo = itrKeys.next();
 			Map<String, String> paramMap = new HashMap<String, String>();
 			paramMap.put("datasetKey", checklistInfo.getId());					
+			paramMap.put("limit", MAX_PAGING_LIMIT);
 
-			URI namesUri = buildUriFromQuery(query, "/name_usage/" + QUERY_PLACEHOLDER,	paramMap);
+			URI namesUri = buildUriFromQuery(query, "/species",	"name", paramMap);
 
 			String response = processRESTService(namesUri);
-
+			
 			updateQueryWithResponse(query,response, paramMap, checklistInfo);
 
-			try {
-				System.out.println(TnrMsgUtils.convertTnrMsgToXML(tnrMsg));
-			} catch (TnrMsgException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+//			try {
+//				System.out.println(TnrMsgUtils.convertTnrMsgToXML(tnrMsg));
+//			} catch (TnrMsgException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 		}
 	}
 
@@ -137,50 +143,59 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 			Map<String, String> paramMap,
 			ChecklistInfo ci) throws DRFChecklistException {
 
-		JSONArray jsonArray = (JSONArray ) JSONUtils.parseJsonToArray(response);
+		JSONObject jsonResponse = (JSONObject) JSONUtils.parseJsonToObject(response);
+		JSONArray results = (JSONArray) jsonResponse.get("results");
 		
-		if(jsonArray != null) {
+		if(results != null) {
 			String accTaxonId = "";
-			Iterator<JSONObject> resIterator = jsonArray.iterator();
+			Iterator<JSONObject> resIterator = results.iterator();
 			while (resIterator.hasNext()) {
 				JSONObject res = resIterator.next();
 				Number acceptedKey = (Number)res.get("acceptedKey");
 				boolean synonym = (Boolean)res.get("synonym");
-				// case when accepted name
-				if(!synonym && (acceptedKey == null)) {
-					Long key = (Long)res.get("key");
-					accTaxonId = key.toString();
-
-				}
-				// case when synonym
-				if(synonym && (acceptedKey != null)) {
-					Long key = (Long)res.get("acceptedKey");
-					accTaxonId = key.toString();
-				}	
-			
+				
 				TnrResponse tnrResponse = new TnrResponse();
 				
 				tnrResponse.setChecklist(ci.getLabel());
 				tnrResponse.setChecklistUrl(ci.getUrl());
 				
-				URI taxonUri = buildUriFromQuery(query, "/name_usage/" + accTaxonId, paramMap);
-				String taxonResponse = processRESTService(taxonUri);
-				
-				JSONObject taxon = (JSONObject) JSONUtils.parseJsonToObject(taxonResponse);				
-				AcceptedName accName = generateAccName(taxon);
-				tnrResponse.setAcceptedName(accName);						
+				// case when accepted name
+				if(!synonym && (acceptedKey == null)) {
+					Long key = (Long)res.get("key");
+					accTaxonId = key.toString();
+					AcceptedName accName = generateAccName(res);
+					tnrResponse.setAcceptedName(accName);
+
+				} else
+				// case when synonym
+				if(synonym && (acceptedKey != null)) {
+					Long key = (Long)res.get("acceptedKey");
+					accTaxonId = key.toString();
+					
+					URI taxonUri = buildUriFromQuery(query, "/species/" + accTaxonId, null);
+					String taxonResponse = processRESTService(taxonUri);
+					
+					JSONObject taxon = (JSONObject) JSONUtils.parseJsonToObject(taxonResponse);				
+					AcceptedName accName = generateAccName(taxon);
+					tnrResponse.setAcceptedName(accName);	
+					
+				} else {
+					throw new DRFChecklistException("Name is neither accepted nor synonym");
+				}
+			
+								
 				if(query != null) {
 					query.getTnrResponse().add(tnrResponse);
 				}
 				int offset = 0;
-				paramMap.put("limit", "20");
+				paramMap.put("limit", MAX_PAGING_LIMIT);
 				
 				boolean endOfRecords = false;
 
 				do {							
 					paramMap.put("offset", Integer.toString(offset));
 					
-					URI synonymsUri = buildUriFromQuery(query, "/name_usage/" + accTaxonId + "/synonyms", paramMap);
+					URI synonymsUri = buildUriFromQuery(query, "/species/" + accTaxonId + "/synonyms", paramMap);
 					String synResponse = processRESTService(synonymsUri);
 					
 					JSONObject pagedSynonyms = (JSONObject) JSONUtils.parseJsonToObject(synResponse);				
@@ -188,7 +203,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 
 					endOfRecords = (Boolean) pagedSynonyms.get("endOfRecords");
 					
-					offset = offset + 20;
+					offset = offset + Integer.parseInt(MAX_PAGING_LIMIT);
 				} while(!endOfRecords);									
 			} 
 		}		
@@ -206,6 +221,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 		name.setNameStatus((String)taxon.get("taxonomicStatus"));
 		
 		taxonName.setRank((String) taxon.get("rank"));
+		taxonName.setAuthorship((String) taxon.get("authorship"));
 		taxonName.setName(name);
 		
 		accName.setTaxonName(taxonName);
@@ -224,7 +240,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 	    accName.setSource(source);
 	    
 	    //FIXME : To fill in		
-	    String accordingTo = "";            
+	    String accordingTo = (String) taxon.get("accordingTo");            
 	    String modified = "";            
 	    
 	    ScrutinyType scrutiny = new ScrutinyType();	    
@@ -245,11 +261,12 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 	}
 	
 	private void generateSynonyms(JSONObject pagedSynonyms, TnrResponse tnrResponse) {
-		TnrResponse.Synonym synonym = new Synonym();
+		
 			
 		JSONArray synonyms = (JSONArray)pagedSynonyms.get("results");
 		Iterator<JSONObject> itrSynonyms = synonyms.iterator();
 		while(itrSynonyms.hasNext()) {
+			TnrResponse.Synonym synonym = new Synonym();
 			JSONObject synonymjs = (JSONObject) itrSynonyms.next();
 			TaxonNameType taxonName = new TaxonNameType();
 			NameType name = new NameType();
@@ -261,6 +278,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 			name.setNameStatus((String)synonymjs.get("taxonomicStatus"));
 			
 			taxonName.setRank((String) synonymjs.get("rank"));
+			taxonName.setAuthorship((String) synonymjs.get("authorship"));
 			taxonName.setName(name);
 			
 			synonym.setTaxonName(taxonName);
@@ -279,7 +297,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 		    synonym.setSource(source);
 		    
 		    //FIXME : To fill in					
-		    String accordingTo = "";            
+		    String accordingTo = (String) synonymjs.get("accordingTo");                 
 		    String modified = "";            
 		    
 		    ScrutinyType scrutiny = new ScrutinyType();	    

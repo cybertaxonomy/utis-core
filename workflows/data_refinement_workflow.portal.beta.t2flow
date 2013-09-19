@@ -1,4 +1,4 @@
-<workflow xmlns="http://taverna.sf.net/2008/xml/t2flow" version="1" producedBy="taverna-2.4.0"><dataflow id="2b0efccf-f8b4-43fb-b59e-49516223b2e2" role="top"><name>Data_Refinement</name><inputPorts /><outputPorts><port><name>csv_output</name><annotations><annotation_chain encoding="xstream"><net.sf.taverna.t2.annotation.AnnotationChainImpl xmlns="">
+<workflow xmlns="http://taverna.sf.net/2008/xml/t2flow" version="1" producedBy="taverna-2.4.0"><dataflow id="2b0efccf-f8b4-43fb-b59e-49516223b2e2" role="top"><name>Data_Refinemement</name><inputPorts /><outputPorts><port><name>csv_output</name><annotations><annotation_chain encoding="xstream"><net.sf.taverna.t2.annotation.AnnotationChainImpl xmlns="">
   <annotationAssertions>
     <net.sf.taverna.t2.annotation.AnnotationAssertionImpl>
       <annotationBean class="net.sf.taverna.t2.annotation.annotationbeans.FreeTextDescription">
@@ -87,7 +87,7 @@ if ("true".matches(loop)) {&#xD;
       <granularDepth>0</granularDepth>
     </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
   </outputs>
-  <presentationOrigin>http://ww2.bgbm.org/biovel/public/webui/InputChooser.html</presentationOrigin>
+  <presentationOrigin>http://ww2.bgbm.org/biovel/public/beta/webui/InputChooser.html</presentationOrigin>
   <interactionActivityType>LocallyPresentedHtml</interactionActivityType>
   <progressNotification>false</progressNotification>
 </net.sf.taverna.t2.activities.interaction.InteractionActivityConfigurationBean></configBean><annotations /></activity></activities><dispatchStack><dispatchLayer><raven><group>net.sf.taverna.t2.core</group><artifact>workflowmodel-impl</artifact><version>1.4</version></raven><class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Parallelize</class><configBean encoding="xstream"><net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ParallelizeConfig xmlns="">
@@ -2571,7 +2571,7 @@ Currently, the data refinement workflow is made up of three distinct parts:
   <annotationAssertions>
     <net.sf.taverna.t2.annotation.AnnotationAssertionImpl>
       <annotationBean class="net.sf.taverna.t2.annotation.annotationbeans.DescriptiveTitle">
-        <text>Data Refinement Workflow v14</text>
+        <text>Data Refinement Workflow v13</text>
       </annotationBean>
       <date>2013-02-04 11:56:44.157 UTC</date>
       <creators />
@@ -4498,7 +4498,7 @@ Once the data is selected the user can return to Taverna with the intermediate '
       <granularDepth>0</granularDepth>
     </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
   </outputs>
-  <presentationOrigin>http://ww2.bgbm.org/biovel/public/webui/SubWorkflowChooser.html</presentationOrigin>
+  <presentationOrigin>http://ww2.bgbm.org/biovel/public/beta/webui/SubWorkflowChooser.html</presentationOrigin>
   <interactionActivityType>LocallyPresentedHtml</interactionActivityType>
   <progressNotification>false</progressNotification>
 </net.sf.taverna.t2.activities.interaction.InteractionActivityConfigurationBean></configBean><annotations /></activity></activities><dispatchStack><dispatchLayer><raven><group>net.sf.taverna.t2.core</group><artifact>workflowmodel-impl</artifact><version>1.4</version></raven><class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Parallelize</class><configBean encoding="xstream"><net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ParallelizeConfig xmlns="">
@@ -6172,15 +6172,10 @@ if(internalCSVData.size() == 1) {
     </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
   </outputs>
   <classLoaderSharing>workflow</classLoaderSharing>
-  <localDependencies />
-  <artifactDependencies>
-    <net.sf.taverna.raven.repository.BasicArtifact>
-      <groupId>biovel.drf</groupId>
-      <artifactId>drf-workflow</artifactId>
-      <version>1.0.2</version>
-      <hashCode>-1793255443</hashCode>
-    </net.sf.taverna.raven.repository.BasicArtifact>
-  </artifactDependencies>
+  <localDependencies>
+    <string>uber-drf-workflow-1.0.1-SNAPSHOT.jar</string>
+  </localDependencies>
+  <artifactDependencies />  
   <script>import org.bgbm.biovel.drf.input.DRFCSVInputParser;
 
 DRFCSVInputParser parser = new DRFCSVInputParser();
@@ -6299,15 +6294,10 @@ flatten(inputlist, outputlist, 1);</script>
     </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
   </outputs>
   <classLoaderSharing>workflow</classLoaderSharing>
-  <localDependencies />
-  <artifactDependencies>
-    <net.sf.taverna.raven.repository.BasicArtifact>
-      <groupId>biovel.drf</groupId>
-      <artifactId>drf-workflow</artifactId>
-      <version>1.0.2</version>
-      <hashCode>-1793255443</hashCode>
-    </net.sf.taverna.raven.repository.BasicArtifact>
-  </artifactDependencies>
+  <localDependencies>
+    <string>uber-drf-workflow-1.0.1-SNAPSHOT.jar</string>
+  </localDependencies>
+  <artifactDependencies />  
   <script>import org.bgbm.biovel.drf.utils.ChecklistUtils;
 
 checklistJson = ChecklistUtils.generateChecklistInfoList();</script>
@@ -6340,7 +6330,7 @@ checklistJson = ChecklistUtils.generateChecklistInfoList();</script>
       <granularDepth>1</granularDepth>
     </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
   </outputs>
-  <presentationOrigin>http://ww2.bgbm.org/biovel/public/webui/TaxonomicChecklistChooser.html</presentationOrigin>
+  <presentationOrigin>http://ww2.bgbm.org/biovel/public/beta/webui/TaxonomicChecklistChooser.html</presentationOrigin>
   <interactionActivityType>LocallyPresentedHtml</interactionActivityType>
   <progressNotification>false</progressNotification>
 </net.sf.taverna.t2.activities.interaction.InteractionActivityConfigurationBean></configBean><annotations /></activity></activities><dispatchStack><dispatchLayer><raven><group>net.sf.taverna.t2.core</group><artifact>workflowmodel-impl</artifact><version>1.4</version></raven><class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Parallelize</class><configBean encoding="xstream"><net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ParallelizeConfig xmlns="">
@@ -6420,15 +6410,10 @@ checklistJson = ChecklistUtils.generateChecklistInfoList();</script>
     </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
   </outputs>
   <classLoaderSharing>workflow</classLoaderSharing>
-  <localDependencies />
-  <artifactDependencies>
-    <net.sf.taverna.raven.repository.BasicArtifact>
-      <groupId>biovel.drf</groupId>
-      <artifactId>drf-workflow</artifactId>
-      <version>1.0.2</version>
-      <hashCode>-1793255443</hashCode>
-    </net.sf.taverna.raven.repository.BasicArtifact>
-  </artifactDependencies>
+  <localDependencies>
+    <string>uber-drf-workflow-1.0.1-SNAPSHOT.jar</string>
+  </localDependencies>
+  <artifactDependencies />
   <script>import org.bgbm.biovel.drf.utils.ChecklistUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.checklist.BgbmEditClient;
@@ -6490,7 +6475,7 @@ while(ciItr.hasNext()) {
       <granularDepth>1</granularDepth>
     </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
   </outputs>
-  <presentationOrigin>http://ww2.bgbm.org/biovel/public/webui/TaxonomicConceptChooser.html</presentationOrigin>
+  <presentationOrigin>http://ww2.bgbm.org/biovel/public/beta/webui/TaxonomicConceptChooser.html</presentationOrigin>
   <interactionActivityType>LocallyPresentedHtml</interactionActivityType>
   <progressNotification>false</progressNotification>
 </net.sf.taverna.t2.activities.interaction.InteractionActivityConfigurationBean></configBean><annotations /></activity></activities><dispatchStack><dispatchLayer><raven><group>net.sf.taverna.t2.core</group><artifact>workflowmodel-impl</artifact><version>1.4</version></raven><class>net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.Parallelize</class><configBean encoding="xstream"><net.sf.taverna.t2.workflowmodel.processor.dispatch.layers.ParallelizeConfig xmlns="">
@@ -8331,15 +8316,10 @@ JSONParser parser=new JSONParser();
     </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
   </outputs>
   <classLoaderSharing>workflow</classLoaderSharing>
-  <localDependencies />
-  <artifactDependencies>
-    <net.sf.taverna.raven.repository.BasicArtifact>
-      <groupId>biovel.drf</groupId>
-      <artifactId>drf-workflow</artifactId>
-      <version>1.0.2</version>
-      <hashCode>-1793255443</hashCode>
-    </net.sf.taverna.raven.repository.BasicArtifact>
-  </artifactDependencies>
+  <localDependencies>
+    <string>uber-drf-workflow-1.0.1-SNAPSHOT.jar</string>
+  </localDependencies>
+  <artifactDependencies />  
   <script>package org.bgbm.biovel.datacleaning.utils;
 
 import org.json.simple.parser.JSONParser;
@@ -19137,15 +19117,10 @@ sourceReader.close();
     </net.sf.taverna.t2.workflowmodel.processor.activity.config.ActivityOutputPortDefinitionBean>
   </outputs>
   <classLoaderSharing>workflow</classLoaderSharing>
-  <localDependencies />
-  <artifactDependencies>
-    <net.sf.taverna.raven.repository.BasicArtifact>
-      <groupId>biovel.drf</groupId>
-      <artifactId>drf-workflow</artifactId>
-      <version>1.0.2</version>
-      <hashCode>-1793255443</hashCode>
-    </net.sf.taverna.raven.repository.BasicArtifact>
-  </artifactDependencies>
+  <localDependencies>
+    <string>uber-drf-workflow-1.0.1-SNAPSHOT.jar</string>
+  </localDependencies>
+  <artifactDependencies />  
   <script>import org.bgbm.biovel.drf.checklist.Species2000ColClient;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;

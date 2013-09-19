@@ -52,11 +52,8 @@ public class Species2000ColClientTest {
 	
 	@Test
 	public void nameCompleteTest() throws DRFChecklistException, DRFInputException, JAXBException, TnrMsgException {
-		parser = new DRFCSVInputParser();
-		//List<String> inputXMLList = parser.parseToXML(BiovelUtils.getCSVAsString("org/bgbm/biovel/drf/tnr/nameCompleteOnly.csv","UTF-8"));
+		parser = new DRFCSVInputParser();		
 		List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/nameCompleteOnly.csv","UTF-8"));
-		List<String> chosenKeyList = new ArrayList<String>();
-		chosenKeyList.add("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c");
 		
 		Species2000ColClient scc =  new Species2000ColClient();
 		Iterator<TnrMsg> tnrMsgItr = tnrMsgs.iterator();
