@@ -10,7 +10,6 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
-import org.bgbm.biovel.drf.checklist.BaseChecklistClient.ChecklistInfo;
 import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.ScrutinyType;
@@ -20,9 +19,8 @@ import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse.Synonym;
+
 import org.bgbm.biovel.drf.utils.JSONUtils;
-import org.bgbm.biovel.drf.utils.TnrMsgException;
-import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -30,12 +28,12 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 	
 	public static final String ID = "gbif";
 	public static final String LABEL = "GBIF Checklist Bank";
-	public static final String URL = "http://portaldev.gbif.org/developer/species";
+	public static final String URL = "http://uat.gbif.org/developer/species";
 	public static final String DATA_AGR_URL = "http://data.gbif.org/tutorial/datauseagreement";
 	private static final String MAX_PAGING_LIMIT = "1000";
 	public static final ChecklistInfo CINFO = new ChecklistInfo(ID,LABEL,URL,DATA_AGR_URL);
 
-	public GBIFBackboneClient(List<String> checklistKeys) {
+	public GBIFBackboneClient() {
 		super();		
 	}
 	
@@ -46,7 +44,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 	@Override
 	public HttpHost getHost() {
 		// TODO Auto-generated method stub
-		return new HttpHost("apidev.gbif.org",80);
+		return new HttpHost("api.gbif.org",80);
 	}
 
 	
@@ -78,8 +76,8 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 					JSONObject result = itrResults.next();
 					String key = (String)result.get("key");
 					String title = (String)result.get("title");
-					String url =  "http://portaldev.gbif.org/dataset/" + key;
-					checklistInfo.addSubChecklist(new ChecklistInfo(key, title,  url));
+					String url =  "http://uat.gbif.org/dataset/" + key;
+					checklistInfo.addSubChecklist(new ChecklistInfo(key, title,  url, DATA_AGR_URL));
 				}
 				
 				endOfRecords = (Boolean) jsonResponse.get("endOfRecords");
@@ -89,9 +87,11 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 		} catch (URISyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			// FIXME : We should process the exceptions and if we can't do nothing with them pass to the next level
 		} catch (DRFChecklistException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			// FIXME : We should process the exceptions and if we can't do nothing with them pass to the next level
 		}
 		
 		return checklistInfo;
@@ -123,13 +123,6 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 			String response = processRESTService(namesUri);
 			
 			updateQueryWithResponse(query,response, paramMap, checklistInfo);
-
-//			try {
-//				System.out.println(TnrMsgUtils.convertTnrMsgToXML(tnrMsg));
-//			} catch (TnrMsgException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
 		}
 	}
 
@@ -163,6 +156,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 				if(!synonym && (acceptedKey == null)) {
 					Long key = (Long)res.get("key");
 					accTaxonId = key.toString();
+					
 					AcceptedName accName = generateAccName(res);
 					tnrResponse.setAcceptedName(accName);
 
@@ -180,7 +174,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 					tnrResponse.setAcceptedName(accName);	
 					
 				} else {
-					throw new DRFChecklistException("Name is neither accepted nor synonym");
+					throw new DRFChecklistException("Name is neither accepted nor a synonym");
 				}
 			
 								
@@ -226,8 +220,15 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 		
 		accName.setTaxonName(taxonName);
 		
+		Long key = (Long)taxon.get("key");
+		String taxonId = key.toString();
+		AcceptedName.Info info = new AcceptedName.Info();
+		info.setUrl("http://uat.gbif.org/species/" + taxonId);
+		accName.setInfo(info);
+		
+		
 		//FIXME : To fill in		
-		String sourceUrl = "";
+		String sourceUrl = "http://uat.gbif.org/species/" + taxonId;
 	    String sourceDatasetID = "";
 	    String sourceDatasetName = "";
 	    String sourceName = "";
@@ -282,9 +283,15 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 			taxonName.setName(name);
 			
 			synonym.setTaxonName(taxonName);
+			
+			Long key = (Long)synonymjs.get("key");
+			String synId = key.toString();
+			Synonym.Info info = new Synonym.Info();
+			info.setUrl("http://uat.gbif.org/species/" + synId);
+			synonym.setInfo(info);
 						
 			//FIXME : To fill in		
-			String sourceUrl = "";
+			String sourceUrl = "http://uat.gbif.org/species/" + synId;
 		    String sourceDatasetID =  "";
 		    String sourceDatasetName = "";
 		    String sourceName = "";
@@ -309,7 +316,25 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 		}
 	}
 
+	private String getDatasetNameById(String datasetKey) throws DRFChecklistException {
+		try{
+			//Add a comment to this line
+			URIBuilder uriBuilder = new URIBuilder();
+			uriBuilder.setScheme("http");
+			uriBuilder.setHost(getHost().getHostName());
+			uriBuilder.setPath("/dataset/" + datasetKey);
 
+			URI uri = uriBuilder.build();
+			String response = processRESTService(uri);
+
+			JSONObject datasetInfo = (JSONObject) JSONUtils.parseJsonToObject(response);
+
+			return  (String) datasetInfo.get("title");
+		}
+		catch(URISyntaxException e){
+			throw new DRFChecklistException(e);
+		}
+	}
 
 	
 }

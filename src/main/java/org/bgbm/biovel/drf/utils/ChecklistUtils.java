@@ -10,6 +10,7 @@ import java.util.Map;
 import org.bgbm.biovel.drf.checklist.BaseChecklistClient.ChecklistInfo;
 import org.bgbm.biovel.drf.checklist.BgbmEditClient;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
+import org.bgbm.biovel.drf.checklist.GBIFBackboneClient;
 import org.bgbm.biovel.drf.checklist.GBIFBetaBackboneClient;
 import org.bgbm.biovel.drf.checklist.Species2000ColClient;
 
@@ -25,8 +26,12 @@ public class ChecklistUtils {
 		BgbmEditClient bec = new BgbmEditClient();
 		cilist.add(bec.getChecklistInfo());
 		
-		GBIFBetaBackboneClient gbc = new GBIFBetaBackboneClient();
+//		GBIFBetaBackboneClient gbc = new GBIFBetaBackboneClient();
+//		cilist.add(gbc.getChecklistInfo());
+		
+		GBIFBackboneClient gbc = new GBIFBackboneClient();
 		cilist.add(gbc.getChecklistInfo());
+		
 		checklistInfoList = JSONUtils.convertObjectToJson(cilist);
 		return checklistInfoList;
 	}
@@ -55,11 +60,11 @@ public class ChecklistUtils {
 								BgbmEditClient.URL,
 								BgbmEditClient.DATA_AGR_URL);
 					}
-					if(key.equals(GBIFBetaBackboneClient.ID)) {
-						ci = new ChecklistInfo(GBIFBetaBackboneClient.ID,
-								GBIFBetaBackboneClient.LABEL,
-								GBIFBetaBackboneClient.URL,
-								GBIFBetaBackboneClient.DATA_AGR_URL);
+					if(key.equals(GBIFBackboneClient.ID)) {
+						ci = new ChecklistInfo(GBIFBackboneClient.ID,
+								GBIFBackboneClient.LABEL,
+								GBIFBackboneClient.URL,
+								GBIFBackboneClient.DATA_AGR_URL);
 					}
 					if(ci != null) {
 						ciMap.put(key, ci);
