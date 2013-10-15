@@ -4,11 +4,11 @@ import java.util.Map;
 
 import org.apache.http.client.utils.URIBuilder;
 
-public class ChecklistURIBuilder extends URIBuilder {
+public class RESTURIBuilder extends URIBuilder {
 
 	private String querykey;
 
-	public ChecklistURIBuilder(String hostName,
+	public RESTURIBuilder(String hostName,
 			String endpointSuffix, 
 			String key,
 			Map<String, String> paramMap) {
@@ -23,7 +23,7 @@ public class ChecklistURIBuilder extends URIBuilder {
 		}
 	}
 	
-	public ChecklistURIBuilder(String hostName,
+	public RESTURIBuilder(String hostName,
 			String endpointUrl,
 			Map<String, String> paramMap) {
 		//this.querykey = key;
@@ -38,7 +38,7 @@ public class ChecklistURIBuilder extends URIBuilder {
 	}
 	
 	public void addQuery(String query) {
-		addParameter(querykey, query);		 
+		addParameter(querykey, query.trim());		 
 	}
 	
 }

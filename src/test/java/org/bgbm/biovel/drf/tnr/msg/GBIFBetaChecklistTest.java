@@ -6,11 +6,11 @@ import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
-import org.bgbm.biovel.drf.checklist.BaseChecklistClient.ChecklistInfo;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.GBIFBetaBackboneClient;
 import org.bgbm.biovel.drf.input.DRFCSVInputParser;
 import org.bgbm.biovel.drf.input.DRFInputException;
+import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgException;
@@ -23,7 +23,7 @@ public class GBIFBetaChecklistTest {
 	private static DRFCSVInputParser parser;
 	private static List<String> nameCompleteList;
 
-	private static ChecklistInfo ci;
+	private static ServiceProviderInfo ci;
 	
 	@BeforeClass 
 	public static void  setup() {
@@ -38,11 +38,11 @@ public class GBIFBetaChecklistTest {
 		nameCompleteList.add("Chelicorophium curvispinum");
 		
 
-		ci = new ChecklistInfo(GBIFBetaBackboneClient.ID,
+		ci = new ServiceProviderInfo(GBIFBetaBackboneClient.ID,
 				GBIFBetaBackboneClient.LABEL,
 				GBIFBetaBackboneClient.URL,
 				GBIFBetaBackboneClient.DATA_AGR_URL);
-		ci.addSubChecklist(new ChecklistInfo("1", "GBIF NUB Taxonomy", "http://ecat-dev.gbif.org/checklist/1"));
+		ci.addSubChecklist(new ServiceProviderInfo("1", "GBIF NUB Taxonomy", "http://ecat-dev.gbif.org/checklist/1"));
 	}
 	
 	@Test

@@ -4,10 +4,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.bgbm.biovel.drf.checklist.BaseChecklistClient.ChecklistInfo;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
-import org.bgbm.biovel.drf.input.DRFCSVInputParser;
-import org.bgbm.biovel.drf.utils.ChecklistUtils;
+import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
+import org.bgbm.biovel.drf.utils.ServiceProviderInfoUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -20,7 +19,7 @@ public class ChecklistTest {
 	
 	@Test
 	public void generateChecklistInfoList() throws DRFChecklistException {
-		String checklistInfoListJson = ChecklistUtils.generateChecklistInfoList();
+		String checklistInfoListJson = ServiceProviderInfoUtils.generateChecklistInfoList();
 		System.out.println("Json : " + checklistInfoListJson);
 	}
 	
@@ -32,8 +31,8 @@ public class ChecklistTest {
 		ciList.add("gbif;1028;Afromoths, online datbase of Afrotropical moth species (Lepidoptera);http://ecat-dev.gbif.org/checklist/1028;");
 		ciList.add("gbif;1000;Afromoths, online datbase of Afrotropical moth species (Lepidoptera);http://ecat-dev.gbif.org/checklist/1000;");
 		
-		List<ChecklistInfo> ciInfoList = ChecklistUtils.convertStringToChecklistInfo(ciList);
-		Iterator<ChecklistInfo> ciInfoItr = ciInfoList.iterator();
+		List<ServiceProviderInfo> ciInfoList = ServiceProviderInfoUtils.convertStringToChecklistInfo(ciList);
+		Iterator<ServiceProviderInfo> ciInfoItr = ciInfoList.iterator();
 		while(ciInfoItr.hasNext()) {
 			System.out.println(JSONUtils.convertObjectToJson(ciInfoItr.next()));
 		}

@@ -6,11 +6,11 @@ import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
-import org.bgbm.biovel.drf.checklist.BaseChecklistClient.ChecklistInfo;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.Species2000ColClient;
 import org.bgbm.biovel.drf.input.DRFCSVInputParser;
 import org.bgbm.biovel.drf.input.DRFInputException;
+import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgException;
@@ -23,7 +23,7 @@ public class Species2000ColClientTest {
 	private static DRFCSVInputParser parser;
 	private static List<String> nameCompleteList;
 
-	private static ChecklistInfo ci;
+	private static ServiceProviderInfo ci;
 	
 	@BeforeClass 
 	public static void  setup() {
@@ -38,7 +38,7 @@ public class Species2000ColClientTest {
 		nameCompleteList.add("Chelicorophium curvispinum");
 		
 
-		ci = new ChecklistInfo(Species2000ColClient.ID,
+		ci = new ServiceProviderInfo(Species2000ColClient.ID,
 				Species2000ColClient.LABEL,
 				Species2000ColClient.URL,
 				Species2000ColClient.DATA_AGR_URL);

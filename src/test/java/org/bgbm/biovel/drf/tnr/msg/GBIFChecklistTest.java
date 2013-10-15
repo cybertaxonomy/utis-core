@@ -8,16 +8,14 @@ import javax.xml.bind.JAXBException;
 
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.GBIFBackboneClient;
-import org.bgbm.biovel.drf.checklist.GBIFBetaBackboneClient;
-import org.bgbm.biovel.drf.checklist.BaseChecklistClient.ChecklistInfo;
 import org.bgbm.biovel.drf.input.DRFCSVInputParser;
 import org.bgbm.biovel.drf.input.DRFInputException;
+import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgException;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 //@Ignore
@@ -26,7 +24,7 @@ public class GBIFChecklistTest {
 	private static DRFCSVInputParser parser;
 	private static List<String> nameCompleteList;
 	
-	private static ChecklistInfo ci;
+	private static ServiceProviderInfo ci;
 	
 	@BeforeClass 
 	public static void  setup() {
@@ -34,17 +32,17 @@ public class GBIFChecklistTest {
 		
 		nameCompleteList = new ArrayList<String>();
 		nameCompleteList.add("Ameira divagans");
-		nameCompleteList.add("Boccardi redeki");
+		nameCompleteList.add("Boccardiella ligerica");
 		nameCompleteList.add("Bougainvillia rugosa");
 		nameCompleteList.add("Branchiura sowerbyi");
 		nameCompleteList.add("Cercopagis pengoi");
 		nameCompleteList.add("Chelicorophium curvispinum");
 		
-		ci = new ChecklistInfo(GBIFBackboneClient.ID,
+		ci = new ServiceProviderInfo(GBIFBackboneClient.ID,
 				GBIFBackboneClient.LABEL,
 				GBIFBackboneClient.URL,
 				GBIFBackboneClient.DATA_AGR_URL);
-		ci.addSubChecklist(new ChecklistInfo("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c", "GBIF NUB Taxonomy", "http://portaldev.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"));
+		ci.addSubChecklist(new ServiceProviderInfo("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c", "GBIF NUB Taxonomy", "http://uat.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"));
 	}
 	
 	@Test

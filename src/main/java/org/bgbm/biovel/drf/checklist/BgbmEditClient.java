@@ -10,7 +10,6 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.ParseException;
-import org.bgbm.biovel.drf.checklist.BaseChecklistClient.ChecklistInfo;
 import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.ScrutinyType;
@@ -55,9 +54,9 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
 	
 	@Override
-	protected ChecklistInfo buildChecklistInfo() {
-		ChecklistInfo checklistInfo = new ChecklistInfo(ID,LABEL,URL,DATA_AGR_URL);
-		checklistInfo.addSubChecklist(new ChecklistInfo("col",
+	protected ServiceProviderInfo buildServiceProviderInfo() {
+		ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL);
+		checklistInfo.addSubChecklist(new ServiceProviderInfo("col",
 				"EDIT - Catalogue Of Life",
 				"http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html",
 				"http://www.catalogueoflife.org/col/info/copyright"));
@@ -68,9 +67,9 @@ public class BgbmEditClient extends AggregateChecklistClient {
 	@Override	
 	public void resolveNames(TnrMsg tnrMsg) throws DRFChecklistException {
 		List<TnrMsg.Query> queryList = tnrMsg.getQuery();
-		Iterator<ChecklistInfo> itrKeys = getChecklistInfo().getSubChecklists().iterator();
+		Iterator<ServiceProviderInfo> itrKeys = getServiceProviderInfo().getSubChecklists().iterator();
 		while(itrKeys.hasNext()) {
-			ChecklistInfo checklistInfo = itrKeys.next();
+			ServiceProviderInfo checklistInfo = itrKeys.next();
 			//if(checklistInfo.getUse()) {
 				URI namesUri = buildUriFromQueryList(queryList,
 						"/cdmserver/" + checklistInfo.getId() + "/name_catalogue.json",									
@@ -145,7 +144,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 		}		
 	}	
 	
-	private void updateQueriesWithResponse(String response, ChecklistInfo ci) throws DRFChecklistException {
+	private void updateQueriesWithResponse(String response, ServiceProviderInfo ci) throws DRFChecklistException {
 		JSONParser parser = new JSONParser();
 		Object obj;
 		try {

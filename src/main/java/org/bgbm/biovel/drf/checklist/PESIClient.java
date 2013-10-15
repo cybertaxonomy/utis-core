@@ -1,40 +1,24 @@
 package org.bgbm.biovel.drf.checklist;
 
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.net.URI;
-import java.util.HashMap;
+import java.rmi.RemoteException;
 import java.util.List;
-import java.util.Map;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
+import javax.xml.rpc.ServiceException;
 
 import org.apache.http.HttpHost;
+import org.bgbm.biovel.drf.checklist.pesi.PESINameServiceLocator;
+import org.bgbm.biovel.drf.checklist.pesi.PESINameServicePortType;
+import org.bgbm.biovel.drf.checklist.pesi.PESIRecord;
+import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
+import org.bgbm.biovel.drf.tnr.msg.NameType;
+import org.bgbm.biovel.drf.tnr.msg.ScrutinyType;
+import org.bgbm.biovel.drf.tnr.msg.SourceType;
+import org.bgbm.biovel.drf.tnr.msg.TaxonNameType;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
-import org.bgbm.biovel.drf.utils.BiovelUtils;
-import org.bgbm.biovel.drf.utils.TnrMsgUtils;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
+import org.bgbm.biovel.drf.tnr.msg.TnrResponse.Synonym;
 
 
 public class PESIClient extends BaseChecklistClient {
@@ -58,8 +42,8 @@ public class PESIClient extends BaseChecklistClient {
 
 
 	@Override
-	protected ChecklistInfo buildChecklistInfo() {
-		ChecklistInfo checklistInfo = new ChecklistInfo(ID,LABEL,URL,DATA_AGR_URL);
+	protected ServiceProviderInfo buildServiceProviderInfo() {
+		ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL);
 		setChecklistInfo(checklistInfo);
 		return checklistInfo;
 	}
@@ -78,66 +62,20 @@ public class PESIClient extends BaseChecklistClient {
 		Query query = queryList.get(0);
 
 		//http://www.catalogueoflife.org/col/webservice?response=full&name={sciName}
-
-
-		Map<String, String> paramMap = new HashMap<String, String>();
 		
-		paramMap.put("response", "full");		
+		String name = query.getTnrRequest().getTaxonName().getName().getNameComplete();
 
-		URI taxonUri = buildUriFromQuery(query,
-				"/col/webservice",									
-				"name",
-				paramMap);
-
-		String response = processRESTService(taxonUri);
-		
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();  
-		DocumentBuilder parser;
-		try {
-			parser = factory.newDocumentBuilder();
-
-		Document doc = parser.parse(new InputSource(new StringReader(response)));   
-		XPathExpression xp = XPathFactory.newInstance().newXPath().compile("/results/result[1]/name_status");
-		Node nameStatusNode = (Node) xp.evaluate(doc, XPathConstants.NODE);
-		
-		if(nameStatusNode != null) {
-			String nameStatus = nameStatusNode.getTextContent();
-			if(nameStatus.equals("synonym")) {
-				xp = XPathFactory.newInstance().newXPath().compile("/results/result[1]/accepted_name/id");
-				Node synTaxonIdNode = (Node) xp.evaluate(doc, XPathConstants.NODE);
+		PESINameServiceLocator pesins = new PESINameServiceLocator();
 				
-				if(synTaxonIdNode != null) {
-					String synTaxonId = synTaxonIdNode.getTextContent();
-					//http://www.catalogueoflife.org/col/webservice?response=full&id={sciId}
-					taxonUri = buildUriFromQueryString(synTaxonId,
-							"/col/webservice",									
-							"id",
-							paramMap);
-
-					response = processRESTService(taxonUri);
-				} else {
-					response = null;
-				}
-			} 
-		}
-		
-		updateQueryWithResponse(query, response);
-		
-		} catch (ParserConfigurationException e) {
+		PESINameServicePortType pesinspt;
+		try {
+			pesinspt = pesins.getPESINameServicePort();
+		} catch (ServiceException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			
-		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (XPathExpressionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}  		
-
+			throw new DRFChecklistException("Error in accessing PESINameService");
+		}		
+		updateQueryWithResponse(query,pesinspt,name,getServiceProviderInfo());			
 	}
 	
 
@@ -145,52 +83,159 @@ public class PESIClient extends BaseChecklistClient {
 	public int getMaxPageSize() {		
 		return 10;
 	}
-	
 
 
-	private void updateQueryWithResponse(Query query, String colXMLResponse) {
 
-		Source inSource = new StreamSource(new StringReader(colXMLResponse));
-		Source xslSource = new StreamSource(new StringReader(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/colres_to_synres.xsl","UTF-8")));
-
-		// the factory pattern supports different XSLT processors
-		// e.g. set the "javax.xml.transform.TransformerFactory" system property
-		TransformerFactory tnfFact = TransformerFactory.newInstance();
-		Transformer tnf;
+	private void updateQueryWithResponse(Query query , 
+			PESINameServicePortType pesinspt,
+			String name,
+			ServiceProviderInfo ci) throws DRFChecklistException {
 		
 		try {
-			tnf = tnfFact.newTransformer(xslSource);
+			String nameGUID = pesinspt.getGUID(name);
+			System.out.println("nameGUID : " + nameGUID);
+			PESIRecord record = pesinspt.getPESIRecordByGUID(nameGUID);
+			if(record != null) {	
+				TnrResponse tnrResponse = new TnrResponse();
 
-			Writer outputWriter = new StringWriter();
-			
-			tnf.transform(inSource, new StreamResult(outputWriter));
-			
-			String tnrResponseXML = outputWriter.toString();
-			System.out.println(tnrResponseXML);
-			TnrResponse tnrResponse = TnrMsgUtils.convertXMLToTnrResponse(tnrResponseXML);			
-			query.getTnrResponse().add(tnrResponse);
-		} catch (TransformerException e) {
+				tnrResponse.setChecklist(ci.getLabel());
+				tnrResponse.setChecklistUrl(ci.getUrl());
+				
+				String accNameGUID = record.getValid_guid();
+				
+				// case when accepted name
+				if(record.getGUID().equals(record.getValid_guid())) {
+					AcceptedName accName = generateAccName(record);
+					tnrResponse.setAcceptedName(accName);	
+				} else {
+					// case when synonym							
+					PESIRecord accNameRecord = pesinspt.getPESIRecordByGUID(accNameGUID);
+					AcceptedName accName = generateAccName(accNameRecord);
+					tnrResponse.setAcceptedName(accName);					
+				}
+				
+				PESIRecord[] records = pesinspt.getPESISynonymsByGUID(accNameGUID);
+				if(records != null && records.length > 0) {
+					generateSynonyms(records,tnrResponse);
+				}
+				if(query != null) {
+					query.getTnrResponse().add(tnrResponse);
+				}
+			}
+		}  catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (JAXBException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
+			throw new DRFChecklistException("Error in getGUID method in PESINameService");
+		}
+
+	}	
+
+	private AcceptedName generateAccName(PESIRecord taxon) {
+		AcceptedName accName = new AcceptedName();
+		TaxonNameType taxonName = new TaxonNameType();
+		NameType name = new NameType();
+		
+		String resName = taxon.getScientificname();
+		name.setNameComplete(resName + " " + taxon.getAuthority());
+
+		name.setNameCanonical(resName);
+		name.setNameStatus(taxon.getStatus());
+		
+		taxonName.setRank(taxon.getRank());
+		taxonName.setAuthorship(taxon.getAuthority());
+		taxonName.setName(name);
+		
+		accName.setTaxonName(taxonName);
+					
+		AcceptedName.Info info = new AcceptedName.Info();
+		info.setUrl(taxon.getUrl());
+		accName.setInfo(info);
 		
 		
+		//FIXME : To fill in		
+		String sourceUrl = taxon.getUrl();
+	    String sourceDatasetID = "";
+	    String sourceDatasetName = "";
+	    String sourceName = "";
+
+	    SourceType source = new SourceType();
+	    source.setDatasetID(sourceDatasetID);
+	    source.setDatasetName(sourceDatasetName);
+	    source.setName(sourceName);
+	    source.setUrl(sourceUrl);
+	    accName.setSource(source);
+	    
+	    //FIXME : To fill in		
+	    String accordingTo = taxon.getAuthority();            
+	    String modified = "";            
+	    
+	    ScrutinyType scrutiny = new ScrutinyType();	    
+		scrutiny.setAccordingTo(accordingTo);
+		scrutiny.setModified(modified);
+		accName.setScrutiny(scrutiny);
+
+		AcceptedName.Classification c = new AcceptedName.Classification();
+		c.setKingdom(taxon.getKingdom());
+		c.setPhylum(taxon.getPhylum());
+		c.setClazz("");
+		c.setOrder(taxon.getOrder());
+		c.setFamily(taxon.getFamily());
+		c.setGenus(taxon.getGenus());
+		accName.setClassification(c);				
+		
+		return accName;
 	}
 
 
-	
+	private void generateSynonyms(PESIRecord[] synonyms, TnrResponse tnrResponse) {
+				
+		for(PESIRecord synRecord : synonyms) {
+			TnrResponse.Synonym synonym = new Synonym();
+
+			TaxonNameType taxonName = new TaxonNameType();
+			NameType name = new NameType();
+			
+			String resName = synRecord.getScientificname();
+			name.setNameComplete(resName + " " + synRecord.getAuthority());
+			
+			name.setNameCanonical(resName);
+			name.setNameStatus(synRecord.getStatus());
+			
+			taxonName.setRank(synRecord.getRank());
+			taxonName.setAuthorship(synRecord.getAuthority());
+			taxonName.setName(name);
+			
+			synonym.setTaxonName(taxonName);
+			
+			Synonym.Info info = new Synonym.Info();
+			info.setUrl(synRecord.getUrl());
+			synonym.setInfo(info);
+						
+			//FIXME : To fill in		
+			String sourceUrl = synRecord.getUrl();
+		    String sourceDatasetID =  "";
+		    String sourceDatasetName = "";
+		    String sourceName = "";
+
+		    SourceType source = new SourceType();
+		    source.setDatasetID(sourceDatasetID);
+		    source.setDatasetName(sourceDatasetName);
+		    source.setName(sourceName);
+		    source.setUrl(sourceUrl);
+		    synonym.setSource(source);
+		    
+		    //FIXME : To fill in					
+		    String accordingTo = synRecord.getAuthority();                 
+		    String modified = "";            
+		    
+		    ScrutinyType scrutiny = new ScrutinyType();	    
+			scrutiny.setAccordingTo(accordingTo);
+			scrutiny.setModified(modified);
+			synonym.setScrutiny(scrutiny);
+			
+			tnrResponse.getSynonym().add(synonym);
+		}
+	}
 }
 
 

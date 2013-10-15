@@ -58,8 +58,8 @@ public class Species2000ColClient extends BaseChecklistClient {
 
 
 	@Override
-	protected ChecklistInfo buildChecklistInfo() {
-		ChecklistInfo checklistInfo = new ChecklistInfo(ID,LABEL,URL,DATA_AGR_URL);
+	protected ServiceProviderInfo buildServiceProviderInfo() {
+		ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL);
 		setChecklistInfo(checklistInfo);
 		return checklistInfo;
 	}

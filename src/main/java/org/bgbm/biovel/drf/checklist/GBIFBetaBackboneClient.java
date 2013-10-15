@@ -10,7 +10,6 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
-import org.bgbm.biovel.drf.checklist.BaseChecklistClient.ChecklistInfo;
 import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.ScrutinyType;
@@ -48,8 +47,8 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 
 	
 	@Override
-	public ChecklistInfo buildChecklistInfo()  {
-		ChecklistInfo checklistInfo = new ChecklistInfo(ID,LABEL,URL,DATA_AGR_URL);
+	public ServiceProviderInfo buildServiceProviderInfo()  {
+		ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL);
 
 		URIBuilder uriBuilder = new URIBuilder();
 		uriBuilder.setScheme("http");
@@ -70,7 +69,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 				String key = ((Long)result.get("datasetID")).toString();
 				String title = (String)result.get("title");
 				String url =  "http://ecat-dev.gbif.org/checklist/" + key;
-				checklistInfo.addSubChecklist(new ChecklistInfo(key, title,  url, DATA_AGR_URL));
+				checklistInfo.addSubChecklist(new ServiceProviderInfo(key, title,  url, DATA_AGR_URL));
 			}
 			
 		} catch (URISyntaxException e) {
@@ -96,10 +95,10 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 			throw new DRFChecklistException("GBIF query list has more than one query");
 		}
 		Query query = queryList.get(0);
-		Iterator<ChecklistInfo> itrKeys = getChecklistInfo().getSubChecklists().iterator();
+		Iterator<ServiceProviderInfo> itrKeys = getServiceProviderInfo().getSubChecklists().iterator();
 		//http://ecat-dev.gbif.org/ws/usage/?rkey={datasetID}&q={sciName}&pagesize=100&searchType=canonical
 		while(itrKeys.hasNext()) {
-			ChecklistInfo checklistInfo = itrKeys.next();
+			ServiceProviderInfo checklistInfo = itrKeys.next();
 			//if(checklistInfo.getUse()) {
 				Map<String, String> paramMap = new HashMap<String, String>();
 				paramMap.put("rKey", checklistInfo.getId());		
@@ -126,7 +125,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 	private void updateQueryWithResponse(Query query, 
 			String response, 
 			Map<String, String> paramMap,
-			ChecklistInfo checklistInfo) throws DRFChecklistException {
+			ServiceProviderInfo checklistInfo) throws DRFChecklistException {
 	
 
 		JSONObject jsonResponse = (JSONObject) JSONUtils.parseJsonToObject(response);

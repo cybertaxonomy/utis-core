@@ -1,6 +1,7 @@
 package org.bgbm.biovel.drf.checklist;
 
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -31,7 +32,8 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 	public static final String URL = "http://uat.gbif.org/developer/species";
 	public static final String DATA_AGR_URL = "http://data.gbif.org/tutorial/datauseagreement";
 	private static final String MAX_PAGING_LIMIT = "1000";
-	public static final ChecklistInfo CINFO = new ChecklistInfo(ID,LABEL,URL,DATA_AGR_URL);
+	private static final String VERSION = "v0.9";
+	public static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL,VERSION,false);
 
 	public GBIFBackboneClient() {
 		super();		
@@ -49,14 +51,14 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 
 	
 	@Override
-	protected ChecklistInfo buildChecklistInfo() {
-		ChecklistInfo checklistInfo = CINFO;
+	protected ServiceProviderInfo buildServiceProviderInfo() {
+		ServiceProviderInfo checklistInfo = CINFO;
 		int offset = 0;
 		
 		URIBuilder uriBuilder = new URIBuilder();
 		uriBuilder.setScheme("http");
 		uriBuilder.setHost(getHost().getHostName());
-		uriBuilder.setPath("/dataset/search");
+		uriBuilder.setPath("/" + checklistInfo.getVersion() + "/dataset/search");
 		uriBuilder.setParameter("type", "CHECKLIST");
 		uriBuilder.setParameter("limit", MAX_PAGING_LIMIT);
 		uriBuilder.setParameter("offset", "0");
@@ -77,7 +79,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 					String key = (String)result.get("key");
 					String title = (String)result.get("title");
 					String url =  "http://uat.gbif.org/dataset/" + key;
-					checklistInfo.addSubChecklist(new ChecklistInfo(key, title,  url, DATA_AGR_URL));
+					checklistInfo.addSubChecklist(new ServiceProviderInfo(key, title,  url, DATA_AGR_URL));
 				}
 				
 				endOfRecords = (Boolean) jsonResponse.get("endOfRecords");
@@ -110,15 +112,15 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 			throw new DRFChecklistException("GBIF query list has more than one query");
 		}
 		Query query = queryList.get(0);
-		Iterator<ChecklistInfo> itrKeys = getChecklistInfo().getSubChecklists().iterator();
+		Iterator<ServiceProviderInfo> itrKeys = getServiceProviderInfo().getSubChecklists().iterator();
 		//http://api.gbif.org/name_usage?q=Abies%20alba&datasetKey=fab88965-e69d-4491-a04d-e3198b626e52
 		while(itrKeys.hasNext()) {
-			ChecklistInfo checklistInfo = itrKeys.next();
+			ServiceProviderInfo checklistInfo = itrKeys.next();
 			Map<String, String> paramMap = new HashMap<String, String>();
 			paramMap.put("datasetKey", checklistInfo.getId());					
 			paramMap.put("limit", MAX_PAGING_LIMIT);
 
-			URI namesUri = buildUriFromQuery(query, "/species",	"name", paramMap);
+			URI namesUri = buildUriFromQuery(query, "/" + CINFO.getVersion() + "/species",	"name", paramMap);
 
 			String response = processRESTService(namesUri);
 			
@@ -134,7 +136,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 	private void updateQueryWithResponse(Query query , 
 			String response, 
 			Map<String, String> paramMap,
-			ChecklistInfo ci) throws DRFChecklistException {
+			ServiceProviderInfo ci) throws DRFChecklistException {
 
 		JSONObject jsonResponse = (JSONObject) JSONUtils.parseJsonToObject(response);
 		JSONArray results = (JSONArray) jsonResponse.get("results");
@@ -166,7 +168,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 					Long key = (Long)res.get("acceptedKey");
 					accTaxonId = key.toString();
 					
-					URI taxonUri = buildUriFromQuery(query, "/species/" + accTaxonId, null);
+					URI taxonUri = buildUriFromQuery(query, "/" + CINFO.getVersion() + "/species/" + accTaxonId, null);
 					String taxonResponse = processRESTService(taxonUri);
 					
 					JSONObject taxon = (JSONObject) JSONUtils.parseJsonToObject(taxonResponse);				
@@ -189,7 +191,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 				do {							
 					paramMap.put("offset", Integer.toString(offset));
 					
-					URI synonymsUri = buildUriFromQuery(query, "/species/" + accTaxonId + "/synonyms", paramMap);
+					URI synonymsUri = buildUriFromQuery(query, "/" + CINFO.getVersion() + "/species/" + accTaxonId + "/synonyms", paramMap);
 					String synResponse = processRESTService(synonymsUri);
 					
 					JSONObject pagedSynonyms = (JSONObject) JSONUtils.parseJsonToObject(synResponse);				
@@ -215,7 +217,9 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 		name.setNameStatus((String)taxon.get("taxonomicStatus"));
 		
 		taxonName.setRank((String) taxon.get("rank"));
+		
 		taxonName.setAuthorship((String) taxon.get("authorship"));
+
 		taxonName.setName(name);
 		
 		accName.setTaxonName(taxonName);
@@ -322,7 +326,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 			URIBuilder uriBuilder = new URIBuilder();
 			uriBuilder.setScheme("http");
 			uriBuilder.setHost(getHost().getHostName());
-			uriBuilder.setPath("/dataset/" + datasetKey);
+			uriBuilder.setPath("/" + CINFO.getVersion() + "/dataset/" + datasetKey);
 
 			URI uri = uriBuilder.build();
 			String response = processRESTService(uri);

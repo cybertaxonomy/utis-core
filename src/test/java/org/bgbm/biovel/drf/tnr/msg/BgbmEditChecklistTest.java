@@ -5,11 +5,11 @@ import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
-import org.bgbm.biovel.drf.checklist.BaseChecklistClient.ChecklistInfo;
 import org.bgbm.biovel.drf.checklist.BgbmEditClient;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.input.DRFCSVInputParser;
 import org.bgbm.biovel.drf.input.DRFInputException;
+import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgException;
@@ -22,7 +22,7 @@ public class BgbmEditChecklistTest {
 	private static DRFCSVInputParser parser;
 	private static List<String> nameCompleteList;
 	
-	private static ChecklistInfo ci;
+	private static ServiceProviderInfo ci;
 	
 	@BeforeClass 
 	public static void  setup() {
@@ -37,11 +37,11 @@ public class BgbmEditChecklistTest {
 		nameCompleteList.add("Chelicorophium curvispinum");
 		
 		
-		ci = new ChecklistInfo(BgbmEditClient.ID,
+		ci = new ServiceProviderInfo(BgbmEditClient.ID,
 				BgbmEditClient.LABEL,
 				BgbmEditClient.URL,
 				BgbmEditClient.DATA_AGR_URL);
-		ci.addSubChecklist(new ChecklistInfo("col",
+		ci.addSubChecklist(new ServiceProviderInfo("col",
 				"EDIT - Catalogue Of Life",
 				"http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html",
 				"http://www.catalogueoflife.org/col/info/copyright"));
