@@ -168,7 +168,7 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 							occurrences.append(",");
 
 							if(jsonOccurence.get("altitude") != null) {
-								occurrences.append(CSVUtils.wrapWhenComma(Integer.toString((Integer) jsonOccurence.get("altitude")))); 
+								occurrences.append(CSVUtils.wrapWhenComma(Long.toString((Long) jsonOccurence.get("altitude")))); 
 							} 
 							occurrences.append(",");
 
@@ -178,7 +178,7 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 							occurrences.append(",");
 
 							if(jsonOccurence.get("altitude") != null) {
-								occurrences.append(CSVUtils.wrapWhenComma(Integer.toString((Integer) jsonOccurence.get("altitude"))));  
+								occurrences.append(CSVUtils.wrapWhenComma(Long.toString((Long) jsonOccurence.get("altitude"))));  
 							} 
 							occurrences.append(",");
 
@@ -235,7 +235,7 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 						}
 					}
 					endOfRecords = (Boolean) jsonOccResponse.get("endOfRecords");
-					System.out.println("usageKey : " + usageKey + "count : " + Long.toString((Long) jsonOccResponse.get("count")) + ", offset : " + offset + ",  + occ count : " + count);
+					System.out.println("usageKey : " + usageKey + ", count : " + Long.toString((Long) jsonOccResponse.get("count")) + ", offset : " + offset + ",  + occ count : " + count);
 					offset = offset + Integer.parseInt(MAX_PAGING_LIMIT);
 				} while(!endOfRecords);	
 				System.out.println("occ count : " + count);
