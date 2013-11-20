@@ -87,6 +87,7 @@ public abstract class TaxoRESTClient {
 			Map<String, String> paramMap) {
 		
 		RESTURIBuilder builder = new RESTURIBuilder(getHost().getHostName(),
+					getHost().getPort(),
 					endpointSuffix, 
 					queryKey,
 					paramMap);
@@ -112,6 +113,7 @@ public abstract class TaxoRESTClient {
 			Map<String, String> paramMap) {
 		
 		RESTURIBuilder builder = new RESTURIBuilder(getHost().getHostName(),
+					getHost().getPort(),
 					endpointSuffix, 
 					queryKey,
 					paramMap);
@@ -132,7 +134,7 @@ public abstract class TaxoRESTClient {
 	public URI buildUriFromQueryString(String endpointUrl, 			
 			Map<String, String> paramMap) {
 		
-		RESTURIBuilder builder = new RESTURIBuilder(getHost().getHostName(), endpointUrl, paramMap);
+		RESTURIBuilder builder = new RESTURIBuilder(getHost().getHostName(), getHost().getPort(),endpointUrl, paramMap);
 		
 		URI uri = null;		
 						
