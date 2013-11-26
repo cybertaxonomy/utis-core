@@ -23,7 +23,9 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 	public static final String LABEL = "GBIF Checklist Bank";
 	public static final String URL = "http://uat.gbif.org/developer/species";
 	public static final String DATA_AGR_URL = "http://data.gbif.org/tutorial/datauseagreement";
-	private static final String MAX_PAGING_LIMIT = "1000";
+	//FIXME: the number 300 is set due to a bug in the current GBIF Occurrence Paging API which seems to work 
+	//only when paging 300 records at a time. 
+	private static final String MAX_PAGING_LIMIT = "300";
 	private static final String VERSION = "v0.9";
 	private static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL,VERSION,false);
 
@@ -190,8 +192,8 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 								datasetJsonResponse = datasetCacheMap.get(datasetKey);
 								if(datasetJsonResponse == null) {
 									URI datasetUri = buildUriFromQueryString("/" + CINFO.getVersion() + "/dataset/" + datasetKey, null);
-									String datasetResponse = processRESTService(datasetUri);
-									datasetJsonResponse = (JSONObject) JSONUtils.parseJsonToObject(datasetResponse);
+									String datasetResponse = processRESTService(datasetUri);																	
+									datasetJsonResponse = (JSONObject) JSONUtils.parseJsonToObject(datasetResponse);									
 									datasetCacheMap.put(datasetKey, datasetJsonResponse);
 								}
 							}
@@ -219,14 +221,16 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 							occurrences.append(",");
 
 							if(datasetJsonResponse != null && datasetJsonResponse.get("rights") != null) {
-								occurrences.append(CSVUtils.wrapWhenComma((String) datasetJsonResponse.get("rights"))); 
+								occurrences.append(CSVUtils.wrapWhenComma(((String) datasetJsonResponse.get("rights")).replaceAll("\r\n|\r|\n", " "))); 
+								//System.out.println("rights : " + CSVUtils.wrapWhenComma(((String) datasetJsonResponse.get("rights")).replaceAll("\r\n|\r|\n", " ")));
 							}
 							occurrences.append(",");
 
 							if(datasetJsonResponse != null && datasetJsonResponse.get("citation") != null) {
 								JSONObject citationJson = (JSONObject) datasetJsonResponse.get("citation");
 								if(citationJson.get("text") != null) {
-									occurrences.append(CSVUtils.wrapWhenComma((String) citationJson.get("text"))); 
+									occurrences.append(CSVUtils.wrapWhenComma(((String) citationJson.get("text")).replaceAll("\r\n|\r|\n", " "))); 
+									
 								}						
 							}																				
 							occurrences.append(System.getProperty("line.separator"));
