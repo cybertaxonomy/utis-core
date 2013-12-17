@@ -56,8 +56,8 @@ public class BgbmEditChecklistTest {
 	@Test
 	public void nameCompleteTest() throws DRFChecklistException, DRFInputException, JAXBException, TnrMsgException {
 		parser = new DRFCSVInputParser();
-		List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/nameCompleteOnly.csv","UTF-8"));
-		//List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/singleNameCompleteOnly.csv","UTF-8"));
+		List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/vibrant.csv","UTF-8"));
+		//List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/nameCompleteOnly.csv","UTF-8"));		
 		TnrMsg tnrMsg = TnrMsgUtils.mergeTnrMsgs(tnrMsgs);
 		BgbmEditClient bec = new BgbmEditClient(JSONUtils.convertObjectToJson(ci));
 

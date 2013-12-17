@@ -20,6 +20,12 @@ import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+
 public class GBIFOccurrencesTest {
 	private static DRFCSVInputParser parser;
 	private static List<String> nameCompleteList;
@@ -27,19 +33,11 @@ public class GBIFOccurrencesTest {
 	private static ServiceProviderInfo ci;
 	
 	@BeforeClass 
-	public static void  setup() {
-				
+	public static void  setup() {				
 		nameCompleteList = new ArrayList<String>();
-		//nameCompleteList.add("Ameira divagans");
-		//nameCompleteList.add("Boccardiella ligerica");
-		//nameCompleteList.add("Coscinodiscus wailesii");
-		//nameCompleteList.add("Caprella mutica‬");
-		//nameCompleteList.add("Caprella mutica Schurin, 1935");
-		nameCompleteList.add("Foo bar");
-//		nameCompleteList.add("Bougainvillia rugosa");
-//		nameCompleteList.add("Branchiura sowerbyi");
-//		nameCompleteList.add("Cercopagis pengoi");
-//		nameCompleteList.add("Chelicorophium curvispinum");
+		nameCompleteList.add("Ameira divagans");
+		nameCompleteList.add("Boccardiella ligerica");
+		nameCompleteList.add("Coscinodiscus wailesii");
 			
 	}
 	
@@ -50,9 +48,23 @@ public class GBIFOccurrencesTest {
 	}
 	
 	@Test
-	public void getOccurrencesTest() throws DRFChecklistException {
+	public void getOccurrencesTest() throws DRFChecklistException, IOException {
 		GBIFOccurrencesClient goc = new GBIFOccurrencesClient();
 		String occurrences = goc.queryOccurrenceBank(nameCompleteList);
-		System.out.println("occurrences : " + occurrences);
+		//System.out.println("occurrences : " + occurrences);
+/*		File file = new File("/home/cmathew/Temp/AchilleaMillefolium/occurrences.txt");
+		 
+		// if file doesnt exists, then create it
+		if (!file.exists()) {
+			file.createNewFile();
+		}
+
+		FileWriter fw = new FileWriter(file.getAbsoluteFile());
+		BufferedWriter bw = new BufferedWriter(fw);
+		bw.write(occurrences);
+		bw.close();*/
+
+		System.out.println("Done");
+		
 	}
 }

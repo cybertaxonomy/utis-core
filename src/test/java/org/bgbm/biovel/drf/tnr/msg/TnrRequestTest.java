@@ -30,11 +30,14 @@ public class TnrRequestTest {
 		nameCompleteList = new ArrayList<String>();
 		nameCompleteList.add("Abies pardei");
 		nameCompleteList.add("Ameira divagans");
-		nameCompleteList.add("Boccardi redeki");
+		nameCompleteList.add("Boccardiella ligerica");
 		nameCompleteList.add("Bougainvillia rugosa");
 		nameCompleteList.add("Branchiura sowerbyi");
 		nameCompleteList.add("Cercopagis pengoi");
 		nameCompleteList.add("Chelicorophium curvispinum");
+		nameCompleteList.add("Chalcis biguttata");
+
+
 	}	
 	
 	@Test
