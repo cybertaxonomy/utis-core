@@ -20,11 +20,10 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 
 
 	public static final String ID = "gbif";
-	public static final String LABEL = "GBIF Checklist Bank";
+	public static final String LABEL = "GBIF Occurrence Bank";
 	public static final String URL = "http://uat.gbif.org/developer/species";
 	public static final String DATA_AGR_URL = "http://data.gbif.org/tutorial/datauseagreement";
-	//FIXME: the number 300 is set due to a bug in the current GBIF Occurrence Paging API which seems to work 
-	//only when paging 300 records at a time. 
+	// in v0.9 the max limit is 300
 	private static final String MAX_PAGING_LIMIT = "300";
 	private static final String VERSION = "v0.9";
 	private static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL,VERSION,false);
@@ -47,7 +46,7 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 
 
 	@Override
-	protected ServiceProviderInfo buildServiceProviderInfo() {
+	public ServiceProviderInfo buildServiceProviderInfo() {
 		ServiceProviderInfo ocbankInfo = CINFO;
 		setChecklistInfo(ocbankInfo);
 		return ocbankInfo;
