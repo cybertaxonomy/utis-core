@@ -16,8 +16,10 @@ import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgException;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class GBIFBetaChecklistTest {
 
 	private static DRFCSVInputParser parser;

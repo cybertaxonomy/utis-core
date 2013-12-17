@@ -52,6 +52,21 @@ public class GBIFChecklistTest {
 	}
 	
 	@Test
+	public void buildServiceProviderInfo() throws DRFChecklistException {
+		GBIFBackboneClient gbc =  new GBIFBackboneClient();
+		ServiceProviderInfo spiInfo = gbc.buildServiceProviderInfo();
+		List<ServiceProviderInfo> spiList = spiInfo.getSubChecklists();
+		Iterator<ServiceProviderInfo> spiItr = spiList.iterator();
+		while(spiItr.hasNext()) {
+			ServiceProviderInfo spi = spiItr.next();
+			System.out.println("Dataset : " + spi.getLabel() );
+		}
+		String checklistInfoJson = JSONUtils.convertObjectToJson(spiInfo);
+		System.out.println("Json : " + checklistInfoJson);
+		
+	}
+	
+	@Test
 	public void nameCompleteTest() throws DRFChecklistException, DRFInputException, JAXBException, TnrMsgException {
 		parser = new DRFCSVInputParser();
 		List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/nameCompleteOnly.csv","UTF-8"));
