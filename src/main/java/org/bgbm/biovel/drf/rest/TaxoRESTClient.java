@@ -5,6 +5,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +35,7 @@ public abstract class TaxoRESTClient {
 		setChecklistInfo(JSONUtils.convertJsonToObject(checklistInfoJson, BaseChecklistClient.ServiceProviderInfo.class));
 	}
 	
-	protected abstract ServiceProviderInfo buildServiceProviderInfo();
+	public abstract ServiceProviderInfo buildServiceProviderInfo();
 	
 	public ServiceProviderInfo getServiceProviderInfo() {
 		return spInfo;
@@ -215,6 +217,9 @@ public static class ServiceProviderInfo {
 		}
 		
 		public List<ServiceProviderInfo> getSubChecklists() {
+			if(subChecklists != null && subChecklists.size() > 0) { 
+				Collections.sort(subChecklists,new ServiceProviderInfoComparator());
+			}
 			return subChecklists;
 		}
 		
@@ -225,7 +230,13 @@ public static class ServiceProviderInfo {
 			return new ServiceProviderInfo(ciArray[0],ciArray[1],ciArray[2],ciArray[3]);
 		}
 
-		
+		public class ServiceProviderInfoComparator implements Comparator<ServiceProviderInfo> {
+			  @Override
+			  public int compare(ServiceProviderInfo spia, ServiceProviderInfo spib) {
+				  return spia.getLabel().compareTo(spib.getLabel());
+			  }
+
+			}
 			
 	}
 

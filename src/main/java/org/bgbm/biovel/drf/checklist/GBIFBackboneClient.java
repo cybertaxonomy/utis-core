@@ -51,7 +51,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 
 	
 	@Override
-	protected ServiceProviderInfo buildServiceProviderInfo() {
+	public ServiceProviderInfo buildServiceProviderInfo() {
 		ServiceProviderInfo checklistInfo = CINFO;
 		int offset = 0;
 		
@@ -78,6 +78,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 					JSONObject result = itrResults.next();
 					String key = (String)result.get("key");
 					String title = (String)result.get("title");
+					
 					String url =  "http://uat.gbif.org/dataset/" + key;
 					checklistInfo.addSubChecklist(new ServiceProviderInfo(key, title,  url, DATA_AGR_URL));
 				}

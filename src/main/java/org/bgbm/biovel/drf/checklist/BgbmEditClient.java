@@ -54,7 +54,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
 	
 	@Override
-	protected ServiceProviderInfo buildServiceProviderInfo() {
+	public ServiceProviderInfo buildServiceProviderInfo() {
 		ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL);
 		checklistInfo.addSubChecklist(new ServiceProviderInfo("col",
 				"EDIT - Catalogue Of Life",
