@@ -42,7 +42,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.4</version>
+			<version>4.11</version>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
@@ -64,36 +64,46 @@
 			<artifactId>axis</artifactId>
 			<version>1.4</version>
 		</dependency>
-        <dependency>
+		<dependency>
 			<groupId>commons-discovery</groupId>
 			<artifactId>commons-discovery</artifactId>
 			<version>0.5</version>
-		</dependency>    
-<!-- 		<dependency> -->
-<!-- 			<groupId>javax.xml</groupId> -->
-<!-- 			<artifactId>jaxrpc-api</artifactId> -->
-<!-- 			<version>1.1</version> -->
-<!-- 		</dependency> -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>javax.xml.soap</groupId> -->
-<!-- 			<artifactId>saaj-api</artifactId> -->
-<!-- 			<version>1.3.5</version> -->
-<!-- 		</dependency> -->
-<!--         <dependency> -->
-<!-- 			<groupId>wsdl4j</groupId> -->
-<!-- 			<artifactId>wsdl4j</artifactId> -->
-<!-- 			<version>1.6.3</version> -->
-<!-- 		</dependency> -->
-<!--         <dependency> -->
-<!-- 			<groupId>org.apache.geronimo.specs</groupId> -->
-<!-- 			<artifactId>geronimo-activation_1.1_spec</artifactId> -->
-<!-- 			<version>1.1</version> -->
-<!-- 		</dependency>      -->
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpmime</artifactId>
+			<version>4.3.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.3.2</version>
+		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>javax.xml</groupId> -->
+		<!-- <artifactId>jaxrpc-api</artifactId> -->
+		<!-- <version>1.1</version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId>javax.xml.soap</groupId> -->
+		<!-- <artifactId>saaj-api</artifactId> -->
+		<!-- <version>1.3.5</version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId>wsdl4j</groupId> -->
+		<!-- <artifactId>wsdl4j</artifactId> -->
+		<!-- <version>1.6.3</version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId>org.apache.geronimo.specs</groupId> -->
+		<!-- <artifactId>geronimo-activation_1.1_spec</artifactId> -->
+		<!-- <version>1.1</version> -->
+		<!-- </dependency> -->
 		<dependency>
 			<groupId>javax.mail</groupId>
 			<artifactId>mail</artifactId>
 			<version>1.4.7</version>
-		</dependency>               
+		</dependency>
 	</dependencies>
 
 	<pluginRepositories>
@@ -203,7 +213,7 @@
 	</build>
 	<!-- The location of your plugin site -->
 	<distributionManagement>
-		<repository>			
+		<repository>
 			<id>wp5.e-taxonomy.eu</id>
 			<name>Edit Maven Repository</name>
 			<url>scpexe://wp5.e-taxonomy.eu/var/www/wp5.e-taxonomy.eu/mavenrepo/</url>

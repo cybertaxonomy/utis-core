@@ -42,6 +42,10 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
 		super(checklistInfoJson);
 	}	
 	
+	public BaseChecklistClient(ServiceProviderInfo spInfo) throws DRFChecklistException {
+		super(spInfo);
+	}	
+	
 	public void queryChecklist(TnrMsg tnrMsg) throws DRFChecklistException {								
 		resolveNames(tnrMsg);					
 	}

@@ -25,8 +25,11 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.bgbm.biovel.drf.tnr.msg.NameType;
+import org.bgbm.biovel.drf.tnr.msg.TaxonNameType;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
+import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query.TnrRequest;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -142,6 +145,32 @@ public class TnrMsgUtils {
 			return finalTnrMsgList;
 		}
 		
+		public static TnrMsg convertStringToTnrMsg(String name) {
+			TnrMsg tnrMsg = new TnrMsg();
+			Query query = new Query();
+			TnrRequest request = new TnrRequest();
+			TaxonNameType tnameType = new TaxonNameType();
+			NameType nameType = new NameType();
+			nameType.setNameComplete(name);
+			
+			tnameType.setName(nameType);
+			request.setTaxonName(tnameType);
+			query.setTnrRequest(request);
+			tnrMsg.getQuery().add(query);
+					
+			return tnrMsg;
+		}
+		
+		public static List<TnrMsg> convertStringListToTnrMsgList(List<String> names) {
+			List<TnrMsg> tnrMsgList = new ArrayList<TnrMsg>();
+			Iterator<String> itrStringMsg = names.iterator();
+			while(itrStringMsg.hasNext()) {
+				TnrMsg tnrMsg = convertStringToTnrMsg(itrStringMsg.next());
+				tnrMsgList.add(tnrMsg);
+			}
+			return tnrMsgList;
+		}
+		
 		public static TnrMsg mergeTnrMsgs(List<TnrMsg> tnrMsgs) {
 			Map<String,Query> nameQueryMap = new HashMap<String,Query>();
 			Iterator<TnrMsg> itrTnrMsg = tnrMsgs.iterator();
@@ -167,6 +196,8 @@ public class TnrMsgUtils {
 		public static TnrMsg mergeTnrXMLList(List<String> xmlMsgs) throws JAXBException {
 			return mergeTnrMsgs(convertXMLListToTnrMsgList(xmlMsgs));
 		}
+		
+
 		
 
 }

@@ -11,4 +11,8 @@ public abstract class AggregateChecklistClient extends BaseChecklistClient {
 		super(checklistInfoJson);			
 	}	
 	
+	public AggregateChecklistClient(ServiceProviderInfo spiInfo) throws DRFChecklistException {	
+		super(spiInfo);			
+	}	
+	
 }

@@ -43,6 +43,10 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 		super(checklistInfoJson);
 	}
 	
+	public GBIFBackboneClient(ServiceProviderInfo spInfo) throws DRFChecklistException {
+		super(spInfo);
+	}
+	
 	@Override
 	public HttpHost getHost() {
 		// TODO Auto-generated method stub

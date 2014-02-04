@@ -35,6 +35,10 @@ public abstract class TaxoRESTClient {
 		setChecklistInfo(JSONUtils.convertJsonToObject(checklistInfoJson, BaseChecklistClient.ServiceProviderInfo.class));
 	}
 	
+	public TaxoRESTClient(ServiceProviderInfo spInfo) throws DRFChecklistException {
+		setChecklistInfo(spInfo);
+	}
+	
 	public abstract ServiceProviderInfo buildServiceProviderInfo();
 	
 	public ServiceProviderInfo getServiceProviderInfo() {
