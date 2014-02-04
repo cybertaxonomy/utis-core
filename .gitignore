@@ -1,0 +1,4 @@
+# Build and Release Folders
+target/
+taverna-plugin/target/
+.settings/
