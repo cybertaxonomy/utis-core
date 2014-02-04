@@ -1,4 +1,4 @@
-package org.bgbm.biovel.drf.occret;
+package org.bgbm.biovel.drf.occurrences;
 
 import java.util.ArrayList;
 import java.util.Iterator;

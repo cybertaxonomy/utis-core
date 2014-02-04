@@ -1,7 +1,10 @@
 package org.bgbm.biovel.drf.occurrences;
 
 import java.net.URI;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -129,14 +132,25 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 							} 
 							occurrences.append(",");
 
-							if(jsonOccurence.get("occurrencesDate") != null) {
-								occurrences.append(CSVUtils.wrapWhenComma((String) jsonOccurence.get("occurrencesDate"))); 
+							String formattedDate = "";
+							if(jsonOccurence.get("occurrenceDate") != null) {
+								String strDate = (String) jsonOccurence.get("occurrenceDate");								
+						        SimpleDateFormat gbifFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+						        SimpleDateFormat biovelFormatter = new SimpleDateFormat("yyyy-MM-dd");
+						        
+								try {
+									Date date = gbifFormatter.parse(strDate);
+									formattedDate = biovelFormatter.format(date);
+								} catch (ParseException e) {
+									formattedDate = "";
+								}
+								occurrences.append(CSVUtils.wrapWhenComma(formattedDate)); 												       
 							} 
 							occurrences.append(",");
 
 
-							if(jsonOccurence.get("occurrencesDate") != null) {
-								occurrences.append(CSVUtils.wrapWhenComma((String) jsonOccurence.get("occurrencesDate"))); 
+							if(jsonOccurence.get("occurrenceDate") != null) {
+								occurrences.append(CSVUtils.wrapWhenComma(formattedDate)); 
 							} 
 							occurrences.append(",");
 
