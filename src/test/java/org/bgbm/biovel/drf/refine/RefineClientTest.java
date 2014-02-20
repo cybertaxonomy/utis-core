@@ -7,9 +7,11 @@ import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+@Ignore
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RefineClientTest {
 	private static RefineClient refineClient;
