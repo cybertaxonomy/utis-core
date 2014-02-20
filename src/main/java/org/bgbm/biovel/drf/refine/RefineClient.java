@@ -65,7 +65,8 @@ public class RefineClient {
 					"Content-Disposition: form-data; name=\"upload\"; filename=\"dcinput.txt\"" + lineEnding +
 					"Content-Type: text/plain" + lineEnding + lineEnding;
 			String endStr = lineEnding + "--" + boundary + "--";
-			String inputBody = beginStr + csvData.replaceAll(System.getProperty("line.separator"),"\r\n") + endStr;
+			//String inputBody = beginStr + csvData.replaceAll(System.getProperty("line.separator"),"\r\n") + endStr;
+			String inputBody = beginStr + csvData + endStr;
 			
 			meBuilder.addBinaryBody("input", inputBody.getBytes());
 			
@@ -130,7 +131,7 @@ public class RefineClient {
 		headers.add(new BasicHeader("Content-Type","application/x-www-form-urlencoded"));
 		headers.add(new BasicHeader("Accept","application/json"));
 		
-		String options = "options={\"encoding\":\"\",\"separator\":\",\",\"ignoreLines\":-1,\"headerLines\":1,\"skipDataLines\":0,\"limit\":-1,\"storeBlankRows\":true,\"guessCellValueTypes\":true,\"processQuotes\":true,\"storeBlankCellsAsNulls\":true,\"includeFileSources\":false,\"projectName\":\"" + jobID + "\"}";
+		String options = "options={\"encoding\":\"\",\"separator\":\",\",\"ignoreLines\":-1,\"headerLines\":1,\"skipDataLines\":0,\"limit\":-1,\"storeBlankRows\":false,\"guessCellValueTypes\":true,\"processQuotes\":true,\"storeBlankCellsAsNulls\":true,\"includeFileSources\":false,\"projectName\":\"" + jobID + "\"}";
 		
 		URIBuilder uriBuilder = getURIBuilder(server,port,"/command/core/importing-controller");		
 		uriBuilder.setParameter("controller","core/default-importing-controller");
@@ -147,7 +148,7 @@ public class RefineClient {
 		headers.add(new BasicHeader("Content-Type","application/x-www-form-urlencoded"));
 		headers.add(new BasicHeader("Accept","application/json"));
 
-		String options = "options={\"encoding\":\"\",\"separator\":\",\",\"ignoreLines\":-1,\"headerLines\":1,\"skipDataLines\":0,\"limit\":-1,\"storeBlankRows\":true,\"guessCellValueTypes\":true,\"processQuotes\":true,\"storeBlankCellsAsNulls\":true,\"includeFileSources\":false,\"projectName\":\"" + jobID + "\"}";
+		String options = "options={\"encoding\":\"\",\"separator\":\",\",\"ignoreLines\":-1,\"headerLines\":1,\"skipDataLines\":0,\"limit\":-1,\"storeBlankRows\":false,\"guessCellValueTypes\":true,\"processQuotes\":true,\"storeBlankCellsAsNulls\":true,\"includeFileSources\":false,\"projectName\":\"" + jobID + "\"}";
 		
 		URIBuilder uriBuilder = getURIBuilder(server,port,"/command/core/importing-controller");		
 		uriBuilder.setParameter("controller","core/default-importing-controller");
@@ -267,4 +268,6 @@ public class RefineClient {
 		
 		return uriBuilder;
 	}
+	
+
 }
