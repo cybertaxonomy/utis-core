@@ -37,7 +37,7 @@ public class GBIFOccurrencesTest {
 		nameCompleteList = new ArrayList<String>();
 		nameCompleteList.add("Ameira divagans");
 		nameCompleteList.add("Boccardiella ligerica");
-		nameCompleteList.add("Coscinodiscus wailesii");
+		//nameCompleteList.add("Coscinodiscus wailesii");
 			
 	}
 	

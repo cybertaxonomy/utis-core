@@ -4,7 +4,7 @@
 	<artifactId>biovel-drf-taverna</artifactId>
 	<packaging>taverna-plugin</packaging>
 	<name>Biovel DRF Taverna plugin</name>
-	<version>1.0.3-SNAPSHOT</version>
+	<version>1.0.3</version>
 	<description>Handles dependencies for the Biovel</description>
 
 	<!-- The repository that your jars are deployed to -->

@@ -63,7 +63,7 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 		JSONObject nameJsonResponse = (JSONObject) JSONUtils.parseJsonToObject(nameResponse);
 		StringBuilder occurrences = new StringBuilder();
 		if(nameJsonResponse.get("usageKey") != null) {
-			String usageKey = Long.toString((Long) nameJsonResponse.get("usageKey"));
+			String usageKey = String.valueOf(nameJsonResponse.get("usageKey"));
 
 			if(!nameidList.contains(usageKey)) {
 				nameidList.add(usageKey);
@@ -118,17 +118,17 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 							occurrences.append(",");
 
 							if(jsonOccurence.get("key") != null) {
-								occurrences.append(CSVUtils.wrapWhenComma(Long.toString((Long) jsonOccurence.get("key")))); 
+								occurrences.append(CSVUtils.wrapWhenComma(String.valueOf(jsonOccurence.get("key")))); 
 							} 
 							occurrences.append(",");
 
-							if(jsonOccurence.get("latitude") != null) {
-								occurrences.append(CSVUtils.wrapWhenComma(Double.toString((Double) jsonOccurence.get("latitude")))); 
+							if(jsonOccurence.get("decimalLatitude") != null) {
+								occurrences.append(CSVUtils.wrapWhenComma(String.valueOf(jsonOccurence.get("decimalLatitude")))); 
 							} 
 							occurrences.append(",");
 
-							if(jsonOccurence.get("longitude") != null) {
-								occurrences.append(CSVUtils.wrapWhenComma(Double.toString((Double) jsonOccurence.get("longitude")))); 
+							if(jsonOccurence.get("decimalLongitude") != null) {
+								occurrences.append(CSVUtils.wrapWhenComma(String.valueOf(jsonOccurence.get("decimalLongitude")))); 
 							} 
 							occurrences.append(",");
 
@@ -178,22 +178,24 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 							occurrences.append(",");
 
 							if(jsonOccurence.get("depth") != null) {
-								occurrences.append(CSVUtils.wrapWhenComma(Long.toString((Long) jsonOccurence.get("depth")))); 
+								occurrences.append(CSVUtils.wrapWhenComma(String.valueOf(jsonOccurence.get("depth")))); 
 							} 
 							occurrences.append(",");
 
 							if(jsonOccurence.get("altitude") != null) {
-								occurrences.append(CSVUtils.wrapWhenComma(Long.toString((Long) jsonOccurence.get("altitude")))); 
+								occurrences.append(CSVUtils.wrapWhenComma(String.valueOf(jsonOccurence.get("altitude")))); 
 							} 
 							occurrences.append(",");
 
 							if(jsonOccurence.get("depth") != null) {
-								occurrences.append(CSVUtils.wrapWhenComma(Long.toString((Long) jsonOccurence.get("depth")))); 
+								String depth = CSVUtils.wrapWhenComma(String.valueOf(jsonOccurence.get("depth")));
+								occurrences.append(depth); 
+								System.out.println("depth : " + depth);
 							} 
 							occurrences.append(",");
 
 							if(jsonOccurence.get("altitude") != null) {
-								occurrences.append(CSVUtils.wrapWhenComma(Long.toString((Long) jsonOccurence.get("altitude"))));  
+								occurrences.append(CSVUtils.wrapWhenComma(String.valueOf(jsonOccurence.get("altitude"))));  
 							} 
 							occurrences.append(",");
 
@@ -252,7 +254,7 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 						}
 					}
 					endOfRecords = (Boolean) jsonOccResponse.get("endOfRecords");
-					System.out.println("usageKey : " + usageKey + ", count : " + Long.toString((Long) jsonOccResponse.get("count")) + ", offset : " + offset + ",  + occ count : " + count);
+					System.out.println("usageKey : " + usageKey + ", count : " + String.valueOf(jsonOccResponse.get("count")) + ", offset : " + offset + ",  + occ count : " + count);
 					offset = offset + Integer.parseInt(MAX_PAGING_LIMIT);
 				} while(!endOfRecords);	
 				System.out.println("occ count : " + count);
