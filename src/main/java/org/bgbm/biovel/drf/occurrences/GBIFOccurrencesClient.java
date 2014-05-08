@@ -133,25 +133,31 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
 							occurrences.append(",");
 
 							String formattedDate = "";
+					        SimpleDateFormat gbifFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+					        SimpleDateFormat biovelFormatter = new SimpleDateFormat("yyyy-MM-dd");
+					        
 							if(jsonOccurence.get("occurrenceDate") != null) {
 								String strDate = (String) jsonOccurence.get("occurrenceDate");								
-						        SimpleDateFormat gbifFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-						        SimpleDateFormat biovelFormatter = new SimpleDateFormat("yyyy-MM-dd");
-						        
 								try {
 									Date date = gbifFormatter.parse(strDate);
 									formattedDate = biovelFormatter.format(date);
 								} catch (ParseException e) {
 									formattedDate = "";
-								}
-								occurrences.append(CSVUtils.wrapWhenComma(formattedDate)); 												       
-							} 
+								}															       
+							} else if((jsonOccurence.get("year") != null) && (jsonOccurence.get("month") != null) && (jsonOccurence.get("day") != null)) {
+								String year = String.valueOf(jsonOccurence.get("year"));
+								String month = String.valueOf(jsonOccurence.get("month"));
+								String day = String.valueOf(jsonOccurence.get("day"));
+								formattedDate = year + "-" + month + "-" + day;
+								System.out.println("date : " + formattedDate);
+							}
+							occurrences.append(CSVUtils.wrapWhenComma(formattedDate)); 					
 							occurrences.append(",");
 
 
-							if(jsonOccurence.get("occurrenceDate") != null) {
+							//if(jsonOccurence.get("occurrenceDate") != null) {
 								occurrences.append(CSVUtils.wrapWhenComma(formattedDate)); 
-							} 
+							//} 
 							occurrences.append(",");
 
 

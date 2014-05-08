@@ -11,7 +11,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-@Ignore
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RefineClientTest {
 	private static RefineClient refineClient;
@@ -54,10 +54,13 @@ public class RefineClientTest {
 		
 		System.out.println("checking project creation");
 		String projectID = refineClient.checkCreateProjectStatus(jobID);
+		
+		String data = refineClient.exportData(projectID);
+		System.out.println(data);
+		
 		if(projectID != null) {
 			System.out.println("deleting project id : " + projectID);
-			refineClient.deleteProject(projectID);
-			
+			refineClient.deleteProject(projectID);			
 		}				
 	}
 	

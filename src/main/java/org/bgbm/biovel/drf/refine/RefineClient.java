@@ -204,6 +204,18 @@ public class RefineClient {
 		
 	}
 	
+	public String exportData(String projectID) throws RefineException, IOException, URISyntaxException {
+		List<Header> headers = new ArrayList<Header>();
+		headers.add(new BasicHeader("Content-Type","application/x-www-form-urlencoded"));
+		headers.add(new BasicHeader("Accept","text/html"));		
+		URIBuilder uriBuilder = getURIBuilder(server,port,"/command/core/export-rows/" + projectID + ".csv");		
+
+		uriBuilder.setParameter("project", projectID);
+		uriBuilder.setParameter("engine","{\"facets\":[],\"mode\":\"row-based\"}");		
+		uriBuilder.setParameter("format","csv");
+		return  callCoreRefineService(uriBuilder.build(),headers,null);		
+	}
+	
 	public String callCoreRefineService(URI uri,
 			List<Header> headers,
 			HttpEntity reqEntity) throws IOException {

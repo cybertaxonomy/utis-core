@@ -2,7 +2,7 @@
 
 if [ $# -eq 0 ]
   then
-    echo "Release version not provided"
+    echo "drf-webui Release version not provided"
 fi
 
 version=$1

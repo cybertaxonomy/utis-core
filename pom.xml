@@ -3,7 +3,7 @@
 	<groupId>biovel.drf</groupId>
 	<artifactId>drf-workflow</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0.3</version>
+	<version>1.0.4-SNAPSHOT</version>
 	<name>drf-workflow</name>
 	<url>http://maven.apache.org</url>
 	<repositories>
