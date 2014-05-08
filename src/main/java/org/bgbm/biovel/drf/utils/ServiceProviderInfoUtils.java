@@ -12,6 +12,7 @@ import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.GBIFBackboneClient;
 import org.bgbm.biovel.drf.checklist.PESIClient;
 import org.bgbm.biovel.drf.checklist.Species2000ColClient;
+import org.bgbm.biovel.drf.checklist.WoRMSClient;
 import org.bgbm.biovel.drf.occurrences.GBIFOccurrencesClient;
 import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
 
@@ -27,11 +28,11 @@ public class ServiceProviderInfoUtils {
 		PESIClient pesi = new PESIClient();
 		cilist.add(pesi.getServiceProviderInfo());
 		
-		BgbmEditClient bec = new BgbmEditClient();
-		cilist.add(bec.getServiceProviderInfo());
+		WoRMSClient worms = new WoRMSClient();
+		cilist.add(worms.getServiceProviderInfo());
 		
-//		GBIFBetaBackboneClient gbc = new GBIFBetaBackboneClient();
-//		cilist.add(gbc.getChecklistInfo());
+		BgbmEditClient bec = new BgbmEditClient();
+		cilist.add(bec.getServiceProviderInfo());		
 		
 		GBIFBackboneClient gbc = new GBIFBackboneClient();
 		cilist.add(gbc.getServiceProviderInfo());
@@ -86,6 +87,12 @@ public class ServiceProviderInfoUtils {
 								PESIClient.LABEL,
 								PESIClient.URL,
 								PESIClient.DATA_AGR_URL);
+					}
+					if(key.equals(WoRMSClient.ID)) {
+						ci = new ServiceProviderInfo(WoRMSClient.ID,
+								WoRMSClient.LABEL,
+								WoRMSClient.URL,
+								WoRMSClient.DATA_AGR_URL);
 					}
 					if(ci != null) {
 						ciMap.put(key, ci);
