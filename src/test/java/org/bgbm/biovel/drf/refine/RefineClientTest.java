@@ -7,7 +7,6 @@ import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
@@ -20,7 +19,7 @@ public class RefineClientTest {
 	
 	@BeforeClass 
 	public static void setup() {
-		refineClient = new RefineClient("127.0.0.1","3333");
+		refineClient = new RefineClient("90.147.102.41","80");
 		csvData = "cola,colb,colc" + System.getProperty("line.separator") +
 				"vala1,valb1,valc1" + System.getProperty("line.separator") +
 				"vala2,valb2,valc2";
