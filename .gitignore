@@ -2,5 +2,5 @@
 target/
 taverna-plugin/target/
 .settings/
-#.classpath
-#.project
+.classpath
+.project
