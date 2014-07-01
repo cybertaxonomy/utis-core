@@ -19,7 +19,7 @@ public class ChecklistTest {
 	
 	@Test
 	public void generateChecklistInfoList() throws DRFChecklistException {
-		String checklistInfoListJson = ServiceProviderInfoUtils.generateChecklistInfoList();
+		String checklistInfoListJson = ServiceProviderInfoUtils.generateChecklistInfoListAsJson();
 		System.out.println("Json : " + checklistInfoListJson);
 	}
 	
