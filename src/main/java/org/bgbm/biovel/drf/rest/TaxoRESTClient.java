@@ -62,13 +62,13 @@ public abstract class TaxoRESTClient {
         HttpGet request = new HttpGet(uri);
 
         try {
-            System.out.println(">> Request URI: " + request.getRequestLine().getUri());
+//            System.out.println(">> Request URI: " + request.getRequestLine().getUri());
             HttpResponse response = client.execute(request);
 
             String strResponse = EntityUtils.toString(response.getEntity(),Charset.forName("UTF-8"));
-            System.out.println("<< Response: " + response.getStatusLine());
-            System.out.println(strResponse);
-            System.out.println("==============");
+//            System.out.println("<< Response: " + response.getStatusLine());
+//            System.out.println(strResponse);
+//            System.out.println("==============");
 
             return strResponse;
         } catch (ClientProtocolException e1) {
