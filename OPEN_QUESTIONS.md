@@ -1,7 +1,14 @@
 Open Questions
 ========================
 
+TODO
+-------
+
+add xs:documentation to the XML Schema file so that xjc can add them as java doc comments
+
 tnrMesg schema
 ------------------------
 
-1. what is the meaning of nameStatus. I think it should be nomenclatorical status but it is mappes wrong in the BgbmEditClient since it holds information like 'synonym' which is not avalid name status
+1. rename the field NameType.nameStatus to taxonStatus since it will contain information like "Synonym", "Misapplied", "Accepted"
+
+
