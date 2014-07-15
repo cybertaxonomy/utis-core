@@ -193,7 +193,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
         NameParser ecatParser = new NameParser();
         String nameCanonical = ecatParser.parseToCanonical(resName);
         name.setNameCanonical(nameCanonical);
-        name.setNameStatus((String)taxon.get("taxonStatus"));
+        name.setTaxonStatus((String)taxon.get("taxonStatus"));
 
         taxonName.setRank((String) taxon.get("rank"));
         taxonName.setName(name);
@@ -254,7 +254,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
                 NameParser ecatParser = new NameParser();
                 String nameCanonical = ecatParser.parseToCanonical(resName);
                 name.setNameCanonical(nameCanonical);
-                name.setNameStatus((String)synonymjs.get("taxonStatus"));
+                name.setTaxonStatus((String)synonymjs.get("taxonStatus"));
 
                 taxonName.setRank((String) synonymjs.get("rank"));
                 taxonName.setName(name);

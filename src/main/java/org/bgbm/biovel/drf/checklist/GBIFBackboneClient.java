@@ -219,7 +219,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 		name.setNameComplete(resName);
 
 		name.setNameCanonical((String) taxon.get("canonicalName"));
-		name.setNameStatus((String)taxon.get("taxonomicStatus"));
+		name.setTaxonStatus((String)taxon.get("taxonomicStatus"));
 		
 		taxonName.setRank((String) taxon.get("rank"));
 		
@@ -285,7 +285,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 			name.setNameComplete(resName);
 			
 			name.setNameCanonical((String) synonymjs.get("canonicalName"));
-			name.setNameStatus((String)synonymjs.get("taxonomicStatus"));
+			name.setTaxonStatus((String)synonymjs.get("taxonomicStatus"));
 			
 			taxonName.setRank((String) synonymjs.get("rank"));
 			taxonName.setAuthorship((String) synonymjs.get("authorship"));
