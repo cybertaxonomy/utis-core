@@ -10,6 +10,13 @@ BioVeL is funded by the European Commission 7th Framework Programme (FP7), throu
 Installation
 ============
 
+Compiling
+============
+
+compiling the schema:
+
+ xjc -d src/main/java  src/main/resources/org/bgbm/biovel/drf/tnr/tnrmsg.xsd
+
 
 
 Third-Party Dependencies

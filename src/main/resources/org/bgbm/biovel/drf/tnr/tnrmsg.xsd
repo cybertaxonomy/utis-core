@@ -87,11 +87,13 @@
       </xsd:element>
       <xsd:element name="atomisedName" type="tns:atomisedNameType"
         minOccurs="0"></xsd:element>
-      <xsd:element name="taxonStatus" minOccurs="0">
+      <xsd:element name="taxonomicStatus" minOccurs="0">
         <xsd:annotation>
           <xsd:appinfo>
             <jxb:property>
-              <jxb:javadoc>The taxonomic status string like "Synonym", "Misapplied", "Accepted"</jxb:javadoc>
+              <jxb:javadoc>
+                The taxonomic status string like  "invalid", "misapplied", "homotypic synonym", "accepted", "synonym".
+                See also http://rs.tdwg.org/dwc/terms/taxonomicStatus</jxb:javadoc>
             </jxb:property>
           </xsd:appinfo>
         </xsd:annotation>

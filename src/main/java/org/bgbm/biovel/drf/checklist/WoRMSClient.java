@@ -143,7 +143,7 @@ public class WoRMSClient extends BaseChecklistClient {
         name.setNameComplete(resName + " " + taxon.getAuthority());
 
         name.setNameCanonical(resName);
-        name.setTaxonStatus(taxon.getStatus());
+        name.setTaxonomicStatus(taxon.getStatus());
 
         taxonName.setRank(taxon.getRank());
         taxonName.setAuthorship(taxon.getAuthority());
@@ -203,7 +203,7 @@ public class WoRMSClient extends BaseChecklistClient {
             name.setNameComplete(resName + " " + synRecord.getAuthority());
 
             name.setNameCanonical(resName);
-            name.setTaxonStatus(synRecord.getStatus());
+            name.setTaxonomicStatus(synRecord.getStatus());
 
             taxonName.setRank(synRecord.getRank());
             taxonName.setAuthorship(synRecord.getAuthority());
