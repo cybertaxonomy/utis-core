@@ -16,7 +16,7 @@
               <xsd:element name="tnrRequest">
                 <xsd:complexType>
                   <xsd:sequence>
-                    <xsd:element name="taxonName" type="tns:taxonNameType">
+                    <xsd:element name="taxonName" type="tns:taxonName">
                     </xsd:element>
                   </xsd:sequence>
                 </xsd:complexType>
@@ -30,7 +30,7 @@
       </xsd:sequence>
     </xsd:complexType>
   </xsd:element>
-  <xsd:complexType name="atomisedNameType">
+  <xsd:complexType name="atomisedName">
     <xsd:choice>
       <xsd:element name="uninomial">
         <xsd:simpleType>
@@ -67,14 +67,34 @@
       </xsd:element>
     </xsd:choice>
   </xsd:complexType>
-  <xsd:complexType name="nameType">
+  <xsd:complexType name="name">
     <xsd:sequence>
-      <xsd:element name="nameComplete">
+      <xsd:element name="fullName">
+       <xsd:annotation>
+          <xsd:appinfo>
+            <jxb:property>
+              <jxb:javadoc>
+                the full name string consisting of nomenclatural information,
+                authorship and potentially further taxonomic information.</jxb:javadoc>
+            </jxb:property>
+          </xsd:appinfo>
+        </xsd:annotation>
         <xsd:simpleType>
           <xsd:restriction base="xsd:string" />
         </xsd:simpleType>
       </xsd:element>
-      <xsd:element name="nameCanonical" minOccurs="1">
+      <xsd:element name="canonicalName" minOccurs="1">
+      <xsd:annotation>
+          <xsd:appinfo>
+            <jxb:property>
+              <jxb:javadoc>
+                Canonical name string consisting of only nomenclatural information,
+                i.e. no authorship or taxonomic hierarchy information
+                with the exception of the necessary
+                placements within Genus or Species.</jxb:javadoc>
+            </jxb:property>
+          </xsd:appinfo>
+        </xsd:annotation>
         <xsd:simpleType>
           <xsd:restriction base="xsd:string" />
         </xsd:simpleType>
@@ -85,25 +105,11 @@
           <xsd:restriction base="xsd:string" />
         </xsd:simpleType>
       </xsd:element>
-      <xsd:element name="atomisedName" type="tns:atomisedNameType"
+      <xsd:element name="atomisedName" type="tns:atomisedName"
         minOccurs="0"></xsd:element>
-      <xsd:element name="taxonomicStatus" minOccurs="0">
-        <xsd:annotation>
-          <xsd:appinfo>
-            <jxb:property>
-              <jxb:javadoc>
-                The taxonomic status string like  "invalid", "misapplied", "homotypic synonym", "accepted", "synonym".
-                See also http://rs.tdwg.org/dwc/terms/taxonomicStatus</jxb:javadoc>
-            </jxb:property>
-          </xsd:appinfo>
-        </xsd:annotation>
-        <xsd:simpleType>
-          <xsd:restriction base="xsd:string" />
-        </xsd:simpleType>
-      </xsd:element>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:complexType name="taxonNameType">
+  <xsd:complexType name="taxonName">
     <xsd:sequence>
       <xsd:element name="authorship" maxOccurs="1"
         minOccurs="0">
@@ -111,7 +117,7 @@
           <xsd:restriction base="xsd:string" />
         </xsd:simpleType>
       </xsd:element>
-      <xsd:element name="name" type="tns:nameType"></xsd:element>
+      <xsd:element name="name" type="tns:name"></xsd:element>
       <xsd:element name="rank" minOccurs="0">
         <xsd:simpleType>
           <xsd:restriction base="xsd:string" />
@@ -119,7 +125,7 @@
       </xsd:element>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:complexType name="sourceType">
+  <xsd:complexType name="source">
     <xsd:sequence>
       <xsd:element name="url">
         <xsd:simpleType>
@@ -143,7 +149,7 @@
       </xsd:element>
     </xsd:sequence>
   </xsd:complexType>
-  <xsd:complexType name="scrutinyType">
+  <xsd:complexType name="scrutiny">
     <xsd:sequence>
       <xsd:element name="accordingTo" type="xsd:string">
       </xsd:element>
@@ -163,7 +169,7 @@
           <xsd:complexType>
             <xsd:sequence>
               <xsd:element minOccurs="1" name="taxonName"
-                type="tns:taxonNameType">
+                type="tns:taxonName">
               </xsd:element>
               <xsd:element minOccurs="0" name="info">
                 <xsd:complexType>
@@ -179,9 +185,9 @@
                   </xsd:sequence>
                 </xsd:complexType>
               </xsd:element>
-              <xsd:element name="source" type="tns:sourceType">
+              <xsd:element name="source" type="tns:source">
               </xsd:element>
-              <xsd:element name="scrutiny" type="tns:scrutinyType">
+              <xsd:element name="scrutiny" type="tns:scrutiny">
               </xsd:element>
             </xsd:sequence>
           </xsd:complexType>
@@ -191,7 +197,7 @@
           <xsd:complexType>
             <xsd:sequence>
               <xsd:element minOccurs="1" name="taxonName"
-                type="tns:taxonNameType">
+                type="tns:taxonName">
               </xsd:element>
               <xsd:element minOccurs="0" name="info">
                 <xsd:complexType>
@@ -207,9 +213,23 @@
                   </xsd:sequence>
                 </xsd:complexType>
               </xsd:element>
-              <xsd:element name="source" type="tns:sourceType">
+              <xsd:element name="taxonomicStatus" minOccurs="0">
+                <xsd:annotation>
+                  <xsd:appinfo>
+                    <jxb:property>
+                      <jxb:javadoc>
+                        The taxonomic status string like  "invalid", "misapplied", "homotypic synonym", "accepted", "synonym".
+                        See also http://rs.tdwg.org/dwc/terms/taxonomicStatus</jxb:javadoc>
+                    </jxb:property>
+                  </xsd:appinfo>
+                </xsd:annotation>
+                <xsd:simpleType>
+                  <xsd:restriction base="xsd:string" />
+                </xsd:simpleType>
               </xsd:element>
-              <xsd:element name="scrutiny" type="tns:scrutinyType">
+              <xsd:element name="source" type="tns:source">
+              </xsd:element>
+              <xsd:element name="scrutiny" type="tns:scrutiny">
               </xsd:element>
             </xsd:sequence>
           </xsd:complexType>
@@ -231,7 +251,7 @@
   <xsd:element name="acceptedName">
     <xsd:complexType>
       <xsd:sequence>
-        <xsd:element minOccurs="1" name="taxonName" type="tns:taxonNameType">
+        <xsd:element minOccurs="1" name="taxonName" type="tns:taxonName">
         </xsd:element>
         <xsd:element minOccurs="0" name="info">
           <xsd:complexType>
@@ -283,8 +303,22 @@
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
-        <xsd:element name="source" type="tns:sourceType"></xsd:element>
-        <xsd:element name="scrutiny" type="tns:scrutinyType"></xsd:element>
+        <xsd:element name="taxonomicStatus" minOccurs="0">
+        <xsd:annotation>
+          <xsd:appinfo>
+            <jxb:property>
+              <jxb:javadoc>
+                The taxonomic status string like  "invalid", "misapplied", "homotypic synonym", "accepted", "synonym".
+                See also http://rs.tdwg.org/dwc/terms/taxonomicStatus</jxb:javadoc>
+            </jxb:property>
+          </xsd:appinfo>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+        <xsd:element name="source" type="tns:source"></xsd:element>
+        <xsd:element name="scrutiny" type="tns:scrutiny"></xsd:element>
       </xsd:sequence>
     </xsd:complexType>
   </xsd:element>

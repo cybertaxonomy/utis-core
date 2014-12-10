@@ -73,7 +73,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
 		List<String> queries = new ArrayList<String>();
 		Iterator<TnrMsg.Query> itrQuery = queryList.iterator();
 		while(itrQuery.hasNext()) {
-			queries.add(itrQuery.next().getTnrRequest().getTaxonName().getName().getNameComplete());
+			queries.add(itrQuery.next().getTnrRequest().getTaxonName().getName().getFullName());
 		}
 		System.out.println("Query size : " + queries.size());
 		return buildUriFromQueryStringList(queries,
@@ -86,7 +86,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
 			String endpointSuffix, 			
 			String queryKey,
 			Map<String, String> paramMap) {
-		return buildUriFromQueryString(query.getTnrRequest().getTaxonName().getName().getNameComplete(),
+		return buildUriFromQueryString(query.getTnrRequest().getTaxonName().getName().getFullName(),
 				endpointSuffix,
 				queryKey,
 				paramMap);
@@ -95,7 +95,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
 	public URI buildUriFromQuery(TnrMsg.Query query,			
 			String regexpUrl, 					
 			Map<String, String> paramMap) {
-		String url = regexpUrl.replace(QUERY_PLACEHOLDER, query.getTnrRequest().getTaxonName().getName().getNameComplete());
+		String url = regexpUrl.replace(QUERY_PLACEHOLDER, query.getTnrRequest().getTaxonName().getName().getFullName());
 		return buildUriFromQueryString(url, paramMap);
 	}
 	

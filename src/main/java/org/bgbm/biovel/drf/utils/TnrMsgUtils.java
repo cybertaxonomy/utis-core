@@ -25,8 +25,8 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.bgbm.biovel.drf.tnr.msg.NameType;
-import org.bgbm.biovel.drf.tnr.msg.TaxonNameType;
+import org.bgbm.biovel.drf.tnr.msg.Name;
+import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query.TnrRequest;
@@ -149,9 +149,9 @@ public class TnrMsgUtils {
 			TnrMsg tnrMsg = new TnrMsg();
 			Query query = new Query();
 			TnrRequest request = new TnrRequest();
-			TaxonNameType tnameType = new TaxonNameType();
-			NameType nameType = new NameType();
-			nameType.setNameComplete(name);
+			TaxonName tnameType = new TaxonName();
+			Name nameType = new Name();
+			nameType.setFullName(name);
 			
 			tnameType.setName(nameType);
 			request.setTaxonName(tnameType);
@@ -179,7 +179,7 @@ public class TnrMsgUtils {
 				Iterator<Query> itrQuery = currentTnrMsg.getQuery().iterator();
 				while(itrQuery.hasNext()) {					
 					Query currentQuery = itrQuery.next();
-					String nameComplete = currentQuery.getTnrRequest().getTaxonName().getName().getNameComplete();
+					String nameComplete = currentQuery.getTnrRequest().getTaxonName().getName().getFullName();
 					Query query = nameQueryMap.get(nameComplete);
 					if(query == null) {						
 						nameQueryMap.put(nameComplete, currentQuery);

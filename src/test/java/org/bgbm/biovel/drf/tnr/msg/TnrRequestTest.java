@@ -49,7 +49,7 @@ public class TnrRequestTest {
 		Iterator<String> itrNc = nameCompleteList.iterator();
 		while(itrTr.hasNext() && itrNc.hasNext()) {
 			TnrMsg tnrMsg = itrTr.next();
-			String sciName = tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().getName().getNameComplete();
+			String sciName = tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().getName().getFullName();
 			System.out.println("Scientific Name : " + sciName);
 			
 			Assert.assertEquals("nameComplete differs",sciName,itrNc.next());
@@ -69,7 +69,7 @@ public class TnrRequestTest {
 	@Test
 	public void tnrResponseTest() throws DRFInputException, JAXBException, ParserConfigurationException, SAXException, IOException {		
 		TnrResponse tnrResponse  = TnrMsgUtils.convertXMLToTnrResponse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/TnrResponse.xml","UTF-8"));
-		System.out.println("name canonical : " + tnrResponse.getAcceptedName().getTaxonName().getName().getNameCanonical());
+		System.out.println("name canonical : " + tnrResponse.getAcceptedName().getTaxonName().getName().getCanonicalName());
 	}
 	
 		

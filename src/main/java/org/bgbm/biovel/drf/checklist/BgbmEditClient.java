@@ -11,10 +11,10 @@ import java.util.Map;
 import org.apache.http.HttpHost;
 import org.apache.http.ParseException;
 import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
-import org.bgbm.biovel.drf.tnr.msg.NameType;
-import org.bgbm.biovel.drf.tnr.msg.ScrutinyType;
-import org.bgbm.biovel.drf.tnr.msg.SourceType;
-import org.bgbm.biovel.drf.tnr.msg.TaxonNameType;
+import org.bgbm.biovel.drf.tnr.msg.Name;
+import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
+import org.bgbm.biovel.drf.tnr.msg.Source;
+import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
@@ -185,20 +185,20 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
     private AcceptedName generateAccName(JSONObject taxon) {
         AcceptedName accName = new AcceptedName();
-        TaxonNameType taxonName = new TaxonNameType();
-        NameType name = new NameType();
+        TaxonName taxonName = new TaxonName();
+        Name name = new Name();
 
         String resName = (String) taxon.get("name");
-        name.setNameComplete(resName);
+        name.setFullName(resName);
         NameParser ecatParser = new NameParser();
         String nameCanonical = ecatParser.parseToCanonical(resName);
-        name.setNameCanonical(nameCanonical);
-        name.setTaxonomicStatus((String)taxon.get("taxonStatus"));
+        name.setCanonicalName(nameCanonical);
 
         taxonName.setRank((String) taxon.get("rank"));
         taxonName.setName(name);
 
         accName.setTaxonName(taxonName);
+        accName.setTaxonomicStatus((String)taxon.get("taxonStatus"));
 
         JSONObject sourcejs = (JSONObject)taxon.get("source");
         String sourceUrl = (String) sourcejs.get("url");
@@ -206,7 +206,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
         String sourceDatasetName = (String) sourcejs.get("datasetName");
         String sourceName = "";
 
-        SourceType source = new SourceType();
+        Source source = new Source();
         source.setDatasetID(sourceDatasetID);
         source.setDatasetName(sourceDatasetName);
         source.setName(sourceName);
@@ -217,7 +217,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
         String accordingTo = (String) scrutinyjs.get("accordingTo");
         String modified = (String) scrutinyjs.get("modified");
 
-        ScrutinyType scrutiny = new ScrutinyType();
+        Scrutiny scrutiny = new Scrutiny();
         scrutiny.setAccordingTo(accordingTo);
         scrutiny.setModified(modified);
         accName.setScrutiny(scrutiny);
@@ -246,15 +246,15 @@ public class BgbmEditClient extends AggregateChecklistClient {
             String status = (String) synonymjs.get("taxonStatus");
             if(status != null && status.equals("synonym")) {
                 TnrResponse.Synonym synonym = new Synonym();
-                TaxonNameType taxonName = new TaxonNameType();
-                NameType name = new NameType();
+                TaxonName taxonName = new TaxonName();
+                Name name = new Name();
 
                 String resName = (String) synonymjs.get("name");
-                name.setNameComplete(resName);
+                name.setFullName(resName);
                 NameParser ecatParser = new NameParser();
                 String nameCanonical = ecatParser.parseToCanonical(resName);
-                name.setNameCanonical(nameCanonical);
-                name.setTaxonomicStatus((String)synonymjs.get("taxonStatus"));
+                name.setCanonicalName(nameCanonical);
+                synonym.setTaxonomicStatus((String)synonymjs.get("taxonStatus"));
 
                 taxonName.setRank((String) synonymjs.get("rank"));
                 taxonName.setName(name);
@@ -267,7 +267,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
                 String sourceDatasetName = (String) sourcejs.get("datasetName");
                 String sourceName = "";
 
-                SourceType source = new SourceType();
+                Source source = new Source();
                 source.setDatasetID(sourceDatasetID);
                 source.setDatasetName(sourceDatasetName);
                 source.setName(sourceName);
@@ -278,7 +278,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
                 String accordingTo = (String) scrutinyjs.get("accordingTo");
                 String modified = (String) scrutinyjs.get("modified");
 
-                ScrutinyType scrutiny = new ScrutinyType();
+                Scrutiny scrutiny = new Scrutiny();
                 scrutiny.setAccordingTo(accordingTo);
                 scrutiny.setModified(modified);
                 synonym.setScrutiny(scrutiny);

@@ -11,10 +11,10 @@ import org.bgbm.biovel.drf.checklist.pesi.PESINameServiceLocator;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServicePortType;
 import org.bgbm.biovel.drf.checklist.pesi.PESIRecord;
 import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
-import org.bgbm.biovel.drf.tnr.msg.NameType;
-import org.bgbm.biovel.drf.tnr.msg.ScrutinyType;
-import org.bgbm.biovel.drf.tnr.msg.SourceType;
-import org.bgbm.biovel.drf.tnr.msg.TaxonNameType;
+import org.bgbm.biovel.drf.tnr.msg.Name;
+import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
+import org.bgbm.biovel.drf.tnr.msg.Source;
+import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
@@ -62,7 +62,7 @@ public class PESIClient extends BaseChecklistClient {
 
         //http://www.catalogueoflife.org/col/webservice?response=full&name={sciName}
 
-        String name = query.getTnrRequest().getTaxonName().getName().getNameComplete();
+        String name = query.getTnrRequest().getTaxonName().getName().getFullName();
 
         PESINameServiceLocator pesins = new PESINameServiceLocator();
 
@@ -131,20 +131,20 @@ public class PESIClient extends BaseChecklistClient {
 
     private AcceptedName generateAccName(PESIRecord taxon) {
         AcceptedName accName = new AcceptedName();
-        TaxonNameType taxonName = new TaxonNameType();
-        NameType name = new NameType();
+        TaxonName taxonName = new TaxonName();
+        Name name = new Name();
 
         String resName = taxon.getScientificname();
-        name.setNameComplete(resName + " " + taxon.getAuthority());
+        name.setFullName(resName + " " + taxon.getAuthority());
 
-        name.setNameCanonical(resName);
-        name.setTaxonomicStatus(taxon.getStatus());
+        name.setCanonicalName(resName);
 
         taxonName.setRank(taxon.getRank());
         taxonName.setAuthorship(taxon.getAuthority());
         taxonName.setName(name);
 
         accName.setTaxonName(taxonName);
+        accName.setTaxonomicStatus(taxon.getStatus());
 
         AcceptedName.Info info = new AcceptedName.Info();
         info.setUrl(taxon.getUrl());
@@ -157,7 +157,7 @@ public class PESIClient extends BaseChecklistClient {
         String sourceDatasetName = "";
         String sourceName = "";
 
-        SourceType source = new SourceType();
+        Source source = new Source();
         source.setDatasetID(sourceDatasetID);
         source.setDatasetName(sourceDatasetName);
         source.setName(sourceName);
@@ -168,7 +168,7 @@ public class PESIClient extends BaseChecklistClient {
         String accordingTo = taxon.getAuthority();
         String modified = "";
 
-        ScrutinyType scrutiny = new ScrutinyType();
+        Scrutiny scrutiny = new Scrutiny();
         scrutiny.setAccordingTo(accordingTo);
         scrutiny.setModified(modified);
         accName.setScrutiny(scrutiny);
@@ -191,20 +191,20 @@ public class PESIClient extends BaseChecklistClient {
         for(PESIRecord synRecord : synonyms) {
             TnrResponse.Synonym synonym = new Synonym();
 
-            TaxonNameType taxonName = new TaxonNameType();
-            NameType name = new NameType();
+            TaxonName taxonName = new TaxonName();
+            Name name = new Name();
 
             String resName = synRecord.getScientificname();
-            name.setNameComplete(resName + " " + synRecord.getAuthority());
+            name.setFullName(resName + " " + synRecord.getAuthority());
 
-            name.setNameCanonical(resName);
-            name.setTaxonomicStatus(synRecord.getStatus());
+            name.setCanonicalName(resName);
 
             taxonName.setRank(synRecord.getRank());
             taxonName.setAuthorship(synRecord.getAuthority());
             taxonName.setName(name);
 
             synonym.setTaxonName(taxonName);
+            synonym.setTaxonomicStatus(synRecord.getStatus());
 
             Synonym.Info info = new Synonym.Info();
             info.setUrl(synRecord.getUrl());
@@ -216,7 +216,7 @@ public class PESIClient extends BaseChecklistClient {
             String sourceDatasetName = "";
             String sourceName = "";
 
-            SourceType source = new SourceType();
+            Source source = new Source();
             source.setDatasetID(sourceDatasetID);
             source.setDatasetName(sourceDatasetName);
             source.setName(sourceName);
@@ -227,7 +227,7 @@ public class PESIClient extends BaseChecklistClient {
             String accordingTo = synRecord.getAuthority();
             String modified = "";
 
-            ScrutinyType scrutiny = new ScrutinyType();
+            Scrutiny scrutiny = new Scrutiny();
             scrutiny.setAccordingTo(accordingTo);
             scrutiny.setModified(modified);
             synonym.setScrutiny(scrutiny);

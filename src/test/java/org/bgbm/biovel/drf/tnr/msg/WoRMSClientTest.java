@@ -65,7 +65,7 @@ public class WoRMSClientTest {
 		Iterator<TnrMsg> tnrMsgItr = tnrMsgs.iterator();
 		while(tnrMsgItr.hasNext()) {
 			TnrMsg tnrMsg = tnrMsgItr.next();
-			logger.info("Querying WoRMS for name : " + tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().getName().getNameComplete());
+			logger.info("Querying WoRMS for name : " + tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().getName().getFullName());
 			wormsc.queryChecklist(tnrMsg);
 			String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
 			logger.info(outputXML);

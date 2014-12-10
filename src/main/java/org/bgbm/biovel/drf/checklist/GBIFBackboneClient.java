@@ -12,10 +12,10 @@ import java.util.Map;
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
 import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
-import org.bgbm.biovel.drf.tnr.msg.NameType;
-import org.bgbm.biovel.drf.tnr.msg.ScrutinyType;
-import org.bgbm.biovel.drf.tnr.msg.SourceType;
-import org.bgbm.biovel.drf.tnr.msg.TaxonNameType;
+import org.bgbm.biovel.drf.tnr.msg.Name;
+import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
+import org.bgbm.biovel.drf.tnr.msg.Source;
+import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
@@ -212,14 +212,13 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 
     private AcceptedName generateAccName(JSONObject taxon) {
         AcceptedName accName = new AcceptedName();
-        TaxonNameType taxonName = new TaxonNameType();
-        NameType name = new NameType();
+        TaxonName taxonName = new TaxonName();
+        Name name = new Name();
 
         String resName = (String) taxon.get("scientificName");
-        name.setNameComplete(resName);
+        name.setFullName(resName);
 
-        name.setNameCanonical((String) taxon.get("canonicalName"));
-        name.setTaxonomicStatus((String)taxon.get("taxonomicStatus"));
+        name.setCanonicalName((String) taxon.get("canonicalName"));
 
         taxonName.setRank((String) taxon.get("rank"));
 
@@ -228,6 +227,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
         taxonName.setName(name);
 
         accName.setTaxonName(taxonName);
+        accName.setTaxonomicStatus((String)taxon.get("taxonomicStatus"));
 
         Long key = (Long)taxon.get("key");
         String taxonId = key.toString();
@@ -242,7 +242,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
         String sourceDatasetName = "";
         String sourceName = "";
 
-        SourceType source = new SourceType();
+        Source source = new Source();
         source.setDatasetID(sourceDatasetID);
         source.setDatasetName(sourceDatasetName);
         source.setName(sourceName);
@@ -253,7 +253,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
         String accordingTo = (String) taxon.get("accordingTo");
         String modified = "";
 
-        ScrutinyType scrutiny = new ScrutinyType();
+        Scrutiny scrutiny = new Scrutiny();
         scrutiny.setAccordingTo(accordingTo);
         scrutiny.setModified(modified);
         accName.setScrutiny(scrutiny);
@@ -278,20 +278,20 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
         while(itrSynonyms.hasNext()) {
             TnrResponse.Synonym synonym = new Synonym();
             JSONObject synonymjs = (JSONObject) itrSynonyms.next();
-            TaxonNameType taxonName = new TaxonNameType();
-            NameType name = new NameType();
+            TaxonName taxonName = new TaxonName();
+            Name name = new Name();
 
             String resName = (String) synonymjs.get("scientificName");
-            name.setNameComplete(resName);
+            name.setFullName(resName);
 
-            name.setNameCanonical((String) synonymjs.get("canonicalName"));
-            name.setTaxonomicStatus((String)synonymjs.get("taxonomicStatus"));
+            name.setCanonicalName((String) synonymjs.get("canonicalName"));
 
             taxonName.setRank((String) synonymjs.get("rank"));
             taxonName.setAuthorship((String) synonymjs.get("authorship"));
             taxonName.setName(name);
 
             synonym.setTaxonName(taxonName);
+            synonym.setTaxonomicStatus((String)synonymjs.get("taxonomicStatus"));
 
             Long key = (Long)synonymjs.get("key");
             String synId = key.toString();
@@ -305,7 +305,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
             String sourceDatasetName = "";
             String sourceName = "";
 
-            SourceType source = new SourceType();
+            Source source = new Source();
             source.setDatasetID(sourceDatasetID);
             source.setDatasetName(sourceDatasetName);
             source.setName(sourceName);
@@ -316,7 +316,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
             String accordingTo = (String) synonymjs.get("accordingTo");
             String modified = "";
 
-            ScrutinyType scrutiny = new ScrutinyType();
+            Scrutiny scrutiny = new Scrutiny();
             scrutiny.setAccordingTo(accordingTo);
             scrutiny.setModified(modified);
             synonym.setScrutiny(scrutiny);
