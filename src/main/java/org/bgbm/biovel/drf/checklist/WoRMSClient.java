@@ -11,7 +11,6 @@ import org.bgbm.biovel.drf.checklist.worms.AphiaNameServiceLocator;
 import org.bgbm.biovel.drf.checklist.worms.AphiaNameServicePortType;
 import org.bgbm.biovel.drf.checklist.worms.AphiaRecord;
 import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
-import org.bgbm.biovel.drf.tnr.msg.Name;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
@@ -59,7 +58,7 @@ public class WoRMSClient extends BaseChecklistClient {
         }
         Query query = queryList.get(0);
 
-        String name = query.getTnrRequest().getTaxonName().getName().getFullName();
+        String name = query.getTnrRequest().getTaxonName().getFullName();
 
         AphiaNameServiceLocator aphiansl = new AphiaNameServiceLocator();
 
@@ -137,16 +136,14 @@ public class WoRMSClient extends BaseChecklistClient {
     private AcceptedName generateAccName(AphiaRecord taxon) {
         AcceptedName accName = new AcceptedName();
         TaxonName taxonName = new TaxonName();
-        Name name = new Name();
 
         String resName = taxon.getScientificname();
-        name.setFullName(resName + " " + taxon.getAuthority());
+        taxonName.setFullName(resName + " " + taxon.getAuthority());
 
-        name.setCanonicalName(resName);
+        taxonName.setCanonicalName(resName);
 
         taxonName.setRank(taxon.getRank());
         taxonName.setAuthorship(taxon.getAuthority());
-        taxonName.setName(name);
 
         accName.setTaxonName(taxonName);
         accName.setTaxonomicStatus(taxon.getStatus());
@@ -197,16 +194,14 @@ public class WoRMSClient extends BaseChecklistClient {
             TnrResponse.Synonym synonym = new Synonym();
 
             TaxonName taxonName = new TaxonName();
-            Name name = new Name();
 
             String resName = synRecord.getScientificname();
-            name.setFullName(resName + " " + synRecord.getAuthority());
+            taxonName.setFullName(resName + " " + synRecord.getAuthority());
 
-            name.setCanonicalName(resName);
+            taxonName.setCanonicalName(resName);
 
             taxonName.setRank(synRecord.getRank());
             taxonName.setAuthorship(synRecord.getAuthority());
-            taxonName.setName(name);
 
             synonym.setTaxonName(taxonName);
             synonym.setTaxonomicStatus(synRecord.getStatus());

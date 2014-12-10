@@ -11,7 +11,6 @@ import java.util.Map;
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
 import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
-import org.bgbm.biovel.drf.tnr.msg.Name;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
@@ -191,15 +190,13 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
     private AcceptedName generateAccName(JSONObject taxon) {
         AcceptedName accName = new AcceptedName();
         TaxonName taxonName = new TaxonName();
-        Name name = new Name();
 
         String resName = (String) taxon.get("scientificName");
-        name.setFullName(resName);
+        taxonName.setFullName(resName);
 
-        name.setCanonicalName((String) taxon.get("canonicalName"));
+        taxonName.setCanonicalName((String) taxon.get("canonicalName"));
 
         taxonName.setRank((String) taxon.get("rank"));
-        taxonName.setName(name);
 
         accName.setTaxonName(taxonName);
         accName.setTaxonomicStatus((String)taxon.get("taxonomicStatus"));
@@ -244,15 +241,13 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
         TnrResponse.Synonym syn = new Synonym();
 
         TaxonName taxonName = new TaxonName();
-        Name name = new Name();
 
         String resName = (String) synonym.get("scientificName");
-        name.setFullName(resName);
+        taxonName.setFullName(resName);
 
-        name.setCanonicalName((String) synonym.get("canonicalName"));
+        taxonName.setCanonicalName((String) synonym.get("canonicalName"));
 
         taxonName.setRank((String) synonym.get("rank"));
-        taxonName.setName(name);
 
         syn.setTaxonName(taxonName);
         syn.setTaxonomicStatus((String) synonym.get("taxonomicStatus"));

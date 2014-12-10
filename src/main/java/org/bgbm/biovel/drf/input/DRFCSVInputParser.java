@@ -17,7 +17,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.bgbm.biovel.drf.tnr.msg.AtomisedName;
-import org.bgbm.biovel.drf.tnr.msg.Name;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
@@ -140,7 +139,6 @@ public class DRFCSVInputParser {
         int nbOfElements = 0;
 
         TaxonName taxonName;
-        Name name;
         AtomisedName atomisedName;
         AtomisedName.SubGenus subGenus;
         CSVReader reader;
@@ -190,7 +188,6 @@ public class DRFCSVInputParser {
                             }
 
                             taxonName = new TaxonName();
-                            name = new Name();
 
                             if (genus_part_index >= 0
                                     && !nextLine[genus_part_index].equals("")
@@ -209,25 +206,25 @@ public class DRFCSVInputParser {
                                 subGenus.setInfraspecificEpithet((infrageneric_epithet_index >= 0) ? nextLine[infraspecific_epithet_index]
                                         : "");
                                 atomisedName.setSubGenus(subGenus);
-                                name.setAtomisedName(atomisedName);
+                                taxonName.setAtomisedName(atomisedName);
                             } else if (uninomial_index >= 0
                                     && !nextLine[uninomial_index].equals("")) {
                                 atomisedName = new AtomisedName();
                                 atomisedName.setUninomial(nextLine[uninomial_index]);
-                                name.setAtomisedName(atomisedName);
+                                taxonName.setAtomisedName(atomisedName);
                             } else if (name_complete_index >= 0
                                     && !nextLine[name_complete_index]
                                             .equals("")) {
-                                name.setFullName(nextLine[name_complete_index]);
+                                taxonName.setFullName(nextLine[name_complete_index]);
                                 NameParser ecatParser = new NameParser();
-                                String nameCanonical = ecatParser.parseToCanonical(name.getFullName());
-                                name.setCanonicalName(nameCanonical);
+                                String nameCanonical = ecatParser.parseToCanonical(taxonName.getFullName());
+                                taxonName.setCanonicalName(nameCanonical);
                             } else if (taxon_name_index >= 0
                                     && !nextLine[taxon_name_index].equals("")) {
-                                name.setFullName(nextLine[taxon_name_index]);
+                                taxonName.setFullName(nextLine[taxon_name_index]);
                                 NameParser ecatParser = new NameParser();
-                                String nameCanonical = ecatParser.parseToCanonical(name.getFullName());
-                                name.setCanonicalName(nameCanonical);
+                                String nameCanonical = ecatParser.parseToCanonical(taxonName.getFullName());
+                                taxonName.setCanonicalName(nameCanonical);
                             }
                             if (authorship_index >= 0
                                     && !nextLine[authorship_index].equals("")) {
@@ -238,7 +235,7 @@ public class DRFCSVInputParser {
                                     && !nextLine[name_label_index].equals("")) {
                                 // System.out.println("Found name label for name "
                                 // + scd.sciName);
-                                Name existingName = getDataObjectFromSciName(name.getFullName());
+                                TaxonName existingName = getDataObjectFromSciName(taxonName.getFullName());
                                 if (existingName != null) {
                                     // System.out.println("add " +
                                     // nextLine[name_label_index] +
@@ -247,12 +244,11 @@ public class DRFCSVInputParser {
                                 } else {
                                     // System.out.println("add " +
                                     // nextLine[name_label_index] + "to new");
-                                    name.getNameLabel().add(nextLine[name_label_index]);
+                                    taxonName.getNameLabel().add(nextLine[name_label_index]);
                                 }
                             }
 
-                            if(name.getAtomisedName() != null || name.getFullName() != null) {
-                                taxonName.setName(name);
+                            if(taxonName.getAtomisedName() != null || taxonName.getFullName() != null) {
 
                                 TnrMsg.Query.TnrRequest tnrRequest = new TnrMsg.Query.TnrRequest();
                                 tnrRequest.setTaxonName(taxonName);
@@ -287,16 +283,16 @@ public class DRFCSVInputParser {
         return tnrMsgs;
     }
 
-    private Name getDataObjectFromSciName(String sciName) {
+    private TaxonName getDataObjectFromSciName(String sciName) {
 
         Iterator<TnrMsg> itrTnrMsg = tnrMsgs.iterator();
         while(itrTnrMsg.hasNext()) {
             List<TnrMsg.Query> queries = itrTnrMsg.next().getQuery();
             Iterator<TnrMsg.Query> itrQueries = queries.iterator();
             while (itrQueries.hasNext()) {
-                Name name = itrQueries.next().getTnrRequest().getTaxonName().getName();
-                if (name != null && name.getFullName().equals(sciName)) {
-                    return name;
+                TaxonName taxonName = itrQueries.next().getTnrRequest().getTaxonName();
+                if (taxonName != null && taxonName.getFullName().equals(sciName)) {
+                    return taxonName;
                 }
             }
         }

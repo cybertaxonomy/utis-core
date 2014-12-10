@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  targetNamespace="http://bgbm.org/biovel/drf/tnr/msg"
-  xmlns:tns="http://bgbm.org/biovel/drf/tnr/msg"
-  xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
-  jxb:version="2.0"
+  targetNamespace="http://bgbm.org/biovel/drf/tnr/msg" xmlns:tns="http://bgbm.org/biovel/drf/tnr/msg"
+  xmlns:jxb="http://java.sun.com/xml/ns/jaxb" jxb:version="2.0"
   elementFormDefault="qualified">
   <xsd:element name="tnrMsg">
     <xsd:complexType>
@@ -67,9 +65,9 @@
       </xsd:element>
     </xsd:choice>
   </xsd:complexType>
-  <xsd:complexType name="name">
+  <xsd:complexType name="taxonName">
     <xsd:sequence>
-      <xsd:element name="fullName">
+    <xsd:element name="fullName">
        <xsd:annotation>
           <xsd:appinfo>
             <jxb:property>
@@ -107,17 +105,12 @@
       </xsd:element>
       <xsd:element name="atomisedName" type="tns:atomisedName"
         minOccurs="0"></xsd:element>
-    </xsd:sequence>
-  </xsd:complexType>
-  <xsd:complexType name="taxonName">
-    <xsd:sequence>
       <xsd:element name="authorship" maxOccurs="1"
         minOccurs="0">
         <xsd:simpleType>
           <xsd:restriction base="xsd:string" />
         </xsd:simpleType>
       </xsd:element>
-      <xsd:element name="name" type="tns:name"></xsd:element>
       <xsd:element name="rank" minOccurs="0">
         <xsd:simpleType>
           <xsd:restriction base="xsd:string" />

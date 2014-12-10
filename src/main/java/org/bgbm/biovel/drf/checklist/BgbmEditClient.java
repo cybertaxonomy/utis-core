@@ -11,7 +11,6 @@ import java.util.Map;
 import org.apache.http.HttpHost;
 import org.apache.http.ParseException;
 import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
-import org.bgbm.biovel.drf.tnr.msg.Name;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
@@ -186,16 +185,14 @@ public class BgbmEditClient extends AggregateChecklistClient {
     private AcceptedName generateAccName(JSONObject taxon) {
         AcceptedName accName = new AcceptedName();
         TaxonName taxonName = new TaxonName();
-        Name name = new Name();
 
         String resName = (String) taxon.get("name");
-        name.setFullName(resName);
+        taxonName.setFullName(resName);
         NameParser ecatParser = new NameParser();
         String nameCanonical = ecatParser.parseToCanonical(resName);
-        name.setCanonicalName(nameCanonical);
+        taxonName.setCanonicalName(nameCanonical);
 
         taxonName.setRank((String) taxon.get("rank"));
-        taxonName.setName(name);
 
         accName.setTaxonName(taxonName);
         accName.setTaxonomicStatus((String)taxon.get("taxonStatus"));
@@ -247,17 +244,16 @@ public class BgbmEditClient extends AggregateChecklistClient {
             if(status != null && status.equals("synonym")) {
                 TnrResponse.Synonym synonym = new Synonym();
                 TaxonName taxonName = new TaxonName();
-                Name name = new Name();
 
                 String resName = (String) synonymjs.get("name");
-                name.setFullName(resName);
+                taxonName.setFullName(resName);
                 NameParser ecatParser = new NameParser();
                 String nameCanonical = ecatParser.parseToCanonical(resName);
-                name.setCanonicalName(nameCanonical);
+                taxonName.setCanonicalName(nameCanonical);
                 synonym.setTaxonomicStatus((String)synonymjs.get("taxonStatus"));
 
                 taxonName.setRank((String) synonymjs.get("rank"));
-                taxonName.setName(name);
+
 
                 synonym.setTaxonName(taxonName);
 

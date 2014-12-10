@@ -23,53 +23,53 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class WoRMSClientTest {
-	private static final Logger logger = Logger.getLogger(WoRMSClientTest.class.getName()); 
-	private static DRFCSVInputParser parser;
-	private static List<String> nameCompleteList;
+    private static final Logger logger = Logger.getLogger(WoRMSClientTest.class.getName());
+    private static DRFCSVInputParser parser;
+    private static List<String> nameCompleteList;
 
-	private static ServiceProviderInfo ci;
-	
-	@BeforeClass 
-	public static void  setup() {
-		
-		logger.setLevel(Level.INFO); 
-		parser = new DRFCSVInputParser();
-		
-		nameCompleteList = new ArrayList<String>();
-		nameCompleteList.add("Ameira divagans");
-		nameCompleteList.add("Boccardi redeki");
-		nameCompleteList.add("Bougainvillia rugosa");
-		nameCompleteList.add("Branchiura sowerbyi");
-		nameCompleteList.add("Cercopagis pengoi");
-		nameCompleteList.add("Chelicorophium curvispinum");
-		
+    private static ServiceProviderInfo ci;
 
-		ci = new ServiceProviderInfo(WoRMSClient.ID,
-				WoRMSClient.LABEL,
-				WoRMSClient.URL,
-				WoRMSClient.DATA_AGR_URL);
-	}
-	
-	@Test
-	public void convertChecklistInfoToJson() throws DRFChecklistException {
-		String checklistInfoJson = JSONUtils.convertObjectToJson(ci);
-		logger.info("ChecklistInfo : " +  checklistInfoJson);
-	}
-	
-	@Test
-	public void nameCompleteTest() throws DRFChecklistException, DRFInputException, JAXBException, TnrMsgException {
-		parser = new DRFCSVInputParser();
-		List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/nameCompleteOnly.csv","UTF-8"));
-		
-		WoRMSClient wormsc =  new WoRMSClient();
-		Iterator<TnrMsg> tnrMsgItr = tnrMsgs.iterator();
-		while(tnrMsgItr.hasNext()) {
-			TnrMsg tnrMsg = tnrMsgItr.next();
-			logger.info("Querying WoRMS for name : " + tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().getName().getFullName());
-			wormsc.queryChecklist(tnrMsg);
-			String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
-			logger.info(outputXML);
-		}
-	}
+    @BeforeClass
+    public static void  setup() {
+
+        logger.setLevel(Level.INFO);
+        parser = new DRFCSVInputParser();
+
+        nameCompleteList = new ArrayList<String>();
+        nameCompleteList.add("Ameira divagans");
+        nameCompleteList.add("Boccardi redeki");
+        nameCompleteList.add("Bougainvillia rugosa");
+        nameCompleteList.add("Branchiura sowerbyi");
+        nameCompleteList.add("Cercopagis pengoi");
+        nameCompleteList.add("Chelicorophium curvispinum");
+
+
+        ci = new ServiceProviderInfo(WoRMSClient.ID,
+                WoRMSClient.LABEL,
+                WoRMSClient.URL,
+                WoRMSClient.DATA_AGR_URL);
+    }
+
+    @Test
+    public void convertChecklistInfoToJson() throws DRFChecklistException {
+        String checklistInfoJson = JSONUtils.convertObjectToJson(ci);
+        logger.info("ChecklistInfo : " +  checklistInfoJson);
+    }
+
+    @Test
+    public void nameCompleteTest() throws DRFChecklistException, DRFInputException, JAXBException, TnrMsgException {
+        parser = new DRFCSVInputParser();
+        List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/nameCompleteOnly.csv","UTF-8"));
+
+        WoRMSClient wormsc =  new WoRMSClient();
+        Iterator<TnrMsg> tnrMsgItr = tnrMsgs.iterator();
+        while(tnrMsgItr.hasNext()) {
+            TnrMsg tnrMsg = tnrMsgItr.next();
+            logger.info("Querying WoRMS for name : " + tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().getFullName());
+            wormsc.queryChecklist(tnrMsg);
+            String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+            logger.info(outputXML);
+        }
+    }
 }
 

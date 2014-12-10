@@ -25,7 +25,7 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.bgbm.biovel.drf.tnr.msg.Name;
+
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
@@ -43,161 +43,160 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 public class TnrMsgUtils {
-	
-		public static Node convertTnrMsgToNode(TnrMsg tnrMsg) throws JAXBException, ParserConfigurationException {
-			JAXBContext context = JAXBContext.newInstance(TnrMsg.class);
 
-			Marshaller m = context.createMarshaller();
-			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        public static Node convertTnrMsgToNode(TnrMsg tnrMsg) throws JAXBException, ParserConfigurationException {
+            JAXBContext context = JAXBContext.newInstance(TnrMsg.class);
 
-			// Write to System.out
-			//m.marshal(tnrMsg, System.out);
+            Marshaller m = context.createMarshaller();
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 
-			// Write to Node
-			DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+            // Write to System.out
+            //m.marshal(tnrMsg, System.out);
 
-			// root elements
-			Document doc = docBuilder.newDocument();
+            // Write to Node
+            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 
-			m.marshal(tnrMsg, doc);
-			return doc;
-		}
+            // root elements
+            Document doc = docBuilder.newDocument();
 
-		public static String convertTnrMsgToJson(TnrMsg tnrMsg) throws JsonGenerationException, JsonMappingException, IOException {
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-			AnnotationIntrospector introspector = new JaxbAnnotationIntrospector();
-			mapper.setAnnotationIntrospector(introspector);
+            m.marshal(tnrMsg, doc);
+            return doc;
+        }
 
-			// Printing JSON
-			return mapper.writeValueAsString(tnrMsg);					
-		}
-		
-		public static String convertTnrMsgToXML(TnrMsg tnrMsg) throws TnrMsgException  {
-			Node node;
-			try {
-				node = convertTnrMsgToNode(tnrMsg);
+        public static String convertTnrMsgToJson(TnrMsg tnrMsg) throws JsonGenerationException, JsonMappingException, IOException {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+            AnnotationIntrospector introspector = new JaxbAnnotationIntrospector();
+            mapper.setAnnotationIntrospector(introspector);
 
-			Transformer t = TransformerFactory.newInstance().newTransformer();
-			t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-			t.setOutputProperty(OutputKeys.INDENT, "yes");
-			
-			StringWriter sw = new StringWriter();
-			t.transform(new DOMSource(node), new StreamResult(sw));
-			
-			return sw.toString();
-			} catch (JAXBException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				throw new TnrMsgException(e);
-			} catch (ParserConfigurationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				throw new TnrMsgException(e);
-			} catch (TransformerConfigurationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				throw new TnrMsgException(e);
-			} catch (TransformerFactoryConfigurationError e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				throw new TnrMsgException(e);
-			} catch (TransformerException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				throw new TnrMsgException(e);
-			}
+            // Printing JSON
+            return mapper.writeValueAsString(tnrMsg);
+        }
 
-		}
-		
-		public static TnrMsg convertXMLToTnrMsg(String xmlMsg) throws JAXBException {
-			JAXBContext context = JAXBContext.newInstance(TnrMsg.class);
-			
-		    Unmarshaller um = context.createUnmarshaller();
-		    return (TnrMsg) um.unmarshal(new StringReader(xmlMsg));					
-		}
-		
-		public static TnrResponse convertXMLToTnrResponse(String xmlMsg) throws JAXBException, ParserConfigurationException, SAXException, IOException {
-			JAXBContext context = JAXBContext.newInstance(TnrResponse.class);
+        public static String convertTnrMsgToXML(TnrMsg tnrMsg) throws TnrMsgException  {
+            Node node;
+            try {
+                node = convertTnrMsgToNode(tnrMsg);
 
-		    Unmarshaller um = context.createUnmarshaller();
-		    return (TnrResponse) um.unmarshal(new StringReader(xmlMsg));	
-		}
-	
-		public static TnrMsg convertXMLListToTnrMsg(List<String> xmlMsg) throws JAXBException {
-			TnrMsg finalTnrMsg = new TnrMsg();
-			Iterator<String> itrXMLMsg = xmlMsg.iterator();
-			while(itrXMLMsg.hasNext()) {
-				TnrMsg tnrMsg = convertXMLToTnrMsg(itrXMLMsg.next());
-				finalTnrMsg.getQuery().add(tnrMsg.getQuery().get(0));
-			}
-			return finalTnrMsg;
-		}
-		
-		public static List<TnrMsg> convertXMLListToTnrMsgList(List<String> xmlMsgs) throws JAXBException {
-			List<TnrMsg> finalTnrMsgList = new ArrayList<TnrMsg>();
-			Iterator<String> itrXMLMsg = xmlMsgs.iterator();
-			while(itrXMLMsg.hasNext()) {
-				TnrMsg tnrMsg = convertXMLToTnrMsg(itrXMLMsg.next());
-				finalTnrMsgList.add(tnrMsg);
-			}
-			return finalTnrMsgList;
-		}
-		
-		public static TnrMsg convertStringToTnrMsg(String name) {
-			TnrMsg tnrMsg = new TnrMsg();
-			Query query = new Query();
-			TnrRequest request = new TnrRequest();
-			TaxonName tnameType = new TaxonName();
-			Name nameType = new Name();
-			nameType.setFullName(name);
-			
-			tnameType.setName(nameType);
-			request.setTaxonName(tnameType);
-			query.setTnrRequest(request);
-			tnrMsg.getQuery().add(query);
-					
-			return tnrMsg;
-		}
-		
-		public static List<TnrMsg> convertStringListToTnrMsgList(List<String> names) {
-			List<TnrMsg> tnrMsgList = new ArrayList<TnrMsg>();
-			Iterator<String> itrStringMsg = names.iterator();
-			while(itrStringMsg.hasNext()) {
-				TnrMsg tnrMsg = convertStringToTnrMsg(itrStringMsg.next());
-				tnrMsgList.add(tnrMsg);
-			}
-			return tnrMsgList;
-		}
-		
-		public static TnrMsg mergeTnrMsgs(List<TnrMsg> tnrMsgs) {
-			Map<String,Query> nameQueryMap = new HashMap<String,Query>();
-			Iterator<TnrMsg> itrTnrMsg = tnrMsgs.iterator();
-			while(itrTnrMsg.hasNext()) {
-				TnrMsg currentTnrMsg = itrTnrMsg.next();
-				Iterator<Query> itrQuery = currentTnrMsg.getQuery().iterator();
-				while(itrQuery.hasNext()) {					
-					Query currentQuery = itrQuery.next();
-					String nameComplete = currentQuery.getTnrRequest().getTaxonName().getName().getFullName();
-					Query query = nameQueryMap.get(nameComplete);
-					if(query == null) {						
-						nameQueryMap.put(nameComplete, currentQuery);
-					} else {						
-						query.getTnrResponse().addAll(currentQuery.getTnrResponse());
-					}
-				}
-			}
-			TnrMsg finalTnrMsg = new TnrMsg();
-			finalTnrMsg.getQuery().addAll(new ArrayList<Query>(nameQueryMap.values()));
-			return  finalTnrMsg;			
-		}
-		
-		public static TnrMsg mergeTnrXMLList(List<String> xmlMsgs) throws JAXBException {
-			return mergeTnrMsgs(convertXMLListToTnrMsgList(xmlMsgs));
-		}
-		
+            Transformer t = TransformerFactory.newInstance().newTransformer();
+            t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+            t.setOutputProperty(OutputKeys.INDENT, "yes");
 
-		
+            StringWriter sw = new StringWriter();
+            t.transform(new DOMSource(node), new StreamResult(sw));
+
+            return sw.toString();
+            } catch (JAXBException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                throw new TnrMsgException(e);
+            } catch (ParserConfigurationException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                throw new TnrMsgException(e);
+            } catch (TransformerConfigurationException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                throw new TnrMsgException(e);
+            } catch (TransformerFactoryConfigurationError e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                throw new TnrMsgException(e);
+            } catch (TransformerException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                throw new TnrMsgException(e);
+            }
+
+        }
+
+        public static TnrMsg convertXMLToTnrMsg(String xmlMsg) throws JAXBException {
+            JAXBContext context = JAXBContext.newInstance(TnrMsg.class);
+
+            Unmarshaller um = context.createUnmarshaller();
+            return (TnrMsg) um.unmarshal(new StringReader(xmlMsg));
+        }
+
+        public static TnrResponse convertXMLToTnrResponse(String xmlMsg) throws JAXBException, ParserConfigurationException, SAXException, IOException {
+            JAXBContext context = JAXBContext.newInstance(TnrResponse.class);
+
+            Unmarshaller um = context.createUnmarshaller();
+            return (TnrResponse) um.unmarshal(new StringReader(xmlMsg));
+        }
+
+        public static TnrMsg convertXMLListToTnrMsg(List<String> xmlMsg) throws JAXBException {
+            TnrMsg finalTnrMsg = new TnrMsg();
+            Iterator<String> itrXMLMsg = xmlMsg.iterator();
+            while(itrXMLMsg.hasNext()) {
+                TnrMsg tnrMsg = convertXMLToTnrMsg(itrXMLMsg.next());
+                finalTnrMsg.getQuery().add(tnrMsg.getQuery().get(0));
+            }
+            return finalTnrMsg;
+        }
+
+        public static List<TnrMsg> convertXMLListToTnrMsgList(List<String> xmlMsgs) throws JAXBException {
+            List<TnrMsg> finalTnrMsgList = new ArrayList<TnrMsg>();
+            Iterator<String> itrXMLMsg = xmlMsgs.iterator();
+            while(itrXMLMsg.hasNext()) {
+                TnrMsg tnrMsg = convertXMLToTnrMsg(itrXMLMsg.next());
+                finalTnrMsgList.add(tnrMsg);
+            }
+            return finalTnrMsgList;
+        }
+
+        public static TnrMsg convertStringToTnrMsg(String name) {
+            TnrMsg tnrMsg = new TnrMsg();
+            Query query = new Query();
+            TnrRequest request = new TnrRequest();
+            TaxonName taxonName = new TaxonName();
+
+            taxonName.setFullName(name);
+
+            request.setTaxonName(taxonName);
+            query.setTnrRequest(request);
+            tnrMsg.getQuery().add(query);
+
+            return tnrMsg;
+        }
+
+        public static List<TnrMsg> convertStringListToTnrMsgList(List<String> names) {
+            List<TnrMsg> tnrMsgList = new ArrayList<TnrMsg>();
+            Iterator<String> itrStringMsg = names.iterator();
+            while(itrStringMsg.hasNext()) {
+                TnrMsg tnrMsg = convertStringToTnrMsg(itrStringMsg.next());
+                tnrMsgList.add(tnrMsg);
+            }
+            return tnrMsgList;
+        }
+
+        public static TnrMsg mergeTnrMsgs(List<TnrMsg> tnrMsgs) {
+            Map<String,Query> nameQueryMap = new HashMap<String,Query>();
+            Iterator<TnrMsg> itrTnrMsg = tnrMsgs.iterator();
+            while(itrTnrMsg.hasNext()) {
+                TnrMsg currentTnrMsg = itrTnrMsg.next();
+                Iterator<Query> itrQuery = currentTnrMsg.getQuery().iterator();
+                while(itrQuery.hasNext()) {
+                    Query currentQuery = itrQuery.next();
+                    String nameComplete = currentQuery.getTnrRequest().getTaxonName().getFullName();
+                    Query query = nameQueryMap.get(nameComplete);
+                    if(query == null) {
+                        nameQueryMap.put(nameComplete, currentQuery);
+                    } else {
+                        query.getTnrResponse().addAll(currentQuery.getTnrResponse());
+                    }
+                }
+            }
+            TnrMsg finalTnrMsg = new TnrMsg();
+            finalTnrMsg.getQuery().addAll(new ArrayList<Query>(nameQueryMap.values()));
+            return  finalTnrMsg;
+        }
+
+        public static TnrMsg mergeTnrXMLList(List<String> xmlMsgs) throws JAXBException {
+            return mergeTnrMsgs(convertXMLListToTnrMsgList(xmlMsgs));
+        }
+
+
+
 
 }

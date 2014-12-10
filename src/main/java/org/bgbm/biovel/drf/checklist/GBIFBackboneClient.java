@@ -12,7 +12,6 @@ import java.util.Map;
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
 import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
-import org.bgbm.biovel.drf.tnr.msg.Name;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
@@ -213,18 +212,15 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
     private AcceptedName generateAccName(JSONObject taxon) {
         AcceptedName accName = new AcceptedName();
         TaxonName taxonName = new TaxonName();
-        Name name = new Name();
 
         String resName = (String) taxon.get("scientificName");
-        name.setFullName(resName);
+        taxonName.setFullName(resName);
 
-        name.setCanonicalName((String) taxon.get("canonicalName"));
+        taxonName.setCanonicalName((String) taxon.get("canonicalName"));
 
         taxonName.setRank((String) taxon.get("rank"));
 
         taxonName.setAuthorship((String) taxon.get("authorship"));
-
-        taxonName.setName(name);
 
         accName.setTaxonName(taxonName);
         accName.setTaxonomicStatus((String)taxon.get("taxonomicStatus"));
@@ -279,16 +275,14 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
             TnrResponse.Synonym synonym = new Synonym();
             JSONObject synonymjs = (JSONObject) itrSynonyms.next();
             TaxonName taxonName = new TaxonName();
-            Name name = new Name();
 
             String resName = (String) synonymjs.get("scientificName");
-            name.setFullName(resName);
+            taxonName.setFullName(resName);
 
-            name.setCanonicalName((String) synonymjs.get("canonicalName"));
+            taxonName.setCanonicalName((String) synonymjs.get("canonicalName"));
 
             taxonName.setRank((String) synonymjs.get("rank"));
             taxonName.setAuthorship((String) synonymjs.get("authorship"));
-            taxonName.setName(name);
 
             synonym.setTaxonName(taxonName);
             synonym.setTaxonomicStatus((String)synonymjs.get("taxonomicStatus"));
