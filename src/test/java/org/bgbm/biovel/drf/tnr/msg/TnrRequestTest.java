@@ -69,7 +69,7 @@ public class TnrRequestTest {
     @Test
     public void tnrResponseTest() throws DRFInputException, JAXBException, ParserConfigurationException, SAXException, IOException {
         TnrResponse tnrResponse  = TnrMsgUtils.convertXMLToTnrResponse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/TnrResponse.xml","UTF-8"));
-        System.out.println("name canonical : " + tnrResponse.getAcceptedName().getTaxonName().getCanonicalName());
+        System.out.println("name canonical : " + tnrResponse.getTaxon().getTaxonName().getCanonicalName());
     }
 
 

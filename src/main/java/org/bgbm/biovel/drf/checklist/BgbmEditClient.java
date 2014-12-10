@@ -10,14 +10,14 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.ParseException;
-import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
+import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
-import org.bgbm.biovel.drf.tnr.msg.TnrResponse.Synonym;
+import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.gbif.nameparser.NameParser;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -171,8 +171,8 @@ public class BgbmEditClient extends AggregateChecklistClient {
                 TnrResponse tnrResponse = new TnrResponse();
                 tnrResponse.setChecklist(ci.getLabel());
                 tnrResponse.setChecklistUrl(ci.getUrl());
-                AcceptedName accName = generateAccName(taxon);
-                tnrResponse.setAcceptedName(accName);
+                Taxon accName = generateAccName(taxon);
+                tnrResponse.setTaxon(accName);
                 generateSynonyms(relatedTaxa, tnrResponse);
                 Query query = taxonIdQueryMap.get(taxonUuid);
                 if(query != null) {
@@ -182,8 +182,8 @@ public class BgbmEditClient extends AggregateChecklistClient {
         }
     }
 
-    private AcceptedName generateAccName(JSONObject taxon) {
-        AcceptedName accName = new AcceptedName();
+    private Taxon generateAccName(JSONObject taxon) {
+        Taxon accName = new Taxon();
         TaxonName taxonName = new TaxonName();
 
         String resName = (String) taxon.get("name");
@@ -221,7 +221,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
         JSONObject classification =(JSONObject)taxon.get("classification");
         if(classification != null) {
-            AcceptedName.Classification c = new AcceptedName.Classification();
+            Taxon.Classification c = new Taxon.Classification();
             c.setKingdom((String) classification.get("Kingdom"));
             c.setPhylum((String) classification.get("Phylum"));
             c.setClazz((String) classification.get("Class"));
@@ -242,7 +242,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
             JSONObject synonymjs = itrSynonyms.next();
             String status = (String) synonymjs.get("taxonStatus");
             if(status != null && status.equals("synonym")) {
-                TnrResponse.Synonym synonym = new Synonym();
+                Synonym synonym = new Synonym();
                 TaxonName taxonName = new TaxonName();
 
                 String resName = (String) synonymjs.get("name");

@@ -11,14 +11,14 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
-import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
+import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
-import org.bgbm.biovel.drf.tnr.msg.TnrResponse.Synonym;
+import org.bgbm.biovel.drf.tnr.msg.Synonym;
 
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.json.simple.JSONArray;
@@ -163,8 +163,8 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
                     Long key = (Long)res.get("key");
                     accTaxonId = key.toString();
 
-                    AcceptedName accName = generateAccName(res);
-                    tnrResponse.setAcceptedName(accName);
+                    Taxon accName = generateAccName(res);
+                    tnrResponse.setTaxon(accName);
 
                 } else
                 // case when synonym
@@ -176,8 +176,8 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
                     String taxonResponse = processRESTService(taxonUri);
 
                     JSONObject taxon = (JSONObject) JSONUtils.parseJsonToObject(taxonResponse);
-                    AcceptedName accName = generateAccName(taxon);
-                    tnrResponse.setAcceptedName(accName);
+                    Taxon accName = generateAccName(taxon);
+                    tnrResponse.setTaxon(accName);
 
                 } else {
                     throw new DRFChecklistException("Name is neither accepted nor a synonym");
@@ -209,8 +209,8 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
         }
     }
 
-    private AcceptedName generateAccName(JSONObject taxon) {
-        AcceptedName accName = new AcceptedName();
+    private Taxon generateAccName(JSONObject taxon) {
+        Taxon accName = new Taxon();
         TaxonName taxonName = new TaxonName();
 
         String resName = (String) taxon.get("scientificName");
@@ -227,7 +227,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 
         Long key = (Long)taxon.get("key");
         String taxonId = key.toString();
-        AcceptedName.Info info = new AcceptedName.Info();
+        Taxon.Info info = new Taxon.Info();
         info.setUrl("http://uat.gbif.org/species/" + taxonId);
         accName.setInfo(info);
 
@@ -254,7 +254,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
         scrutiny.setModified(modified);
         accName.setScrutiny(scrutiny);
 
-        AcceptedName.Classification c = new AcceptedName.Classification();
+        Taxon.Classification c = new Taxon.Classification();
         c.setKingdom((String) taxon.get("kingdom"));
         c.setPhylum((String) taxon.get("phylum"));
         c.setClazz((String) taxon.get("clazz"));
@@ -272,7 +272,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
         JSONArray synonyms = (JSONArray)pagedSynonyms.get("results");
         Iterator<JSONObject> itrSynonyms = synonyms.iterator();
         while(itrSynonyms.hasNext()) {
-            TnrResponse.Synonym synonym = new Synonym();
+            Synonym synonym = new Synonym();
             JSONObject synonymjs = (JSONObject) itrSynonyms.next();
             TaxonName taxonName = new TaxonName();
 

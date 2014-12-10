@@ -10,14 +10,14 @@ import org.apache.http.HttpHost;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServiceLocator;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServicePortType;
 import org.bgbm.biovel.drf.checklist.pesi.PESIRecord;
-import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
+import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
-import org.bgbm.biovel.drf.tnr.msg.TnrResponse.Synonym;
+import org.bgbm.biovel.drf.tnr.msg.Synonym;
 
 
 public class PESIClient extends BaseChecklistClient {
@@ -103,13 +103,13 @@ public class PESIClient extends BaseChecklistClient {
 
                 // case when accepted name
                 if(record.getGUID().equals(record.getValid_guid())) {
-                    AcceptedName accName = generateAccName(record);
-                    tnrResponse.setAcceptedName(accName);
+                    Taxon accName = generateAccName(record);
+                    tnrResponse.setTaxon(accName);
                 } else {
                     // case when synonym
                     PESIRecord accNameRecord = pesinspt.getPESIRecordByGUID(accNameGUID);
-                    AcceptedName accName = generateAccName(accNameRecord);
-                    tnrResponse.setAcceptedName(accName);
+                    Taxon accName = generateAccName(accNameRecord);
+                    tnrResponse.setTaxon(accName);
                 }
 
                 PESIRecord[] records = pesinspt.getPESISynonymsByGUID(accNameGUID);
@@ -128,8 +128,8 @@ public class PESIClient extends BaseChecklistClient {
 
     }
 
-    private AcceptedName generateAccName(PESIRecord taxon) {
-        AcceptedName accName = new AcceptedName();
+    private Taxon generateAccName(PESIRecord taxon) {
+        Taxon accName = new Taxon();
         TaxonName taxonName = new TaxonName();
 
         String resName = taxon.getScientificname();
@@ -143,7 +143,7 @@ public class PESIClient extends BaseChecklistClient {
         accName.setTaxonName(taxonName);
         accName.setTaxonomicStatus(taxon.getStatus());
 
-        AcceptedName.Info info = new AcceptedName.Info();
+        Taxon.Info info = new Taxon.Info();
         info.setUrl(taxon.getUrl());
         accName.setInfo(info);
 
@@ -170,7 +170,7 @@ public class PESIClient extends BaseChecklistClient {
         scrutiny.setModified(modified);
         accName.setScrutiny(scrutiny);
 
-        AcceptedName.Classification c = new AcceptedName.Classification();
+        Taxon.Classification c = new Taxon.Classification();
         c.setKingdom(taxon.getKingdom());
         c.setPhylum(taxon.getPhylum());
         c.setClazz("");
@@ -186,7 +186,7 @@ public class PESIClient extends BaseChecklistClient {
     private void generateSynonyms(PESIRecord[] synonyms, TnrResponse tnrResponse) {
 
         for(PESIRecord synRecord : synonyms) {
-            TnrResponse.Synonym synonym = new Synonym();
+            Synonym synonym = new Synonym();
 
             TaxonName taxonName = new TaxonName();
 

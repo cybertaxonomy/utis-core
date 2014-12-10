@@ -10,14 +10,14 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
-import org.bgbm.biovel.drf.tnr.msg.AcceptedName;
+import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
-import org.bgbm.biovel.drf.tnr.msg.TnrResponse.Synonym;
+import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -160,8 +160,8 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 
             JSONObject res = (JSONObject) JSONUtils.parseJsonToObject(taxonResponse);
             JSONObject jsonAccName = (JSONObject)res.get("data");
-            AcceptedName accName = generateAccName(jsonAccName);
-            tnrResponse.setAcceptedName(accName);
+            Taxon accName = generateAccName(jsonAccName);
+            tnrResponse.setTaxon(accName);
             if(query != null) {
                 query.getTnrResponse().add(tnrResponse);
             }
@@ -187,8 +187,8 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
         }
     }
 
-    private AcceptedName generateAccName(JSONObject taxon) {
-        AcceptedName accName = new AcceptedName();
+    private Taxon generateAccName(JSONObject taxon) {
+        Taxon accName = new Taxon();
         TaxonName taxonName = new TaxonName();
 
         String resName = (String) taxon.get("scientificName");
@@ -225,7 +225,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
         scrutiny.setModified(modified);
         accName.setScrutiny(scrutiny);
 
-        AcceptedName.Classification c = new AcceptedName.Classification();
+        Taxon.Classification c = new Taxon.Classification();
         c.setKingdom((String) taxon.get("kingdom"));
         c.setPhylum((String) taxon.get("phylum"));
         c.setClazz((String) taxon.get("class"));
@@ -238,7 +238,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
     }
 
     private void generateSynonyms(JSONObject synonym, TnrResponse tnrResponse) {
-        TnrResponse.Synonym syn = new Synonym();
+        Synonym syn = new Synonym();
 
         TaxonName taxonName = new TaxonName();
 
