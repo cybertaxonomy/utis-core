@@ -1,7 +1,6 @@
 package org.bgbm.biovel.drf.checklist;
 
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -11,15 +10,15 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
-import org.bgbm.biovel.drf.tnr.msg.Taxon;
+import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
+import org.bgbm.biovel.drf.tnr.msg.Synonym;
+import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
-import org.bgbm.biovel.drf.tnr.msg.Synonym;
-
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -32,7 +31,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
     public static final String DATA_AGR_URL = "http://data.gbif.org/tutorial/datauseagreement";
     private static final String MAX_PAGING_LIMIT = "1000";
     private static final String VERSION = "v0.9";
-    public static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL,VERSION,false);
+    public static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL,VERSION);
 
     public GBIFBackboneClient() {
         super();
@@ -156,7 +155,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
                 TnrResponse tnrResponse = new TnrResponse();
 
                 tnrResponse.setChecklist(ci.getLabel());
-                tnrResponse.setChecklistUrl(ci.getUrl());
+                tnrResponse.setChecklistUrl(ci.getDocumentationUrl());
 
                 // case when accepted name
                 if(!synonym && (acceptedKey == null)) {
@@ -254,7 +253,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
         scrutiny.setModified(modified);
         accName.setScrutiny(scrutiny);
 
-        Taxon.Classification c = new Taxon.Classification();
+        Classification c = new Classification();
         c.setKingdom((String) taxon.get("kingdom"));
         c.setPhylum((String) taxon.get("phylum"));
         c.setClazz((String) taxon.get("clazz"));

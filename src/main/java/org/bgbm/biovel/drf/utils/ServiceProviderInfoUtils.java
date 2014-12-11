@@ -84,8 +84,8 @@ public class ServiceProviderInfoUtils {
                     if(key.equals(BgbmEditClient.ID)) {
                         ci = new ServiceProviderInfo(BgbmEditClient.ID,
                                 BgbmEditClient.LABEL,
-                                BgbmEditClient.URL,
-                                BgbmEditClient.DATA_AGR_URL);
+                                BgbmEditClient.DOC_URL,
+                                BgbmEditClient.COPYRIGHT_URL);
                     }
                     if(key.equals(GBIFBackboneClient.ID)) {
                         ci = new ServiceProviderInfo(GBIFBackboneClient.ID,

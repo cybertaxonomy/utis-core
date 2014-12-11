@@ -72,8 +72,8 @@
           <xsd:appinfo>
             <jxb:property>
               <jxb:javadoc>
-the full name string consisting of nomenclatural information,
-authorship and potentially further taxonomic information.
+the  full scientific name, with authorship, publication date information
+and potentially further taxonomic information.
                 </jxb:javadoc>
             </jxb:property>
           </xsd:appinfo>
@@ -206,7 +206,30 @@ placements within Genus or Species.
   <xsd:element name="taxon">
     <xsd:complexType>
       <xsd:sequence>
-        <xsd:element minOccurs="1" name="taxonName" type="tns:taxonName">
+        <xsd:element minOccurs="1" name="taxonName"
+          type="tns:taxonName">
+        </xsd:element>
+        <xsd:element name="accordingTo" minOccurs="0">
+          <xsd:annotation>
+            <xsd:appinfo>
+              <jxb:property>
+                <jxb:javadoc>
+                  The reference to the source in which the specific
+                  taxon concept circumscription is defined or implied -
+                  traditionally signified by the Latin "sensu" or "sec."
+                  (from secundum, meaning "according to"). For taxa that
+                  result from identifications, a reference to the keys,
+                  monographs, experts and other sources should be given.
+
+                  Corresponds to
+                  http://rs.tdwg.org/dwc/terms/nameAccordingTo
+                </jxb:javadoc>
+              </jxb:property>
+            </xsd:appinfo>
+          </xsd:annotation>
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string" />
+          </xsd:simpleType>
         </xsd:element>
         <xsd:element minOccurs="0" name="info">
           <xsd:complexType>
@@ -216,63 +239,27 @@ placements within Genus or Species.
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
-        <xsd:element minOccurs="0" name="classification">
-          <xsd:complexType>
-            <xsd:sequence>
-              <xsd:element minOccurs="0" name="kingdom">
-                <xsd:simpleType>
-                  <xsd:restriction base="xsd:string">
-                  </xsd:restriction>
-                </xsd:simpleType>
-              </xsd:element>
-              <xsd:element minOccurs="0" name="phylum">
-                <xsd:simpleType>
-                  <xsd:restriction base="xsd:string">
-                  </xsd:restriction>
-                </xsd:simpleType>
-              </xsd:element>
-              <xsd:element minOccurs="0" name="class">
-                <xsd:simpleType>
-                  <xsd:restriction base="xsd:string">
-                  </xsd:restriction>
-                </xsd:simpleType>
-              </xsd:element>
-              <xsd:element minOccurs="0" name="order">
-                <xsd:simpleType>
-                  <xsd:restriction base="xsd:string">
-                  </xsd:restriction>
-                </xsd:simpleType>
-              </xsd:element>
-              <xsd:element minOccurs="0" name="family">
-                <xsd:simpleType>
-                  <xsd:restriction base="xsd:string">
-                  </xsd:restriction>
-                </xsd:simpleType>
-              </xsd:element>
-              <xsd:element minOccurs="0" name="genus">
-                <xsd:simpleType>
-                  <xsd:restriction base="xsd:string">
-                  </xsd:restriction>
-                </xsd:simpleType>
-              </xsd:element>
-            </xsd:sequence>
-          </xsd:complexType>
+        <xsd:element minOccurs="0" ref="tns:classification">
         </xsd:element>
         <xsd:element name="taxonomicStatus" minOccurs="0">
-        <xsd:annotation>
-          <xsd:appinfo>
-            <jxb:property>
-              <jxb:javadoc>
-The taxonomic status string like  "invalid", "misapplied", "homotypic synonym", "accepted", "synonym".
-See also http://rs.tdwg.org/dwc/terms/taxonomicStatus
+          <xsd:annotation>
+            <xsd:appinfo>
+              <jxb:property>
+                <jxb:javadoc>
+                  The taxonomic status string like "invalid",
+                  "misapplied", "homotypic synonym", "accepted",
+                  "synonym".
+
+                  Corresponds to
+                  http://rs.tdwg.org/dwc/terms/taxonomicStatus
                 </jxb:javadoc>
-            </jxb:property>
-          </xsd:appinfo>
-        </xsd:annotation>
-        <xsd:simpleType>
-          <xsd:restriction base="xsd:string" />
-        </xsd:simpleType>
-      </xsd:element>
+              </jxb:property>
+            </xsd:appinfo>
+          </xsd:annotation>
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string" />
+          </xsd:simpleType>
+        </xsd:element>
         <xsd:element name="source" type="tns:source"></xsd:element>
         <xsd:element name="scrutiny" type="tns:scrutiny"></xsd:element>
       </xsd:sequence>
@@ -304,6 +291,42 @@ See also http://rs.tdwg.org/dwc/terms/taxonomicStatus
         </xsd:element>
         <xsd:element name="source" type="tns:source"></xsd:element>
         <xsd:element name="scrutiny" type="tns:scrutiny"></xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="classification">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element minOccurs="0" name="kingdom">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+          </xsd:simpleType>
+        </xsd:element>
+        <xsd:element minOccurs="0" name="phylum">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+          </xsd:simpleType>
+        </xsd:element>
+        <xsd:element minOccurs="0" name="class">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+          </xsd:simpleType>
+        </xsd:element>
+        <xsd:element minOccurs="0" name="order">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+          </xsd:simpleType>
+        </xsd:element>
+        <xsd:element minOccurs="0" name="family">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+          </xsd:simpleType>
+        </xsd:element>
+        <xsd:element minOccurs="0" name="genus">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+          </xsd:simpleType>
+        </xsd:element>
       </xsd:sequence>
     </xsd:complexType>
   </xsd:element>

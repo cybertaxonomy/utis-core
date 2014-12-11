@@ -39,8 +39,8 @@ public class BgbmEditChecklistTest {
 		
 		ci = new ServiceProviderInfo(BgbmEditClient.ID,
 				BgbmEditClient.LABEL,
-				BgbmEditClient.URL,
-				BgbmEditClient.DATA_AGR_URL);
+				BgbmEditClient.DOC_URL,
+				BgbmEditClient.COPYRIGHT_URL);
 		ci.addSubChecklist(new ServiceProviderInfo("col",
 				"EDIT - Catalogue Of Life",
 				"http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html",
@@ -59,7 +59,8 @@ public class BgbmEditChecklistTest {
 		List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/vibrant.csv","UTF-8"));
 		//List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/nameCompleteOnly.csv","UTF-8"));		
 		TnrMsg tnrMsg = TnrMsgUtils.mergeTnrMsgs(tnrMsgs);
-		BgbmEditClient bec = new BgbmEditClient(JSONUtils.convertObjectToJson(ci));
+		String json = JSONUtils.convertObjectToJson(ci);
+        BgbmEditClient bec = new BgbmEditClient(json);
 
 		bec.queryChecklist(tnrMsg);
 		String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);

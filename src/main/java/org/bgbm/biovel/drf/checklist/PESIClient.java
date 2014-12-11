@@ -10,14 +10,15 @@ import org.apache.http.HttpHost;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServiceLocator;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServicePortType;
 import org.bgbm.biovel.drf.checklist.pesi.PESIRecord;
-import org.bgbm.biovel.drf.tnr.msg.Taxon;
+import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
+import org.bgbm.biovel.drf.tnr.msg.Synonym;
+import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
-import org.bgbm.biovel.drf.tnr.msg.Synonym;
 
 
 public class PESIClient extends BaseChecklistClient {
@@ -97,7 +98,7 @@ public class PESIClient extends BaseChecklistClient {
                 TnrResponse tnrResponse = new TnrResponse();
 
                 tnrResponse.setChecklist(ci.getLabel());
-                tnrResponse.setChecklistUrl(ci.getUrl());
+                tnrResponse.setChecklistUrl(ci.getDocumentationUrl());
 
                 String accNameGUID = record.getValid_guid();
 
@@ -170,7 +171,7 @@ public class PESIClient extends BaseChecklistClient {
         scrutiny.setModified(modified);
         accName.setScrutiny(scrutiny);
 
-        Taxon.Classification c = new Taxon.Classification();
+        Classification c = new Classification();
         c.setKingdom(taxon.getKingdom());
         c.setPhylum(taxon.getPhylum());
         c.setClazz("");

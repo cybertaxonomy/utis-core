@@ -10,14 +10,15 @@ import org.apache.http.HttpHost;
 import org.bgbm.biovel.drf.checklist.worms.AphiaNameServiceLocator;
 import org.bgbm.biovel.drf.checklist.worms.AphiaNameServicePortType;
 import org.bgbm.biovel.drf.checklist.worms.AphiaRecord;
-import org.bgbm.biovel.drf.tnr.msg.Taxon;
+import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
+import org.bgbm.biovel.drf.tnr.msg.Synonym;
+import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
-import org.bgbm.biovel.drf.tnr.msg.Synonym;
 
 
 public class WoRMSClient extends BaseChecklistClient {
@@ -102,7 +103,7 @@ public class WoRMSClient extends BaseChecklistClient {
                 TnrResponse tnrResponse = new TnrResponse();
 
                 tnrResponse.setChecklist(ci.getLabel());
-                tnrResponse.setChecklistUrl(ci.getUrl());
+                tnrResponse.setChecklistUrl(ci.getDocumentationUrl());
 
                 int accNameGUID = record.getValid_AphiaID();
 
@@ -175,7 +176,7 @@ public class WoRMSClient extends BaseChecklistClient {
         scrutiny.setModified(modified);
         accName.setScrutiny(scrutiny);
 
-        Taxon.Classification c = new Taxon.Classification();
+        Classification c = new Classification();
         c.setKingdom(taxon.getKingdom());
         c.setPhylum(taxon.getPhylum());
         c.setClazz("");

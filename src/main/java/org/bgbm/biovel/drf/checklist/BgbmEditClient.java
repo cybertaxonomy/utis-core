@@ -10,14 +10,15 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.ParseException;
-import org.bgbm.biovel.drf.tnr.msg.Taxon;
+import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
+import org.bgbm.biovel.drf.tnr.msg.Synonym;
+import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
-import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.gbif.nameparser.NameParser;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -25,10 +26,10 @@ import org.json.simple.parser.JSONParser;
 
 public class BgbmEditClient extends AggregateChecklistClient {
 
-    public static final String ID = "edit";
-    public static final String LABEL = "EDIT Platform";
-    public static final String URL = "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html";
-    public static final String DATA_AGR_URL = "http://wp5.e-taxonomy.eu/cdmlib/license.html";
+    public static final String ID = "bgbm-cdm-server";
+    public static final String LABEL = "Name catalogues served by the BGBM CDM Server";
+    public static final String DOC_URL = "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html";
+    public static final String COPYRIGHT_URL = "http://wp5.e-taxonomy.eu/cdmlib/license.html";
 
 
     private final Map<String,Query> taxonIdQueryMap;
@@ -52,7 +53,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {
-        ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL);
+        ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,DOC_URL,COPYRIGHT_URL);
         checklistInfo.addSubChecklist(new ServiceProviderInfo("col",
                 "Catalogue Of Life (EDIT -  name catalogue end point)",
                 "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html",
@@ -170,7 +171,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
             if(taxon != null) {
                 TnrResponse tnrResponse = new TnrResponse();
                 tnrResponse.setChecklist(ci.getLabel());
-                tnrResponse.setChecklistUrl(ci.getUrl());
+                tnrResponse.setChecklistUrl(ci.getDocumentationUrl());
                 Taxon accName = generateAccName(taxon);
                 tnrResponse.setTaxon(accName);
                 generateSynonyms(relatedTaxa, tnrResponse);
@@ -221,7 +222,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
         JSONObject classification =(JSONObject)taxon.get("classification");
         if(classification != null) {
-            Taxon.Classification c = new Taxon.Classification();
+            Classification c = new Classification();
             c.setKingdom((String) classification.get("Kingdom"));
             c.setPhylum((String) classification.get("Phylum"));
             c.setClazz((String) classification.get("Class"));

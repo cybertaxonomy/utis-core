@@ -27,7 +27,7 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
     // in v0.9 the max limit is 300
     private static final String MAX_PAGING_LIMIT = "300";
     private static final String VERSION = "v0.9";
-    private static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL,VERSION,false);
+    private static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL,VERSION);
 
     private final Map<String, JSONObject> datasetCacheMap = new HashMap<String, JSONObject>();
     private final Map<String, JSONObject> orgCacheMap = new HashMap<String, JSONObject>();

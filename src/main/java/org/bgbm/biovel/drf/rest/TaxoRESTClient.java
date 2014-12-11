@@ -157,10 +157,9 @@ public static class ServiceProviderInfo {
 
         private String id;
         private String label;
-        private String url;
+        private String documentationUrl;
         private String copyrightUrl;
         private String version;
-        private boolean use = false;
         private List<ServiceProviderInfo> subChecklists = null;
 
         public ServiceProviderInfo() {
@@ -171,20 +170,15 @@ public static class ServiceProviderInfo {
         }
 
         public ServiceProviderInfo(String id, String label, String url, String copyrightUrl) {
-            this(id,label,url,copyrightUrl,false);
+            this(id,label,url,copyrightUrl, "");
         }
 
-        public ServiceProviderInfo(String id, String label, String url, String copyrightUrl, boolean use) {
-            this(id,label,url,copyrightUrl,"",use);
-        }
-
-        public ServiceProviderInfo(String id, String label, String url, String copyrightUrl, String version, boolean use) {
+        public ServiceProviderInfo(String id, String label, String documentationUrl, String copyrightUrl, String version) {
             this.id = id;
             this.label = label;
-            this.url = url;
+            this.documentationUrl = documentationUrl;
             this.copyrightUrl = copyrightUrl;
             this.version = version;
-            this.use = use;
             subChecklists = null;
         }
 
@@ -196,8 +190,8 @@ public static class ServiceProviderInfo {
             return label;
         }
 
-        public String getUrl() {
-            return url;
+        public String getDocumentationUrl() {
+            return documentationUrl;
         }
 
         public String getCopyrightUrl() {
@@ -207,10 +201,6 @@ public static class ServiceProviderInfo {
 
         public String getVersion() {
             return version;
-        }
-
-        public boolean getUse() {
-            return use;
         }
 
         public void addSubChecklist(ServiceProviderInfo ci) {

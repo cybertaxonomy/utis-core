@@ -10,14 +10,15 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
-import org.bgbm.biovel.drf.tnr.msg.Taxon;
+import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
+import org.bgbm.biovel.drf.tnr.msg.Synonym;
+import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
-import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -153,7 +154,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
             TnrResponse tnrResponse = new TnrResponse();
 
             tnrResponse.setChecklist(checklistInfo.getLabel());
-            tnrResponse.setChecklistUrl(checklistInfo.getUrl());
+            tnrResponse.setChecklistUrl(checklistInfo.getDocumentationUrl());
 
             URI taxonUri = buildUriFromQuery(query, "/ws/usage/" + taxonId, null);
             String taxonResponse = processRESTService(taxonUri);
@@ -225,7 +226,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
         scrutiny.setModified(modified);
         accName.setScrutiny(scrutiny);
 
-        Taxon.Classification c = new Taxon.Classification();
+        Classification c = new Classification();
         c.setKingdom((String) taxon.get("kingdom"));
         c.setPhylum((String) taxon.get("phylum"));
         c.setClazz((String) taxon.get("class"));
