@@ -15,7 +15,7 @@ Compiling
 
 compiling the schema:
 
- rm -r src/main/java/org/bgbm/biovel/drf/tnr/msg; xjc -d src/main/java  src/main/resources/org/bgbm/biovel/drf/tnr/tnrmsg.xsd
+    mvn jaxb2:generate
 
 
 

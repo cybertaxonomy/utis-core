@@ -28,10 +28,6 @@ For a package you write a child to xsd:schema
 
 Writing HTML document requires bracketing with `<![CDATA[ --- ]]>`
 
-### Annotations
-Annotate plugins is capable of adding arbitrary annotations to the generated sources.
-
-http://confluence.highsource.org/display/J2B/Annotate+Plugin
 
 
 

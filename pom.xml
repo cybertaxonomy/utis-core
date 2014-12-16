@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>biovel.drf</groupId>
   <artifactId>drf-workflow</artifactId>
@@ -29,14 +30,14 @@
       <version>2.0.5</version>
     </dependency>
     <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.2.3</version>
+    </dependency>
+    <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>name-parser</artifactId>
       <version>2.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.2.5</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -105,15 +106,9 @@
     </dependency>
   </dependencies>
 
-  <!--
-   === THIS IS ONLY NEEDED FOR DEPLOYMENT TO TAVERNA ===
-  <pluginRepositories>
-    <pluginRepository>
-      <id>onejar-maven-plugin.googlecode.com</id>
-      <url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
-    </pluginRepository>
-  </pluginRepositories>
-   -->
+  <!-- === THIS IS ONLY NEEDED FOR DEPLOYMENT TO TAVERNA === <pluginRepositories>
+    <pluginRepository> <id>onejar-maven-plugin.googlecode.com</id> <url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
+    </pluginRepository> </pluginRepositories> -->
 
   <build>
     <extensions>
@@ -162,11 +157,10 @@
           <artifactId>maven-release-plugin</artifactId>
           <version>2.4.2</version>
         </plugin>
-         </plugins>
+      </plugins>
     </pluginManagement>
     <plugins>
-      <!--
-        === THIS IS ONLY NEEDED FOR DEPLOYMENT TO TAVERNA ===
+      <!-- === THIS IS ONLY NEEDED FOR DEPLOYMENT TO TAVERNA ===
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -186,16 +180,46 @@
       <plugin>
         <groupId>org.jvnet.jaxb2.maven2</groupId>
         <artifactId>maven-jaxb2-plugin</artifactId>
-        <version>0.7.1</version>
+        <version>0.11.0</version>
+        <executions>
+          <execution>
+            <!-- Generates Java sources from XML Schema(s) and binding file(s)
+              using the JAXB Binding Compiler (XJC) -->
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
         <configuration>
           <schemaDirectory>src/main/resources/org/bgbm/biovel/drf/tnr</schemaDirectory>
           <generateDirectory>src/main/java</generateDirectory>
-          <removeOldOutput>false</removeOldOutput>
+          <!-- removeOldOutput>false</removeOldOutput> -->
+          <cleanPackageDirectories>true</cleanPackageDirectories>
+          <extension>true</extension>
+          <args>
+            <arg>-Xannotate</arg>
+          </args>
+          <clearOutputDir>true</clearOutputDir>
+          <plugins>
+            <plugin>
+              <groupId>org.jvnet.jaxb2_commons</groupId>
+              <artifactId>jaxb2-basics-annotate</artifactId>
+              <version>1.0.1</version>
+            </plugin>
+          </plugins>
         </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.2.3</version>
+          </dependency>
+        </dependencies>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.9.1</version>
         <executions>
           <execution>
             <id>add-source</id>
@@ -220,18 +244,20 @@
           <target>1.6</target>
         </configuration>
       </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>attach-sources</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
   <!-- The location of your plugin site -->

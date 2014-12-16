@@ -4,3 +4,5 @@ taverna-plugin/target/
 .settings/
 .classpath
 .project
+src/main/java/META-INF/
+src/main/java/org/bgbm/biovel/drf/tnr/msg/META-INF/
