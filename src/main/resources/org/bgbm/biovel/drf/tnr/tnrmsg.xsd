@@ -204,6 +204,27 @@ placements within Genus or Species.
       </xsd:attribute>
       <xsd:attribute use="required" name="status"
         type="xsd:string">
+        <xsd:annotation>
+              <xsd:appinfo>
+                <jxb:property>
+                  <jxb:javadoc>
+                   Status of the request, possible values are 'ok', 'timeout', 'interrupted'.
+                  </jxb:javadoc>
+                </jxb:property>
+              </xsd:appinfo>
+            </xsd:annotation>
+      </xsd:attribute>
+      <xsd:attribute use="required" name="duration"
+        type="xsd:decimal">
+        <xsd:annotation>
+              <xsd:appinfo>
+                <jxb:property>
+                  <jxb:javadoc>
+                   Duration of the request in milliseconds
+                  </jxb:javadoc>
+                </jxb:property>
+              </xsd:appinfo>
+            </xsd:annotation>
       </xsd:attribute>
     </xsd:complexType>
   </xsd:element>

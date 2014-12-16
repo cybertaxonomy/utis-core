@@ -243,7 +243,12 @@ public static class ServiceProviderInfo {
                   return spia.getLabel().compareTo(spib.getLabel());
               }
 
-            }
+        }
+
+        @Override
+        public String toString(){
+            return getId();
+        }
 
     }
 
