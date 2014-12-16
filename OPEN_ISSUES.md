@@ -1,8 +1,11 @@
 Open Issues
 ========================
 
-TODO
--------
+### TODO
+
+* add @ApiModel annotations to classes
+* add @ApiModelProperty http://docs.swagger.io/swagger-core/apidocs/index.html?com/wordnik/swagger/annotations/ApiModelProperty.html
+
 
 ### Documentation
 add xs:documentation to the XML Schema file so that xjc can add them as java doc comments
@@ -29,6 +32,9 @@ Writing HTML document requires bracketing with `<![CDATA[ --- ]]>`
 Annotate plugins is capable of adding arbitrary annotations to the generated sources.
 
 http://confluence.highsource.org/display/J2B/Annotate+Plugin
+
+
+
 
 
 

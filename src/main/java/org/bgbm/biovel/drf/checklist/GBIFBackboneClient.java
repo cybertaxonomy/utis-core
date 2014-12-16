@@ -71,9 +71,9 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
                 uriBuilder.setParameter("offset", Integer.toString(offset));
                 uri = uriBuilder.build();
                 System.out.println("buildChecklistMap");
-                String response = processRESTService(uri);
+                String responseBody = processRESTService(uri);
 
-                JSONObject jsonResponse = (JSONObject) JSONUtils.parseJsonToObject(response);
+                JSONObject jsonResponse = (JSONObject) JSONUtils.parseJsonToObject(responseBody);
                 JSONArray results = (JSONArray) jsonResponse.get("results");
                 Iterator<JSONObject> itrResults = results.iterator();
                 while(itrResults.hasNext()) {
@@ -125,9 +125,9 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 
             URI namesUri = buildUriFromQuery(query, "/" + CINFO.getVersion() + "/species",	"name", paramMap);
 
-            String response = processRESTService(namesUri);
+            String responseBody = processRESTService(namesUri);
 
-            updateQueryWithResponse(query,response, paramMap, checklistInfo);
+            updateQueryWithResponse(query,responseBody, paramMap, checklistInfo);
         }
     }
 
@@ -172,9 +172,9 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
                     accTaxonId = key.toString();
 
                     URI taxonUri = buildUriFromQuery(query, "/" + CINFO.getVersion() + "/species/" + accTaxonId, null);
-                    String taxonResponse = processRESTService(taxonUri);
+                    String responseBody = processRESTService(taxonUri);
 
-                    JSONObject taxon = (JSONObject) JSONUtils.parseJsonToObject(taxonResponse);
+                    JSONObject taxon = (JSONObject) JSONUtils.parseJsonToObject(responseBody);
                     Taxon accName = generateAccName(taxon);
                     tnrResponse.setTaxon(accName);
 
@@ -327,9 +327,9 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
             uriBuilder.setPath("/" + CINFO.getVersion() + "/dataset/" + datasetKey);
 
             URI uri = uriBuilder.build();
-            String response = processRESTService(uri);
+            String responseBody = processRESTService(uri);
 
-            JSONObject datasetInfo = (JSONObject) JSONUtils.parseJsonToObject(response);
+            JSONObject datasetInfo = (JSONObject) JSONUtils.parseJsonToObject(responseBody);
 
             return  (String) datasetInfo.get("title");
         }

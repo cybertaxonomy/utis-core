@@ -88,14 +88,14 @@ public class Species2000ColClient extends BaseChecklistClient {
                 "name",
                 paramMap);
 
-        String response = processRESTService(taxonUri);
+        String responseBody = processRESTService(taxonUri);
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder parser;
         try {
             parser = factory.newDocumentBuilder();
 
-        Document doc = parser.parse(new InputSource(new StringReader(response)));
+        Document doc = parser.parse(new InputSource(new StringReader(responseBody)));
         XPathExpression xp = XPathFactory.newInstance().newXPath().compile("/results/result[1]/name_status");
         Node nameStatusNode = (Node) xp.evaluate(doc, XPathConstants.NODE);
 
@@ -113,14 +113,14 @@ public class Species2000ColClient extends BaseChecklistClient {
                             "id",
                             paramMap);
 
-                    response = processRESTService(taxonUri);
+                    responseBody = processRESTService(taxonUri);
                 } else {
-                    response = null;
+                    responseBody = null;
                 }
             }
         }
 
-        updateQueryWithResponse(query, response);
+        updateQueryWithResponse(query, responseBody);
 
         } catch (ParserConfigurationException e) {
             // TODO Auto-generated catch block

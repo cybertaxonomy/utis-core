@@ -22,8 +22,12 @@ import org.bgbm.biovel.drf.checklist.BaseChecklistClient;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.RESTURIBuilder;
 import org.bgbm.biovel.drf.utils.JSONUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class TaxoRESTClient {
+
+    protected Logger logger = LoggerFactory.getLogger(TaxoRESTClient.class);
 
     private ServiceProviderInfo spInfo;
 
@@ -57,20 +61,29 @@ public abstract class TaxoRESTClient {
         this.spInfo = checklistInfo;
     }
 
+    /**
+     * Sends a GET request to the REST service specified by the <code>uri</code>
+     * parameter and returns the response body as <code>String</code>
+     *
+     * @param uri
+     *            the REST service uri to send a GET request to
+     * @return the response body
+     * @throws DRFChecklistException
+     */
     public String processRESTService(URI uri) throws DRFChecklistException {
         HttpClient client = new DefaultHttpClient();
         HttpGet request = new HttpGet(uri);
 
         try {
-//            System.out.println(">> Request URI: " + request.getRequestLine().getUri());
+            logger.debug(">> Request URI: " + request.getRequestLine().getUri());
             HttpResponse response = client.execute(request);
 
-            String strResponse = EntityUtils.toString(response.getEntity(),Charset.forName("UTF-8"));
-//            System.out.println("<< Response: " + response.getStatusLine());
-//            System.out.println(strResponse);
-//            System.out.println("==============");
+            String responseBody = EntityUtils.toString(response.getEntity(),Charset.forName("UTF-8"));
+            logger.debug("<< Response: " + response.getStatusLine());
+            logger.trace(responseBody);
+            logger.trace("==============");
 
-            return strResponse;
+            return responseBody;
         } catch (ClientProtocolException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();

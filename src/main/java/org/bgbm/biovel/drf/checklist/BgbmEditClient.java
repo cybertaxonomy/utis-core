@@ -67,30 +67,23 @@ public class BgbmEditClient extends AggregateChecklistClient {
         Iterator<ServiceProviderInfo> itrKeys = getServiceProviderInfo().getSubChecklists().iterator();
         while(itrKeys.hasNext()) {
             ServiceProviderInfo checklistInfo = itrKeys.next();
-            //if(checklistInfo.getUse()) {
-                URI namesUri = buildUriFromQueryList(queryList,
-                        "/cdmserver/" + checklistInfo.getId() + "/name_catalogue.json",
-                        "query",
+            URI namesUri = buildUriFromQueryList(queryList,
+                    "/cdmserver/" + checklistInfo.getId() + "/name_catalogue.json",
+                    "query",
+                    null);
+
+            String responseBody = processRESTService(namesUri);
+            buildTaxonIdList(queryList, responseBody);
+            List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
+            if(taxonIdList.size() > 0) {
+                URI taxonUri = buildUriFromQueryStringList(taxonIdList,
+                        "/cdmserver/" + checklistInfo.getId() + "/name_catalogue/taxon.json",
+                        "taxonUuid",
                         null);
-
-                String response = processRESTService(namesUri);
-                buildTaxonIdList(queryList,response);
-                List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
-                if(taxonIdList.size() > 0) {
-                    URI taxonUri = buildUriFromQueryStringList(taxonIdList,
-                            "/cdmserver/" + checklistInfo.getId() + "/name_catalogue/taxon.json",
-                            "taxonUuid",
-                            null);
-                    response = processRESTService(taxonUri);
-                    updateQueriesWithResponse(response, checklistInfo);
-                }
-
-
-            //}
-
+                responseBody = processRESTService(taxonUri);
+                updateQueriesWithResponse(responseBody, checklistInfo);
+            }
         }
-
-
     }
 
     @Override

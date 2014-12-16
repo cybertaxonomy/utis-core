@@ -59,9 +59,9 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
         try {
             uri = uriBuilder.build();
             System.out.println("buildChecklistMap");
-            String response = processRESTService(uri);
+            String responseBody = processRESTService(uri);
 
-            JSONObject jsonResponse = (JSONObject) JSONUtils.parseJsonToObject(response);
+            JSONObject jsonResponse = (JSONObject) JSONUtils.parseJsonToObject(responseBody);
             JSONArray data = (JSONArray) jsonResponse.get("data");
             Iterator<JSONObject> itrResults = data.iterator();
             while(itrResults.hasNext()) {
@@ -110,9 +110,9 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
                         "q",
                         paramMap);
 
-                String response = processRESTService(namesUri);
+                String responseBody = processRESTService(namesUri);
 
-                updateQueryWithResponse(query,response, paramMap, checklistInfo);
+                updateQueryWithResponse(query,responseBody, paramMap, checklistInfo);
             //}
         }
     }
@@ -157,9 +157,9 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
             tnrResponse.setChecklistUrl(checklistInfo.getDocumentationUrl());
 
             URI taxonUri = buildUriFromQuery(query, "/ws/usage/" + taxonId, null);
-            String taxonResponse = processRESTService(taxonUri);
+            String responseBody = processRESTService(taxonUri);
 
-            JSONObject res = (JSONObject) JSONUtils.parseJsonToObject(taxonResponse);
+            JSONObject res = (JSONObject) JSONUtils.parseJsonToObject(responseBody);
             JSONObject jsonAccName = (JSONObject)res.get("data");
             Taxon accName = generateAccName(jsonAccName);
             tnrResponse.setTaxon(accName);
