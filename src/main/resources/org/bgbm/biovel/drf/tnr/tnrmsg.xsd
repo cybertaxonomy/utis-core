@@ -190,7 +190,8 @@ placements within Genus or Species.
           ref="tns:synonym">
         </xsd:element>
       </xsd:sequence>
-      <xsd:attribute use="required" name="checklist" type="xsd:string">
+      <xsd:attribute use="required" name="checklist"
+        type="xsd:string">
       </xsd:attribute>
       <xsd:attribute use="required" name="checklist_url"
         type="xsd:string">
@@ -199,6 +200,9 @@ placements within Genus or Species.
         type="xsd:string">
       </xsd:attribute>
       <xsd:attribute use="required" name="checklist_citation"
+        type="xsd:string">
+      </xsd:attribute>
+      <xsd:attribute use="required" name="status"
         type="xsd:string">
       </xsd:attribute>
     </xsd:complexType>

@@ -25,7 +25,7 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-
+import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
@@ -194,6 +194,17 @@ public class TnrMsgUtils {
 
         public static TnrMsg mergeTnrXMLList(List<String> xmlMsgs) throws JAXBException {
             return mergeTnrMsgs(convertXMLListToTnrMsgList(xmlMsgs));
+        }
+
+        /**
+         * @param ci
+         * @return
+         */
+        public static TnrResponse tnrResponseFor(ServiceProviderInfo ci) {
+            TnrResponse tnrResponse = new TnrResponse();
+            tnrResponse.setChecklist(ci.getLabel());
+            tnrResponse.setChecklistUrl(ci.getDocumentationUrl());
+            return tnrResponse;
         }
 
 

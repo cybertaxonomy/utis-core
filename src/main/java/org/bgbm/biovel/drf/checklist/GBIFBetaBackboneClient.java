@@ -20,6 +20,7 @@ import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
 import org.bgbm.biovel.drf.utils.JSONUtils;
+import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -151,10 +152,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 
             }
 
-            TnrResponse tnrResponse = new TnrResponse();
-
-            tnrResponse.setChecklist(checklistInfo.getLabel());
-            tnrResponse.setChecklistUrl(checklistInfo.getDocumentationUrl());
+            TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(checklistInfo);
 
             URI taxonUri = buildUriFromQuery(query, "/ws/usage/" + taxonId, null);
             String responseBody = processRESTService(taxonUri);

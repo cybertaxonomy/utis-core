@@ -19,6 +19,7 @@ import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
+import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 
 
 public class PESIClient extends BaseChecklistClient {
@@ -95,10 +96,7 @@ public class PESIClient extends BaseChecklistClient {
             System.out.println("nameGUID : " + nameGUID);
             PESIRecord record = pesinspt.getPESIRecordByGUID(nameGUID);
             if(record != null) {
-                TnrResponse tnrResponse = new TnrResponse();
-
-                tnrResponse.setChecklist(ci.getLabel());
-                tnrResponse.setChecklistUrl(ci.getDocumentationUrl());
+                TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
 
                 String accNameGUID = record.getValid_guid();
 

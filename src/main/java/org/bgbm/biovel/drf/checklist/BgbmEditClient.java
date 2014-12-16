@@ -19,6 +19,7 @@ import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
+import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.gbif.nameparser.NameParser;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -55,7 +56,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
     public ServiceProviderInfo buildServiceProviderInfo() {
         ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,DOC_URL,COPYRIGHT_URL);
         checklistInfo.addSubChecklist(new ServiceProviderInfo("col",
-                "Catalogue Of Life (EDIT -  name catalogue end point)",
+                "Catalogue Of Life (EDIT - name catalogue end point)",
                 "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html",
                 "http://www.catalogueoflife.org/col/info/copyright"));
         return checklistInfo;
@@ -162,9 +163,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
             String taxonUuid = (String) taxonRequest.get("taxonUuid");
 
             if(taxon != null) {
-                TnrResponse tnrResponse = new TnrResponse();
-                tnrResponse.setChecklist(ci.getLabel());
-                tnrResponse.setChecklistUrl(ci.getDocumentationUrl());
+                TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
                 Taxon accName = generateAccName(taxon);
                 tnrResponse.setTaxon(accName);
                 generateSynonyms(relatedTaxa, tnrResponse);

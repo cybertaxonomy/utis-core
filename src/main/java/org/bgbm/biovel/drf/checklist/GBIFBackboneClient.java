@@ -20,6 +20,7 @@ import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
 import org.bgbm.biovel.drf.utils.JSONUtils;
+import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -152,10 +153,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
                 Number acceptedKey = (Number)res.get("acceptedKey");
                 boolean synonym = (Boolean)res.get("synonym");
 
-                TnrResponse tnrResponse = new TnrResponse();
-
-                tnrResponse.setChecklist(ci.getLabel());
-                tnrResponse.setChecklistUrl(ci.getDocumentationUrl());
+                TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
 
                 // case when accepted name
                 if(!synonym && (acceptedKey == null)) {
