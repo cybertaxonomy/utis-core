@@ -1,2 +1,2 @@
 command to run in case of encoding problems :
-java -cp axis-1.4.jar:commons-logging-1.1.jar:commons-discovery-0.2.jar:geronimo-jaxrpc_1.1_spec-1.1.jar:saaj-1.1.jar:wsdl4j-1.4.jar:geronimo-activation_1.1_spec-1.1.jar:mail-1.4.jar org.apache.axis.wsdl.WSDL2Java <url-to-wsdl-file>
+java -cp  $(mvn3 dependency:build-classpath | grep -v "\[")  org.apache.axis.wsdl.WSDL2Java <url-to-wsdl-file>

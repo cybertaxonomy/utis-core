@@ -211,8 +211,7 @@
         type="xsd:decimal">
         <xsd:annotation>
               <xsd:appinfo>
-                <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty("
-                   Duration of the request in milliseconds")
+                <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty("Duration of the request in milliseconds")
                   </annox:annotate>
               </xsd:appinfo>
             </xsd:annotation>

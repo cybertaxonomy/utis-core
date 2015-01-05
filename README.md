@@ -10,16 +10,6 @@ BioVeL is funded by the European Commission 7th Framework Programme (FP7), throu
 Installation
 ============
 
-Compiling
-============
-
-compiling the schema:
-
-    mvn jaxb2:generate
-
-the xml schema file contains ```<annox:annotate>``` elements for the xjc Annotate Plugin which will compile them into java annotations.
-See https://github.com/highsource/jaxb2-annotate-plugin  for more information.
-
 
 
 Third-Party Dependencies
