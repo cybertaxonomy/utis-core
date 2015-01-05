@@ -74,12 +74,8 @@
     <xsd:element name="fullName">
        <xsd:annotation>
           <xsd:appinfo>
-            <jxb:property>
-              <jxb:javadoc>
-the  full scientific name, with authorship, publication date information
-and potentially further taxonomic information.
-                </jxb:javadoc>
-            </jxb:property>
+            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty("The full scientific name, with authorship, publication date information and potentially further taxonomic information.")
+            </annox:annotate>
           </xsd:appinfo>
         </xsd:annotation>
         <xsd:simpleType>
@@ -89,14 +85,9 @@ and potentially further taxonomic information.
       <xsd:element name="canonicalName" minOccurs="1">
       <xsd:annotation>
           <xsd:appinfo>
-            <jxb:property>
-              <jxb:javadoc>
-Canonical name string consisting of only nomenclatural information,
-i.e. no authorship or taxonomic hierarchy information
-with the exception of the necessary
-placements within Genus or Species.
-                </jxb:javadoc>
-            </jxb:property>
+            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty(
+                "Canonical name string consisting of only nomenclatural information, i.e. no authorship or taxonomic hierarchy information with the exception of the necessary placements within Genus or Species. ")
+              </annox:annotate>
           </xsd:appinfo>
         </xsd:annotation>
         <xsd:simpleType>
@@ -210,11 +201,9 @@ placements within Genus or Species.
         type="xsd:string">
         <xsd:annotation>
               <xsd:appinfo>
-                <jxb:property>
-                  <jxb:javadoc>
-                   Status of the request, possible values are 'ok', 'timeout', 'interrupted'.
-                  </jxb:javadoc>
-                </jxb:property>
+                  <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty(
+                   "Status of the request, possible values are 'ok', 'timeout', 'interrupted'.")
+                  </annox:annotate>
               </xsd:appinfo>
             </xsd:annotation>
       </xsd:attribute>
@@ -222,11 +211,9 @@ placements within Genus or Species.
         type="xsd:decimal">
         <xsd:annotation>
               <xsd:appinfo>
-                <jxb:property>
-                  <jxb:javadoc>
-                   Duration of the request in milliseconds
-                  </jxb:javadoc>
-                </jxb:property>
+                <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty("
+                   Duration of the request in milliseconds")
+                  </annox:annotate>
               </xsd:appinfo>
             </xsd:annotation>
       </xsd:attribute>
@@ -241,19 +228,9 @@ placements within Genus or Species.
         <xsd:element name="accordingTo" minOccurs="0">
           <xsd:annotation>
             <xsd:appinfo>
-              <jxb:property>
-                <jxb:javadoc>
-                  The reference to the source in which the specific
-                  taxon concept circumscription is defined or implied -
-                  traditionally signified by the Latin "sensu" or "sec."
-                  (from secundum, meaning "according to"). For taxa that
-                  result from identifications, a reference to the keys,
-                  monographs, experts and other sources should be given.
-
-                  Corresponds to
-                  http://rs.tdwg.org/dwc/terms/nameAccordingTo
-                </jxb:javadoc>
-              </jxb:property>
+              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty(
+                  "The reference to the source in which the specific taxon concept circumscription is defined or implied - traditionally signified by the Latin 'sensu' or 'sec.' (from secundum, meaning 'according to'). For taxa that result from identifications, a reference to the keys, monographs, experts and other sources should be given. Corresponds to http://rs.tdwg.org/dwc/terms/nameAccordingTo")
+                </annox:annotate>
             </xsd:appinfo>
           </xsd:annotation>
           <xsd:simpleType>
@@ -273,16 +250,9 @@ placements within Genus or Species.
         <xsd:element name="taxonomicStatus" minOccurs="0">
           <xsd:annotation>
             <xsd:appinfo>
-              <jxb:property>
-                <jxb:javadoc>
-                  The taxonomic status string like "invalid",
-                  "misapplied", "homotypic synonym", "accepted",
-                  "synonym".
-
-                  Corresponds to
-                  http://rs.tdwg.org/dwc/terms/taxonomicStatus
-                </jxb:javadoc>
-              </jxb:property>
+              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty(
+                  "The taxonomic status string like 'invalid', 'misapplied', 'homotypic synonym', 'accepted', 'synonym'.  Corresponds to http://rs.tdwg.org/dwc/terms/taxonomicStatus")
+                </annox:annotate>
             </xsd:appinfo>
           </xsd:annotation>
           <xsd:simpleType>
@@ -340,6 +310,10 @@ placements within Genus or Species.
           <xsd:annotation>
             <xsd:appinfo>
               <annox:annotate target="getter">@com.fasterxml.jackson.annotation.JsonProperty("class")</annox:annotate>
+              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty(
+                "The full scientific name of the class in which the taxon is classified."
+              )
+              </annox:annotate>
             </xsd:appinfo>
           </xsd:annotation>
           <xsd:simpleType>
