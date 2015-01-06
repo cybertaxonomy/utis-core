@@ -71,5 +71,26 @@ public class WoRMSClientTest {
             logger.info(outputXML);
         }
     }
+
+    @Test
+    public void resolveScientificNamesLikeTest() throws DRFChecklistException, DRFInputException, JAXBException, TnrMsgException {
+
+        parser = new DRFCSVInputParser();
+        List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/nameCompleteOnly.csv","UTF-8"));
+
+        WoRMSClient wormsc =  new WoRMSClient();
+        // strip off the last to characters of the names since we will do a like query
+        for (TnrMsg tnrMsg : tnrMsgs) {
+            String name = tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().getFullName();
+            String nameTrunk = name.substring(0, name.length() - 2);
+            logger.info("Querying WoRMS for name : " + nameTrunk);
+            
+            tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().setFullName(nameTrunk);
+            wormsc.resolveScientificNamesLike(tnrMsg);
+            String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+            logger.info(outputXML);
+        }
+
+    }
 }
 
