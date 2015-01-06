@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import org.apache.http.util.EntityUtils;
 import org.bgbm.biovel.drf.checklist.BaseChecklistClient;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.RESTURIBuilder;
+import org.bgbm.biovel.drf.checklist.SearchMode;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -173,6 +175,7 @@ public static class ServiceProviderInfo {
         private String documentationUrl;
         private String copyrightUrl;
         private String version;
+        private EnumSet<SearchMode> searchModes;
         private List<ServiceProviderInfo> subChecklists = null;
 
         public ServiceProviderInfo() {
@@ -248,6 +251,20 @@ public static class ServiceProviderInfo {
         @Override
         public String toString(){
             return getId();
+        }
+
+        /**
+         * @return the searchModes
+         */
+        public EnumSet<SearchMode> getSearchModes() {
+            return searchModes;
+        }
+
+        /**
+         * @param searchModes the searchModes to set
+         */
+        public void setSearchModes(EnumSet<SearchMode> searchModes) {
+            this.searchModes = searchModes;
         }
 
     }

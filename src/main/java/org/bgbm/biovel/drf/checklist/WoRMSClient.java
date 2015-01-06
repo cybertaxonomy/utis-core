@@ -2,7 +2,7 @@ package org.bgbm.biovel.drf.checklist;
 
 
 import java.rmi.RemoteException;
-import java.util.List;
+import java.util.EnumSet;
 
 import javax.xml.rpc.ServiceException;
 
@@ -29,6 +29,10 @@ public class WoRMSClient extends BaseChecklistClient {
     public static final String URL = "http://www.marinespecies.org/index.php";
     public static final String DATA_AGR_URL = "";
 
+    private static final EnumSet<SearchMode> capability = EnumSet.of(
+            SearchMode.scientificNameExact,
+            SearchMode.scientificNameLike);
+
 
     public WoRMSClient() {
         super();
@@ -49,88 +53,11 @@ public class WoRMSClient extends BaseChecklistClient {
 
 
     @Override
-    public void resolveNames(TnrMsg tnrMsg) throws DRFChecklistException {
-        List<TnrMsg.Query> queryList = tnrMsg.getQuery();
-        if(queryList.size() ==  0) {
-            throw new DRFChecklistException("WoRMS query list is empty");
-        }
-
-        if(queryList.size() > 1) {
-            throw new DRFChecklistException("WoRMS query list has more than one query");
-        }
-        Query query = queryList.get(0);
-
-        String name = query.getTnrRequest().getTaxonName().getFullName();
-
-        AphiaNameServiceLocator aphiansl = new AphiaNameServiceLocator();
-
-        AphiaNameServicePortType aphianspt;
-        try {
-            aphianspt = aphiansl.getAphiaNameServicePort();
-        } catch (ServiceException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            throw new DRFChecklistException("Error in accessing PESINameService");
-        }
-        updateQueryWithResponse(query,aphianspt,name,getServiceProviderInfo());
-    }
-
-
-    @Override
     public int getMaxPageSize() {
         return 10;
     }
 
 
-
-    private void updateQueryWithResponse(Query query ,
-            AphiaNameServicePortType aphianspt,
-            String name,
-            ServiceProviderInfo ci) throws DRFChecklistException {
-
-        try {
-            AphiaRecord record = null;
-            try {
-                Integer nameAphiaID = aphianspt.getAphiaID(name, false);
-                System.out.println("nameAphiaID : " + nameAphiaID);
-                record = aphianspt.getAphiaRecordByID(nameAphiaID);
-            } catch(NullPointerException npe) {
-                //FIXME : Workaround for NPE thrown by the aphia stub due to a,
-                //        null aphia id (Integer), when the name is not present
-                //        in the db
-                record = null;
-            }
-            if(record != null) {
-                TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
-
-                int accNameGUID = record.getValid_AphiaID();
-
-                // case when accepted name
-                if(record.getAphiaID() == accNameGUID) {
-                    Taxon accName = generateAccName(record);
-                    tnrResponse.setTaxon(accName);
-                } else {
-                    // case when synonym
-                    AphiaRecord accNameRecord = aphianspt.getAphiaRecordByID(accNameGUID);
-                    Taxon accName = generateAccName(accNameRecord);
-                    tnrResponse.setTaxon(accName);
-                }
-
-                AphiaRecord[] records = aphianspt.getAphiaSynonymsByID(accNameGUID);
-                if(records != null && records.length > 0) {
-                    generateSynonyms(records,tnrResponse);
-                }
-                if(query != null) {
-                    query.getTnrResponse().add(tnrResponse);
-                }
-            }
-        }  catch (RemoteException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            throw new DRFChecklistException("Error in getGUID method in PESINameService");
-        }
-
-    }
 
     private Taxon generateAccName(AphiaRecord taxon) {
         Taxon accName = new Taxon();
@@ -233,6 +160,94 @@ public class WoRMSClient extends BaseChecklistClient {
 
             tnrResponse.getSynonym().add(synonym);
         }
+    }
+
+
+
+    @Override
+    public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
+
+        Query query = singleQueryFrom(tnrMsg);
+
+        String name = query.getTnrRequest().getTaxonName().getFullName();
+
+        AphiaNameServiceLocator aphiansl = new AphiaNameServiceLocator();
+
+        AphiaNameServicePortType aphianspt;
+        try {
+            aphianspt = aphiansl.getAphiaNameServicePort();
+        } catch (ServiceException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            throw new DRFChecklistException("Error in accessing PESINameService");
+        }
+        resolveScientificNamesExactUpdateQueryWithResponse(query,aphianspt,name,getServiceProviderInfo());
+    }
+
+    private void resolveScientificNamesExactUpdateQueryWithResponse(Query query ,
+            AphiaNameServicePortType aphianspt,
+            String name,
+            ServiceProviderInfo ci) throws DRFChecklistException {
+
+        try {
+            AphiaRecord record = null;
+            try {
+                Integer nameAphiaID = aphianspt.getAphiaID(name, false);
+                logger.debug("nameAphiaID : " + nameAphiaID);
+                record = aphianspt.getAphiaRecordByID(nameAphiaID);
+            } catch(NullPointerException npe) {
+                //FIXME : Workaround for NPE thrown by the aphia stub due to a,
+                //        null aphia id (Integer), when the name is not present
+                //        in the db
+                record = null;
+            }
+            if(record != null) {
+                TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
+
+                int accNameGUID = record.getValid_AphiaID();
+
+                // case when accepted name
+                if(record.getAphiaID() == accNameGUID) {
+                    Taxon accName = generateAccName(record);
+                    tnrResponse.setTaxon(accName);
+                } else {
+                    // case when synonym
+                    AphiaRecord accNameRecord = aphianspt.getAphiaRecordByID(accNameGUID);
+                    Taxon accName = generateAccName(accNameRecord);
+                    tnrResponse.setTaxon(accName);
+                }
+
+                AphiaRecord[] records = aphianspt.getAphiaSynonymsByID(accNameGUID);
+                if(records != null && records.length > 0) {
+                    generateSynonyms(records,tnrResponse);
+                }
+                if(query != null) {
+                    query.getTnrResponse().add(tnrResponse);
+                }
+            }
+        }  catch (RemoteException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            throw new DRFChecklistException("Error in getGUID method in PESINameService");
+        }
+
+    }
+
+    @Override
+    public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void resolveVernacularNames(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public EnumSet<SearchMode> getSearchModes() {
+        return capability;
     }
 }
 

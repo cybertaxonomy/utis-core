@@ -2,6 +2,7 @@ package org.bgbm.biovel.drf.checklist;
 
 
 import java.rmi.RemoteException;
+import java.util.EnumSet;
 import java.util.List;
 
 import javax.xml.rpc.ServiceException;
@@ -29,6 +30,8 @@ public class PESIClient extends BaseChecklistClient {
     public static final String URL = "http://www.eu-nomen.eu/portal/index.php";
     public static final String DATA_AGR_URL = "";
 
+    private static final EnumSet<SearchMode> capability = EnumSet.of(SearchMode.scientificNameExact);
+
 
     public PESIClient() {
         super();
@@ -50,16 +53,9 @@ public class PESIClient extends BaseChecklistClient {
 
 
     @Override
-    public void resolveNames(TnrMsg tnrMsg) throws DRFChecklistException {
-        List<TnrMsg.Query> queryList = tnrMsg.getQuery();
-        if(queryList.size() ==  0) {
-            throw new DRFChecklistException("PESI query list is empty");
-        }
+    public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
-        if(queryList.size() > 1) {
-            throw new DRFChecklistException("PESI query list has more than one query");
-        }
-        Query query = queryList.get(0);
+        Query query = singleQueryFrom(tnrMsg);
 
         //http://www.catalogueoflife.org/col/webservice?response=full&name={sciName}
 
@@ -228,6 +224,23 @@ public class PESIClient extends BaseChecklistClient {
 
             tnrResponse.getSynonym().add(synonym);
         }
+    }
+
+    @Override
+    public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void resolveVernacularNames(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public EnumSet<SearchMode> getSearchModes() {
+        return capability;
     }
 }
 

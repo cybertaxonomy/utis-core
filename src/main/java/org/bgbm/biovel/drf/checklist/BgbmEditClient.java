@@ -3,6 +3,7 @@ package org.bgbm.biovel.drf.checklist;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -35,6 +36,8 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
     private final Map<String,Query> taxonIdQueryMap;
 
+    private static final EnumSet<SearchMode> capability = EnumSet.of(SearchMode.scientificNameExact);
+
     public BgbmEditClient() {
         super();
         taxonIdQueryMap = new HashMap<String,Query>();
@@ -63,7 +66,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
     }
 
     @Override
-    public void resolveNames(TnrMsg tnrMsg) throws DRFChecklistException {
+    public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
         List<TnrMsg.Query> queryList = tnrMsg.getQuery();
         Iterator<ServiceProviderInfo> itrKeys = getServiceProviderInfo().getSubChecklists().iterator();
         while(itrKeys.hasNext()) {
@@ -275,6 +278,23 @@ public class BgbmEditClient extends AggregateChecklistClient {
                 tnrResponse.getSynonym().add(synonym);
             }
         }
+    }
+
+    @Override
+    public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void resolveVernacularNames(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public EnumSet<SearchMode> getSearchModes() {
+        return capability ;
     }
 
 

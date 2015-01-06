@@ -6,6 +6,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URI;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,8 @@ public class Species2000ColClient extends BaseChecklistClient {
     public static final String URL = "http://www.catalogueoflife.org";
     public static final String DATA_AGR_URL = "http://www.catalogueoflife.org/col/info/copyright";
 
+    private static final EnumSet<SearchMode> capability = EnumSet.of(SearchMode.scientificNameExact);
+
 
     public Species2000ColClient() {
         super();
@@ -65,16 +68,9 @@ public class Species2000ColClient extends BaseChecklistClient {
 
 
     @Override
-    public void resolveNames(TnrMsg tnrMsg) throws DRFChecklistException {
-        List<TnrMsg.Query> queryList = tnrMsg.getQuery();
-        if(queryList.size() ==  0) {
-            throw new DRFChecklistException("GBIF query list is empty");
-        }
+    public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
-        if(queryList.size() > 1) {
-            throw new DRFChecklistException("GBIF query list has more than one query");
-        }
-        Query query = queryList.get(0);
+        Query query = singleQueryFrom(tnrMsg);
 
         //http://www.catalogueoflife.org/col/webservice?response=full&name={sciName}
 
@@ -186,6 +182,23 @@ public class Species2000ColClient extends BaseChecklistClient {
         }
 
 
+    }
+
+    @Override
+    public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void resolveVernacularNames(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public EnumSet<SearchMode> getSearchModes() {
+        return capability;
     }
 
 

@@ -3,6 +3,7 @@ package org.bgbm.biovel.drf.checklist;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -30,6 +31,8 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
     public static final String LABEL = "GBIF Checklist Bank";
     public static final String URL = "http://ecat-dev.gbif.org/";
     public static final String DATA_AGR_URL = "http://data.gbif.org/tutorial/datauseagreement";
+
+    private static final EnumSet<SearchMode> capability = EnumSet.of(SearchMode.scientificNameExact);
 
 
     public GBIFBetaBackboneClient() {
@@ -62,7 +65,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
             System.out.println("buildChecklistMap");
             String responseBody = processRESTService(uri);
 
-            JSONObject jsonResponse = (JSONObject) JSONUtils.parseJsonToObject(responseBody);
+            JSONObject jsonResponse = JSONUtils.parseJsonToObject(responseBody);
             JSONArray data = (JSONArray) jsonResponse.get("data");
             Iterator<JSONObject> itrResults = data.iterator();
             while(itrResults.hasNext()) {
@@ -86,16 +89,10 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 
 
     @Override
-    public void resolveNames(TnrMsg tnrMsg) throws DRFChecklistException {
-        List<TnrMsg.Query> queryList = tnrMsg.getQuery();
-        if(queryList.size() ==  0) {
-            throw new DRFChecklistException("GBIF query list is empty");
-        }
+    public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
-        if(queryList.size() > 1) {
-            throw new DRFChecklistException("GBIF query list has more than one query");
-        }
-        Query query = queryList.get(0);
+        Query query = singleQueryFrom(tnrMsg);
+
         Iterator<ServiceProviderInfo> itrKeys = getServiceProviderInfo().getSubChecklists().iterator();
         //http://ecat-dev.gbif.org/ws/usage/?rkey={datasetID}&q={sciName}&pagesize=100&searchType=canonical
         while(itrKeys.hasNext()) {
@@ -276,6 +273,23 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
         syn.setScrutiny(scrutiny);
 
         tnrResponse.getSynonym().add(syn);
+    }
+
+    @Override
+    public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void resolveVernacularNames(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public EnumSet<SearchMode> getSearchModes() {
+        return capability;
     }
 
 

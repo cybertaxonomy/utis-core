@@ -3,6 +3,7 @@ package org.bgbm.biovel.drf.checklist;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -33,6 +34,8 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
     private static final String MAX_PAGING_LIMIT = "1000";
     private static final String VERSION = "v0.9";
     public static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL,VERSION);
+
+    private static final EnumSet<SearchMode> capability = EnumSet.of(SearchMode.scientificNameExact);
 
     public GBIFBackboneClient() {
         super();
@@ -106,16 +109,10 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 
 
     @Override
-    public void resolveNames(TnrMsg tnrMsg) throws DRFChecklistException {
-        List<TnrMsg.Query> queryList = tnrMsg.getQuery();
-        if(queryList.size() ==  0) {
-            throw new DRFChecklistException("GBIF query list is empty");
-        }
+    public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
-        if(queryList.size() > 1) {
-            throw new DRFChecklistException("GBIF query list has more than one query");
-        }
-        Query query = queryList.get(0);
+        Query query = singleQueryFrom(tnrMsg);
+
         Iterator<ServiceProviderInfo> itrKeys = getServiceProviderInfo().getSubChecklists().iterator();
         //http://api.gbif.org/name_usage?q=Abies%20alba&datasetKey=fab88965-e69d-4491-a04d-e3198b626e52
         while(itrKeys.hasNext()) {
@@ -334,6 +331,23 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
         catch(URISyntaxException e){
             throw new DRFChecklistException(e);
         }
+    }
+
+    @Override
+    public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void resolveVernacularNames(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public EnumSet<SearchMode> getSearchModes() {
+        return capability;
     }
 
 
