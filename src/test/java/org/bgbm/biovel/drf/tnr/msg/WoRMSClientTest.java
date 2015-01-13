@@ -10,6 +10,7 @@ import javax.xml.bind.JAXBException;
 
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.PESIClient;
+import org.bgbm.biovel.drf.checklist.SearchMode;
 import org.bgbm.biovel.drf.checklist.Species2000ColClient;
 import org.bgbm.biovel.drf.checklist.WoRMSClient;
 import org.bgbm.biovel.drf.input.DRFCSVInputParser;
@@ -66,7 +67,7 @@ public class WoRMSClientTest {
         while(tnrMsgItr.hasNext()) {
             TnrMsg tnrMsg = tnrMsgItr.next();
             logger.info("Querying WoRMS for name : " + tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().getFullName());
-            wormsc.queryChecklist(tnrMsg);
+            wormsc.queryChecklist(tnrMsg, SearchMode.scientificNameExact);
             String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
             logger.info(outputXML);
         }
@@ -84,7 +85,7 @@ public class WoRMSClientTest {
             String name = tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().getFullName();
             String nameTrunk = name.substring(0, name.length() - 2);
             logger.info("Querying WoRMS for name : " + nameTrunk);
-            
+
             tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().setFullName(nameTrunk);
             wormsc.resolveScientificNamesLike(tnrMsg);
             String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);

@@ -175,8 +175,7 @@ public static class ServiceProviderInfo {
         private String documentationUrl;
         private String copyrightUrl;
         private String version;
-        private EnumSet<SearchMode> searchModes;
-        private List<ServiceProviderInfo> subChecklists = null;
+        private List<ServiceProviderInfo> subChecklists = new ArrayList<ServiceProviderInfo>();
 
         public ServiceProviderInfo() {
         }
@@ -195,7 +194,6 @@ public static class ServiceProviderInfo {
             this.documentationUrl = documentationUrl;
             this.copyrightUrl = copyrightUrl;
             this.version = version;
-            subChecklists = null;
         }
 
         public String getId() {
@@ -220,9 +218,6 @@ public static class ServiceProviderInfo {
         }
 
         public void addSubChecklist(ServiceProviderInfo ci) {
-            if(subChecklists == null) {
-                subChecklists = new ArrayList<ServiceProviderInfo>();
-            }
             subChecklists.add(ci);
         }
 
@@ -251,20 +246,6 @@ public static class ServiceProviderInfo {
         @Override
         public String toString(){
             return getId();
-        }
-
-        /**
-         * @return the searchModes
-         */
-        public EnumSet<SearchMode> getSearchModes() {
-            return searchModes;
-        }
-
-        /**
-         * @param searchModes the searchModes to set
-         */
-        public void setSearchModes(EnumSet<SearchMode> searchModes) {
-            this.searchModes = searchModes;
         }
 
     }

@@ -46,8 +46,8 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
         super(spInfo);
     }
 
-    public void queryChecklist(TnrMsg tnrMsg) throws DRFChecklistException {
-        resolveScientificNamesExact(tnrMsg);
+    public void queryChecklist(TnrMsg tnrMsg, SearchMode searchMode) throws DRFChecklistException {
+        resolveNames(tnrMsg, searchMode);
     }
 
     public TnrMsg queryChecklist(List<TnrMsg> tnrMsgs) throws DRFChecklistException {
@@ -110,7 +110,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
         if(queryList.size() ==  0) {
             throw new DRFChecklistException("query list is empty");
         }
-    
+
         if(queryList.size() > 1) {
             throw new DRFChecklistException("query list has more than one query");
         }
@@ -120,6 +120,9 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
 
     public void resolveNames(TnrMsg tnrMsg, SearchMode mode) throws DRFChecklistException {
 
+        if(!getSearchModes().contains(mode)){
+            throw new DRFChecklistException("Unsupported SearchMode");
+        }
         if (getSearchModes().contains(mode)){
             switch(mode){
             case scientificNameExact:

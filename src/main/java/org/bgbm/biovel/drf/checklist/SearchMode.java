@@ -4,6 +4,6 @@ public enum SearchMode {
 
     scientificNameExact,
     scientificNameLike,
-    vernacularName
+    vernacularName;
 
 }
