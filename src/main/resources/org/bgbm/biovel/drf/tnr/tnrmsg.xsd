@@ -154,6 +154,13 @@
     <xsd:complexType>
       <xsd:sequence>
         <xsd:element minOccurs="0" maxOccurs="1" ref="tns:taxon">
+          <xsd:annotation>
+              <xsd:appinfo>
+                <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty(
+                     "The accepted taxon")
+                 </annox:annotate>
+              </xsd:appinfo>
+             </xsd:annotation>
         </xsd:element>
         <xsd:element minOccurs="0" maxOccurs="unbounded"
           name="otherNames">
