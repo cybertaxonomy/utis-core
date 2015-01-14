@@ -17,6 +17,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.bgbm.biovel.drf.tnr.msg.AtomisedName;
+import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
@@ -250,14 +251,14 @@ public class DRFCSVInputParser {
 
                             if(taxonName.getAtomisedName() != null || taxonName.getFullName() != null) {
 
-                                TnrMsg.Query.TnrRequest tnrRequest = new TnrMsg.Query.TnrRequest();
+                                Query.TnrRequest tnrRequest = new Query.TnrRequest();
                                 tnrRequest.setTaxonName(taxonName);
 
-                                TnrMsg.Query query = new TnrMsg.Query();
+                                Query query = new Query();
                                 query.setTnrRequest(tnrRequest);
 
                                 TnrMsg tnrMsg = new TnrMsg();
-                                List<TnrMsg.Query> queries = tnrMsg.getQuery();
+                                List<Query> queries = tnrMsg.getQuery();
                                 queries.add(query);
 
                                 tnrMsgs.add(tnrMsg);
@@ -287,8 +288,8 @@ public class DRFCSVInputParser {
 
         Iterator<TnrMsg> itrTnrMsg = tnrMsgs.iterator();
         while(itrTnrMsg.hasNext()) {
-            List<TnrMsg.Query> queries = itrTnrMsg.next().getQuery();
-            Iterator<TnrMsg.Query> itrQueries = queries.iterator();
+            List<Query> queries = itrTnrMsg.next().getQuery();
+            Iterator<Query> itrQueries = queries.iterator();
             while (itrQueries.hasNext()) {
                 TaxonName taxonName = itrQueries.next().getTnrRequest().getTaxonName();
                 if (taxonName != null && taxonName.getFullName().equals(sciName)) {

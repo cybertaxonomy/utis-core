@@ -18,7 +18,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.bgbm.biovel.drf.rest.TaxoRESTClient;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
+import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
         TnrMsg finalTnrMsg = new TnrMsg();
         Iterator<TnrMsg> itrTnrMsg = tnrMsgs.iterator();
         while(itrTnrMsg.hasNext()) {
-            Iterator<TnrMsg.Query> itrQuery = itrTnrMsg.next().getQuery().iterator();
+            Iterator<Query> itrQuery = itrTnrMsg.next().getQuery().iterator();
             while(itrQuery.hasNext()) {
                 finalTnrMsg.getQuery().add(itrQuery.next());
             }
@@ -66,12 +66,12 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
         return finalTnrMsg;
     }
 
-    public URI buildUriFromQueryList(List<TnrMsg.Query> queryList,
+    public URI buildUriFromQueryList(List<Query> queryList,
             String endpointSuffix,
             String queryKey,
             Map<String, String> paramMap) {
         List<String> queries = new ArrayList<String>();
-        Iterator<TnrMsg.Query> itrQuery = queryList.iterator();
+        Iterator<Query> itrQuery = queryList.iterator();
         while(itrQuery.hasNext()) {
             queries.add(itrQuery.next().getTnrRequest().getTaxonName().getFullName());
         }
@@ -82,7 +82,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
                 paramMap);
     }
 
-    public URI buildUriFromQuery(TnrMsg.Query query,
+    public URI buildUriFromQuery(Query query,
             String endpointSuffix,
             String queryKey,
             Map<String, String> paramMap) {
@@ -92,7 +92,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
                 paramMap);
     }
 
-    public URI buildUriFromQuery(TnrMsg.Query query,
+    public URI buildUriFromQuery(Query query,
             String regexpUrl,
             Map<String, String> paramMap) {
         String url = regexpUrl.replace(QUERY_PLACEHOLDER, query.getTnrRequest().getTaxonName().getFullName());
@@ -106,7 +106,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
      * @throws DRFChecklistException
      */
     protected Query singleQueryFrom(TnrMsg tnrMsg) throws DRFChecklistException {
-        List<TnrMsg.Query> queryList = tnrMsg.getQuery();
+        List<Query> queryList = tnrMsg.getQuery();
         if(queryList.size() ==  0) {
             throw new DRFChecklistException("query list is empty");
         }

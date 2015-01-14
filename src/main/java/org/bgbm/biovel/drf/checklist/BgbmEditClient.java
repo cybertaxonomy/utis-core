@@ -18,7 +18,7 @@ import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
+import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.gbif.nameparser.NameParser;
@@ -67,7 +67,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
     @Override
     public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
-        List<TnrMsg.Query> queryList = tnrMsg.getQuery();
+        List<Query> queryList = tnrMsg.getQuery();
         Iterator<ServiceProviderInfo> itrKeys = getServiceProviderInfo().getSubChecklists().iterator();
         while(itrKeys.hasNext()) {
             ServiceProviderInfo checklistInfo = itrKeys.next();
@@ -95,7 +95,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
         return 10;
     }
 
-    private void buildTaxonIdList(List<TnrMsg.Query> queryList , String response) throws DRFChecklistException {
+    private void buildTaxonIdList(List<Query> queryList , String response) throws DRFChecklistException {
 
         JSONParser parser = new JSONParser();
         Object obj;
@@ -117,7 +117,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
         }
 
         Iterator<JSONObject> itrNameMsgs = jsonArray.iterator();
-        Iterator<TnrMsg.Query> itrQuery = queryList.iterator();
+        Iterator<Query> itrQuery = queryList.iterator();
 
         while(itrNameMsgs.hasNext() && itrQuery.hasNext()) {
             Query query = itrQuery.next();

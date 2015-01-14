@@ -26,10 +26,10 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
+import org.bgbm.biovel.drf.tnr.msg.Query;
+import org.bgbm.biovel.drf.tnr.msg.Query.TnrRequest;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
-import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query.TnrRequest;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;

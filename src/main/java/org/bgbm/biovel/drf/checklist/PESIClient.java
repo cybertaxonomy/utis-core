@@ -11,6 +11,7 @@ import org.apache.http.HttpHost;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServiceLocator;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServicePortType;
 import org.bgbm.biovel.drf.checklist.pesi.PESIRecord;
+import org.bgbm.biovel.drf.checklist.worms.AphiaRecord;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
@@ -18,7 +19,7 @@ import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.TnrMsg.Query;
+import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 
@@ -30,7 +31,7 @@ public class PESIClient extends BaseChecklistClient {
     public static final String URL = "http://www.eu-nomen.eu/portal/index.php";
     public static final String DATA_AGR_URL = "";
 
-    private static final EnumSet<SearchMode> capability = EnumSet.of(SearchMode.scientificNameExact);
+    private static final EnumSet<SearchMode> capability = EnumSet.of(SearchMode.scientificNameExact, SearchMode.scientificNameLike);
 
 
     public PESIClient() {
@@ -40,7 +41,6 @@ public class PESIClient extends BaseChecklistClient {
 
     @Override
     public HttpHost getHost() {
-        // TODO Auto-generated method stub
         return new HttpHost("http://www.eu-nomen.eu",80);
     }
 
@@ -53,74 +53,15 @@ public class PESIClient extends BaseChecklistClient {
 
 
     @Override
-    public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
-
-        Query query = singleQueryFrom(tnrMsg);
-
-        //http://www.catalogueoflife.org/col/webservice?response=full&name={sciName}
-
-        String name = query.getTnrRequest().getTaxonName().getFullName();
-
-        PESINameServiceLocator pesins = new PESINameServiceLocator();
-
-        PESINameServicePortType pesinspt;
-        try {
-            pesinspt = pesins.getPESINameServicePort();
-        } catch (ServiceException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            throw new DRFChecklistException("Error in accessing PESINameService");
-        }
-        updateQueryWithResponse(query,pesinspt,name,getServiceProviderInfo());
-    }
-
-
-    @Override
     public int getMaxPageSize() {
         return 10;
     }
 
 
 
-    private void updateQueryWithResponse(Query query ,
-            PESINameServicePortType pesinspt,
-            String name,
-            ServiceProviderInfo ci) throws DRFChecklistException {
-
-        try {
-            String nameGUID = pesinspt.getGUID(name);
-            System.out.println("nameGUID : " + nameGUID);
-            PESIRecord record = pesinspt.getPESIRecordByGUID(nameGUID);
-            if(record != null) {
-                TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
-
-                String accNameGUID = record.getValid_guid();
-
-                // case when accepted name
-                if(record.getGUID().equals(record.getValid_guid())) {
-                    Taxon accName = generateAccName(record);
-                    tnrResponse.setTaxon(accName);
-                } else {
-                    // case when synonym
-                    PESIRecord accNameRecord = pesinspt.getPESIRecordByGUID(accNameGUID);
-                    Taxon accName = generateAccName(accNameRecord);
-                    tnrResponse.setTaxon(accName);
-                }
-
-                PESIRecord[] records = pesinspt.getPESISynonymsByGUID(accNameGUID);
-                if(records != null && records.length > 0) {
-                    generateSynonyms(records,tnrResponse);
-                }
-                if(query != null) {
-                    query.getTnrResponse().add(tnrResponse);
-                }
-            }
-        }  catch (RemoteException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            throw new DRFChecklistException("Error in getGUID method in PESINameService");
-        }
-
+    @Override
+    public EnumSet<SearchMode> getSearchModes() {
+        return capability;
     }
 
     private Taxon generateAccName(PESIRecord taxon) {
@@ -227,9 +168,67 @@ public class PESIClient extends BaseChecklistClient {
     }
 
     @Override
-    public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
+    public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
+        Query query = singleQueryFrom(tnrMsg);
+        String name = query.getTnrRequest().getTaxonName().getFullName();
+        PESINameServiceLocator pesins = new PESINameServiceLocator();
+
+        PESINameServicePortType pesinspt = getPESINameService(pesins);
+
+        try {
+            String nameGUID = pesinspt.getGUID(name);
+            if(nameGUID != null){
+                logger.debug("nameGUID : " + nameGUID);
+                PESIRecord record = pesinspt.getPESIRecordByGUID(nameGUID);
+                tnrResponseFromRecord(pesinspt, record);
+            } else {
+                logger.debug("no match for " + name);
+            }
+        }  catch (RemoteException e) {
+            logger.error("Error in getGUID method in PESINameService", e);
+            throw new DRFChecklistException("Error in getGUID method in PESINameService");
+        }
+
+    }
+
+    @Override
+    public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
+        Query query = singleQueryFrom(tnrMsg);
+        String name = query.getTnrRequest().getTaxonName().getFullName();
+        PESINameServiceLocator pesins = new PESINameServiceLocator();
+
+        PESINameServicePortType pesinspt = getPESINameService(pesins);
+
+        try {
+            PESIRecord[] records = pesinspt.getPESIRecords(name, true);
+            if(records != null){
+                for (PESIRecord record : records) {
+                    TnrResponse tnrResponse = tnrResponseFromRecord(pesinspt, record);
+                    query.getTnrResponse().add(tnrResponse);
+                }
+            }
+        }  catch (RemoteException e) {
+            logger.error("Error in getPESIRecords method in PESINameService", e);
+            throw new DRFChecklistException("Error in getPESIRecords method in PESINameService");
+        }
+
+    }
+
+    /**
+     * @param pesins
+     * @return
+     * @throws DRFChecklistException
+     */
+    private PESINameServicePortType getPESINameService(PESINameServiceLocator pesins) throws DRFChecklistException {
+        PESINameServicePortType pesinspt;
+        try {
+            pesinspt = pesins.getPESINameServicePort();
+        } catch (ServiceException e) {
+            logger.error("Error in accessing PESINameService", e);
+            throw new DRFChecklistException("Error in accessing PESINameService");
+        }
+        return pesinspt;
     }
 
     @Override
@@ -238,9 +237,34 @@ public class PESIClient extends BaseChecklistClient {
 
     }
 
-    @Override
-    public EnumSet<SearchMode> getSearchModes() {
-        return capability;
+    /**
+     * @param pesinspt
+     * @param record
+     * @throws RemoteException
+     */
+    private TnrResponse tnrResponseFromRecord(PESINameServicePortType pesinspt, PESIRecord record) throws RemoteException {
+
+        TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
+
+        String accNameGUID = record.getValid_guid();
+
+        // case when accepted name
+        if(record.getGUID().equals(record.getValid_guid())) {
+            Taxon accName = generateAccName(record);
+            tnrResponse.setTaxon(accName);
+        } else {
+            // case when synonym
+            PESIRecord accNameRecord = pesinspt.getPESIRecordByGUID(accNameGUID);
+            Taxon accName = generateAccName(accNameRecord);
+            tnrResponse.setTaxon(accName);
+        }
+
+        PESIRecord[] records = pesinspt.getPESISynonymsByGUID(accNameGUID);
+        if(records != null && records.length > 0) {
+            generateSynonyms(records,tnrResponse);
+        }
+
+        return tnrResponse;
     }
 }
 
