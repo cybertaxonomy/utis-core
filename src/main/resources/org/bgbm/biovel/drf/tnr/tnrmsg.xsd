@@ -212,7 +212,7 @@
             </xsd:appinfo>
           </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="matchingNameType" type="xsd:string">
+      <xsd:attribute name="matchingNameType" type="tns:nameType">
                 <xsd:annotation>
             <xsd:appinfo>
               <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "Reports which of the names was matching the query string:  'taxon', 'synonym', 'vernacularName', or 'otherName'")
@@ -380,4 +380,13 @@
       </xsd:sequence>
     </xsd:complexType>
   </xsd:element>
+
+  <xsd:simpleType name="nameType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="taxon"></xsd:enumeration>
+      <xsd:enumeration value="synonym"></xsd:enumeration>
+      <xsd:enumeration value="vernacularName"></xsd:enumeration>
+      <xsd:enumeration value="otherName"></xsd:enumeration>
+    </xsd:restriction>
+  </xsd:simpleType>
 </xsd:schema>

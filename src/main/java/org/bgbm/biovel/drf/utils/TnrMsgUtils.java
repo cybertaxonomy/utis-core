@@ -27,6 +27,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Query;
+import org.bgbm.biovel.drf.tnr.msg.Query.TnrClientStatus;
 import org.bgbm.biovel.drf.tnr.msg.Query.TnrRequest;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
@@ -202,9 +203,16 @@ public class TnrMsgUtils {
          */
         public static TnrResponse tnrResponseFor(ServiceProviderInfo ci) {
             TnrResponse tnrResponse = new TnrResponse();
+            tnrResponse.setChecklistId(ci.getId());
             tnrResponse.setChecklist(ci.getLabel());
             tnrResponse.setChecklistUrl(ci.getDocumentationUrl());
             return tnrResponse;
+        }
+
+        public static TnrClientStatus tnrClientStatusFor(ServiceProviderInfo ci) {
+            TnrClientStatus tnrClientStatus = new TnrClientStatus();
+            tnrClientStatus.setChecklistId(ci.getId());
+            return tnrClientStatus;
         }
 
 

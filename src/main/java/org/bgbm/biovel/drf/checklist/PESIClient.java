@@ -13,6 +13,7 @@ import org.bgbm.biovel.drf.checklist.pesi.PESINameServicePortType;
 import org.bgbm.biovel.drf.checklist.pesi.PESIRecord;
 import org.bgbm.biovel.drf.checklist.worms.AphiaRecord;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
+import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.Synonym;
@@ -247,16 +248,19 @@ public class PESIClient extends BaseChecklistClient {
         TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
 
         String accNameGUID = record.getValid_guid();
+        tnrResponse.setMatchingNameString(record.getScientificname());
 
         // case when accepted name
         if(record.getGUID().equals(record.getValid_guid())) {
             Taxon accName = generateAccName(record);
             tnrResponse.setTaxon(accName);
+            tnrResponse.setMatchingNameType(NameType.TAXON);
         } else {
             // case when synonym
             PESIRecord accNameRecord = pesinspt.getPESIRecordByGUID(accNameGUID);
             Taxon accName = generateAccName(accNameRecord);
             tnrResponse.setTaxon(accName);
+            tnrResponse.setMatchingNameType(NameType.SYNONYM);
         }
 
         PESIRecord[] records = pesinspt.getPESISynonymsByGUID(accNameGUID);

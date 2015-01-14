@@ -11,6 +11,7 @@ import org.bgbm.biovel.drf.checklist.worms.AphiaNameServiceLocator;
 import org.bgbm.biovel.drf.checklist.worms.AphiaNameServicePortType;
 import org.bgbm.biovel.drf.checklist.worms.AphiaRecord;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
+import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.Synonym;
@@ -88,16 +89,20 @@ public class WoRMSClient extends BaseChecklistClient {
         TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
 
         int accNameGUID = record.getValid_AphiaID();
+        String matchingName = record.getScientificname();
+        tnrResponse.setMatchingNameString(matchingName); // TODO how about vernacualr search modes?
 
         // case when accepted name
         if(record.getAphiaID() == accNameGUID) {
             Taxon accName = generateAccName(record);
             tnrResponse.setTaxon(accName);
+            tnrResponse.setMatchingNameType(NameType.TAXON);
         } else {
             // case when synonym
             AphiaRecord accNameRecord = aphianspt.getAphiaRecordByID(accNameGUID);
             Taxon accName = generateAccName(accNameRecord);
             tnrResponse.setTaxon(accName);
+            tnrResponse.setMatchingNameType(NameType.SYNONYM);
         }
 
         AphiaRecord[] synonyms = aphianspt.getAphiaSynonymsByID(accNameGUID);
