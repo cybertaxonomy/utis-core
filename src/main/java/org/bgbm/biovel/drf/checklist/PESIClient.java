@@ -250,22 +250,25 @@ public class PESIClient extends BaseChecklistClient {
         String accNameGUID = record.getValid_guid();
         tnrResponse.setMatchingNameString(record.getScientificname());
 
-        // case when accepted name
-        if(record.getGUID().equals(record.getValid_guid())) {
-            Taxon accName = generateAccName(record);
-            tnrResponse.setTaxon(accName);
-            tnrResponse.setMatchingNameType(NameType.TAXON);
-        } else {
-            // case when synonym
-            PESIRecord accNameRecord = pesinspt.getPESIRecordByGUID(accNameGUID);
-            Taxon accName = generateAccName(accNameRecord);
-            tnrResponse.setTaxon(accName);
-            tnrResponse.setMatchingNameType(NameType.SYNONYM);
-        }
+        if(accNameGUID != null){
 
-        PESIRecord[] records = pesinspt.getPESISynonymsByGUID(accNameGUID);
-        if(records != null && records.length > 0) {
-            generateSynonyms(records,tnrResponse);
+            // case when accepted name
+            if(record.getGUID() != null && record.getGUID().equals(accNameGUID)) {
+                Taxon accName = generateAccName(record);
+                tnrResponse.setTaxon(accName);
+                tnrResponse.setMatchingNameType(NameType.TAXON);
+            } else {
+                // case when synonym
+                PESIRecord accNameRecord = pesinspt.getPESIRecordByGUID(accNameGUID);
+                Taxon accName = generateAccName(accNameRecord);
+                tnrResponse.setTaxon(accName);
+                tnrResponse.setMatchingNameType(NameType.SYNONYM);
+            }
+
+            PESIRecord[] records = pesinspt.getPESISynonymsByGUID(accNameGUID);
+            if(records != null && records.length > 0) {
+                generateSynonyms(records,tnrResponse);
+            }
         }
 
         return tnrResponse;
