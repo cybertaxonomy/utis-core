@@ -12,6 +12,7 @@ import java.util.Map;
 import org.apache.http.HttpHost;
 import org.apache.http.ParseException;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
+import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.Synonym;
@@ -34,18 +35,20 @@ public class BgbmEditClient extends AggregateChecklistClient {
     public static final String COPYRIGHT_URL = "http://wp5.e-taxonomy.eu/cdmlib/license.html";
 
 
-    private final Map<String,Query> taxonIdQueryMap;
+    private final Map<String,Query> taxonIdQueryMap = new HashMap<String,Query>();
 
-    private static final EnumSet<SearchMode> capability = EnumSet.of(SearchMode.scientificNameExact);
+    private final Map<String,String> taxonIdMatchStringMap = new HashMap<String, String>();
+
+    private static final EnumSet<SearchMode> capability = EnumSet.of(
+            SearchMode.scientificNameExact,
+            SearchMode.scientificNameLike);
 
     public BgbmEditClient() {
         super();
-        taxonIdQueryMap = new HashMap<String,Query>();
     }
 
     public BgbmEditClient(String checklistInfoJson) throws DRFChecklistException {
         super(checklistInfoJson);
-        taxonIdQueryMap = new HashMap<String,Query>();
     }
 
     @Override
@@ -66,71 +69,47 @@ public class BgbmEditClient extends AggregateChecklistClient {
     }
 
     @Override
-    public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
-        List<Query> queryList = tnrMsg.getQuery();
-        Iterator<ServiceProviderInfo> itrKeys = getServiceProviderInfo().getSubChecklists().iterator();
-        while(itrKeys.hasNext()) {
-            ServiceProviderInfo checklistInfo = itrKeys.next();
-            URI namesUri = buildUriFromQueryList(queryList,
-                    "/cdmserver/" + checklistInfo.getId() + "/name_catalogue.json",
-                    "query",
-                    null);
-
-            String responseBody = processRESTService(namesUri);
-            buildTaxonIdList(queryList, responseBody);
-            List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
-            if(taxonIdList.size() > 0) {
-                URI taxonUri = buildUriFromQueryStringList(taxonIdList,
-                        "/cdmserver/" + checklistInfo.getId() + "/name_catalogue/taxon.json",
-                        "taxonUuid",
-                        null);
-                responseBody = processRESTService(taxonUri);
-                updateQueriesWithResponse(responseBody, checklistInfo);
-            }
-        }
-    }
-
-    @Override
     public int getMaxPageSize() {
         return 10;
     }
 
-    private void buildTaxonIdList(List<Query> queryList , String response) throws DRFChecklistException {
+    /**
+     * Adds the acceptedTaxonUuids found in the <code>responseBody</code> to the private field <code>taxonIdQueryMap</code>
+     * and populates the <code>taxonIdMatchStringMap</code>
+     *
+     * @param queryList
+     * @param responseBodyJson
+     * @throws DRFChecklistException
+     */
+    private void buildTaxonIdMaps(List<Query> queryList , String responseBody) throws DRFChecklistException {
 
-        JSONParser parser = new JSONParser();
-        Object obj;
-        try {
-            obj = parser.parse(response);
-        } catch (ParseException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            throw new DRFChecklistException(e);
-        } catch (org.json.simple.parser.ParseException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            throw new DRFChecklistException(e);
-        }
+        JSONArray responseBodyJson = parseResponseBody(responseBody);
 
-        JSONArray jsonArray = (JSONArray ) obj;
-        if(jsonArray.size() != queryList.size()){
+        if(responseBodyJson.size() != queryList.size()){
             throw new DRFChecklistException("Query and Response lists have different lengths");
         }
 
-        Iterator<JSONObject> itrNameMsgs = jsonArray.iterator();
-        Iterator<Query> itrQuery = queryList.iterator();
+        Iterator<JSONObject> itrNameMsgs = responseBodyJson.iterator();
 
-        while(itrNameMsgs.hasNext() && itrQuery.hasNext()) {
-            Query query = itrQuery.next();
+        for (Query query : queryList) {
             JSONArray responseArray = (JSONArray) itrNameMsgs.next().get("response");
             if(responseArray != null) {
                 Iterator<JSONObject> resIterator = responseArray.iterator();
                 while (resIterator.hasNext()) {
                     JSONObject res = resIterator.next();
                     JSONArray accTaxonUuidArray = (JSONArray) res.get("acceptedTaxonUuids");
+                    String matchName = res.get("title").toString();
                     Iterator<String> atIterator = accTaxonUuidArray.iterator();
                     while (atIterator.hasNext()) {
                         String accTaxonId = atIterator.next();
-                        taxonIdQueryMap.put(accTaxonId, query);
+                        boolean isAcceptedTaxonMatch = res.get("taxonConceptUuids").toString().contains(accTaxonId);
+                        if(!taxonIdQueryMap.containsKey(accTaxonId) || isAcceptedTaxonMatch){
+                            // matches for accepted taxa should be preferred here
+                            // mathches for synomymy or other typs should never overrwite
+                            // accepted taxon matches
+                            taxonIdQueryMap.put(accTaxonId, query);
+                            taxonIdMatchStringMap.put(accTaxonId, matchName);
+                        }
                         //System.out.println("Found accepted taxon id : " + accTaxonId);
                     }
                 }
@@ -138,11 +117,16 @@ public class BgbmEditClient extends AggregateChecklistClient {
         }
     }
 
-    private void updateQueriesWithResponse(String response, ServiceProviderInfo ci) throws DRFChecklistException {
+    /**
+     * @param responseBody
+     * @return
+     * @throws DRFChecklistException
+     */
+    private JSONArray parseResponseBody(String responseBody) throws DRFChecklistException {
         JSONParser parser = new JSONParser();
         Object obj;
         try {
-            obj = parser.parse(response);
+            obj = parser.parse(responseBody);
         } catch (ParseException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -154,28 +138,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
         }
 
         JSONArray jsonArray = (JSONArray ) obj;
-        Iterator<JSONObject> itrTaxonMsgs = jsonArray.iterator();
-
-        while(itrTaxonMsgs.hasNext()) {
-            JSONObject taxonInfo = itrTaxonMsgs.next();
-            JSONObject taxonResponse = (JSONObject) taxonInfo.get("response");
-            JSONObject taxon = (JSONObject) taxonResponse.get("taxon");
-            JSONArray relatedTaxa = (JSONArray) taxonResponse.get("relatedTaxa");
-
-            JSONObject taxonRequest = (JSONObject) taxonInfo.get("request");
-            String taxonUuid = (String) taxonRequest.get("taxonUuid");
-
-            if(taxon != null) {
-                TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
-                Taxon accName = generateAccName(taxon);
-                tnrResponse.setTaxon(accName);
-                generateSynonyms(relatedTaxa, tnrResponse);
-                Query query = taxonIdQueryMap.get(taxonUuid);
-                if(query != null) {
-                    query.getTnrResponse().add(tnrResponse);
-                }
-            }
-        }
+        return jsonArray;
     }
 
     private Taxon generateAccName(JSONObject taxon) {
@@ -281,9 +244,72 @@ public class BgbmEditClient extends AggregateChecklistClient {
     }
 
     @Override
-    public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
+    public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
+        List<Query> queryList = tnrMsg.getQuery();
+
+        for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
+            URI namesUri = buildUriFromQueryList(queryList,
+                    "/cdmserver/" + checklistInfo.getId() + "/name_catalogue.json",
+                    "query",
+                    "*", null);
+
+            String searchResponseBody = processRESTService(namesUri);
+            buildTaxonIdMaps(queryList, searchResponseBody);
+
+            List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
+
+            if(taxonIdList.size() > 0) {
+                URI taxonUri = buildUriFromQueryStringList(taxonIdList,
+                        "/cdmserver/" + checklistInfo.getId() + "/name_catalogue/taxon.json",
+                        "taxonUuid",
+                        null);
+                String taxonResponseBody = processRESTService(taxonUri);
+                updateQueriesWithResponse(taxonResponseBody, checklistInfo);
+            }
+        }
+    }
+
+    @Override
+    public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
+        // delegate to resolveScientificNamesExact, since the like search mode is handled in buildUriFromQueryList
+        resolveScientificNamesExact(tnrMsg);
+
+    }
+
+    private void updateQueriesWithResponse(String responseBody, ServiceProviderInfo ci) throws DRFChecklistException {
+
+        JSONArray responseBodyJson = parseResponseBody(responseBody);
+
+        Iterator<JSONObject> itrTaxonMsgs = responseBodyJson.iterator();
+
+        int i = -1;
+        while(itrTaxonMsgs.hasNext()) {
+            i++;
+            JSONObject taxonInfo = itrTaxonMsgs.next();
+            JSONObject taxonResponse = (JSONObject) taxonInfo.get("response");
+            JSONObject taxon = (JSONObject) taxonResponse.get("taxon");
+            JSONArray relatedTaxa = (JSONArray) taxonResponse.get("relatedTaxa");
+
+            JSONObject taxonRequest = (JSONObject) taxonInfo.get("request");
+            String taxonUuid = (String) taxonRequest.get("taxonUuid");
+
+            if(taxon != null) {
+                TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
+
+                String matchingName = taxonIdMatchStringMap.get(taxonUuid);
+                tnrResponse.setMatchingNameString(matchingName);
+                tnrResponse.setMatchingNameType(matchingName.equals(taxon.get("name").toString()) ? NameType.TAXON : NameType.SYNONYM);
+
+                Taxon accName = generateAccName(taxon);
+                tnrResponse.setTaxon(accName);
+                generateSynonyms(relatedTaxa, tnrResponse);
+                Query query = taxonIdQueryMap.get(taxonUuid);
+                if(query != null) {
+                    query.getTnrResponse().add(tnrResponse);
+                }
+            }
+        }
     }
 
     @Override

@@ -17,6 +17,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.bgbm.biovel.drf.rest.TaxoRESTClient;
+import org.bgbm.biovel.drf.tnr.msg.Query.TnrRequest;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.utils.JSONUtils;
@@ -66,16 +67,36 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
         return finalTnrMsg;
     }
 
+    /**
+     *
+     * @param queryList
+     * @param endpointSuffix
+     * @param queryKey
+     * @param likeModeWildcard the wildcard to add to the query string in case of like search modes
+     * @param paramMap
+     * @return
+     */
     public URI buildUriFromQueryList(List<Query> queryList,
             String endpointSuffix,
             String queryKey,
+            String likeModeWildcard,
             Map<String, String> paramMap) {
+
         List<String> queries = new ArrayList<String>();
-        Iterator<Query> itrQuery = queryList.iterator();
-        while(itrQuery.hasNext()) {
-            queries.add(itrQuery.next().getTnrRequest().getTaxonName().getFullName());
+
+        EnumSet<SearchMode> likeModes = EnumSet.of(SearchMode.scientificNameLike);
+
+        for(Query query : queryList) {
+            TnrRequest tnrRequest = query.getTnrRequest();
+            String queryString = tnrRequest.getTaxonName().getFullName();
+            if(likeModes.contains(SearchMode.valueOf(tnrRequest.getSearchMode()))){
+                queryString += likeModeWildcard;
+            }
+            queries.add(queryString);
         }
-        System.out.println("Query size : " + queries.size());
+
+        logger.debug("Query size : " + queries.size());
+
         return buildUriFromQueryStringList(queries,
                 endpointSuffix,
                 queryKey,
