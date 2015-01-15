@@ -134,7 +134,6 @@ public class DRFCSVInputParser {
         int name_complete_index = -1;
         int uninomial_index = -1;
         int taxon_name_index = -1;
-        int name_label_index = -1;
 
         int line_count = 0;
         int nbOfElements = 0;
@@ -180,8 +179,6 @@ public class DRFCSVInputParser {
                             taxon_name_index = headers
                                     .indexOf(SynCheckConstants.TAXONNAME_HDR);
 
-                            name_label_index = headers
-                                    .indexOf(SynCheckConstants.NAMELABEL_HDR);
                         } else {
                             if (nextLine.length != nbOfElements) {
                                 throw new DRFInputException(
@@ -230,23 +227,6 @@ public class DRFCSVInputParser {
                             if (authorship_index >= 0
                                     && !nextLine[authorship_index].equals("")) {
                                 taxonName.setAuthorship(nextLine[authorship_index]);
-                            }
-
-                            if (name_label_index >= 0
-                                    && !nextLine[name_label_index].equals("")) {
-                                // System.out.println("Found name label for name "
-                                // + scd.sciName);
-                                TaxonName existingName = getDataObjectFromSciName(taxonName.getFullName());
-                                if (existingName != null) {
-                                    // System.out.println("add " +
-                                    // nextLine[name_label_index] +
-                                    // "to existing");
-                                    existingName.getNameLabel().add(nextLine[name_label_index]);
-                                } else {
-                                    // System.out.println("add " +
-                                    // nextLine[name_label_index] + "to new");
-                                    taxonName.getNameLabel().add(nextLine[name_label_index]);
-                                }
                             }
 
                             if(taxonName.getAtomisedName() != null || taxonName.getFullName() != null) {
