@@ -167,13 +167,36 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
         }
     }
 
-
+    /**
+     * Searches for scientific names which exactly match the given query string.
+     *
+     * @param tnrMsg
+     * @throws DRFChecklistException
+     */
     public abstract void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException;
 
+    /**
+     * Searches for scientific names which start with the given query string.
+     *
+     * @param tnrMsg
+     * @throws DRFChecklistException
+     */
     public abstract void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException;
 
+    /**
+     * Searches for taxa with an vernacular name that exactly match the given query string.
+     *
+     * @param tnrMsg
+     * @throws DRFChecklistException
+     */
     public abstract void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException;
 
+    /**
+     * Searches for taxa with an vernacular name that contains the given query string.
+     *
+     * @param tnrMsg
+     * @throws DRFChecklistException
+     */
     public abstract void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException;
 
     public abstract EnumSet<SearchMode> getSearchModes();

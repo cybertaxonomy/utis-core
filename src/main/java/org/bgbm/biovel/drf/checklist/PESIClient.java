@@ -314,7 +314,7 @@ public class PESIClient extends BaseChecklistClient {
         PESINameServicePortType pesinspt = getPESINameService(pesins);
 
         try {
-            PESIRecord[] records = pesinspt.getPESIRecordsByVernacular(name + "%");
+            PESIRecord[] records = pesinspt.getPESIRecordsByVernacular("%" + name + "%");
             if(records != null){
                 for (PESIRecord record : records) {
                     TnrResponse tnrResponse = tnrResponseFromRecord(pesinspt, record, null);

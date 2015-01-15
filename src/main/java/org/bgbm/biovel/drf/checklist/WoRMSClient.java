@@ -33,7 +33,16 @@ public class WoRMSClient extends BaseChecklistClient {
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
-            SearchMode.scientificNameLike);
+            SearchMode.scientificNameLike,
+            SearchMode.vernacularNameExact,
+            SearchMode.vernacularNameLike
+            );
+
+    public static final EnumSet<SearchMode> SCIENTIFICNAME_SEARCH_MODES = EnumSet.of(
+            SearchMode.scientificNameExact,
+            SearchMode.scientificNameLike
+            );
+
 
 
     public WoRMSClient() {
@@ -61,6 +70,11 @@ public class WoRMSClient extends BaseChecklistClient {
 
 
 
+    @Override
+    public EnumSet<SearchMode> getSearchModes() {
+        return SEARCH_MODES;
+    }
+
     /**
      * @return
      * @throws DRFChecklistException
@@ -73,7 +87,7 @@ public class WoRMSClient extends BaseChecklistClient {
         try {
             aphianspt = aphiansl.getAphiaNameServicePort();
         } catch (ServiceException e) {
-            logger.error("Error in accessing PESINameService", e);
+            logger.error("Error in accessing AphiaNameSerice", e);
             throw new DRFChecklistException("Error in accessing AphiaNameService");
         }
         return aphianspt;
@@ -85,25 +99,31 @@ public class WoRMSClient extends BaseChecklistClient {
      * @return
      * @throws RemoteException
      */
-    private TnrResponse tnrResponseFromRecord(AphiaNameServicePortType aphianspt, AphiaRecord record)
+    private TnrResponse tnrResponseFromRecord(AphiaNameServicePortType aphianspt, AphiaRecord record, SearchMode searchMode)
             throws RemoteException {
         TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
 
         int accNameGUID = record.getValid_AphiaID();
         String matchingName = record.getScientificname();
-        tnrResponse.setMatchingNameString(matchingName); // TODO how about vernacualr search modes?
+        if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
+            tnrResponse.setMatchingNameString(matchingName);
+        }
 
         // case when accepted name
         if(record.getAphiaID() == accNameGUID) {
             Taxon accName = generateAccName(record);
             tnrResponse.setTaxon(accName);
-            tnrResponse.setMatchingNameType(NameType.TAXON);
+            if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
+                tnrResponse.setMatchingNameType(NameType.TAXON);
+            }
         } else {
             // case when synonym
             AphiaRecord accNameRecord = aphianspt.getAphiaRecordByID(accNameGUID);
             Taxon accName = generateAccName(accNameRecord);
             tnrResponse.setTaxon(accName);
-            tnrResponse.setMatchingNameType(NameType.SYNONYM);
+            if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
+                tnrResponse.setMatchingNameType(NameType.SYNONYM);
+            }
         }
 
         AphiaRecord[] synonyms = aphianspt.getAphiaSynonymsByID(accNameGUID);
@@ -232,7 +252,7 @@ public class WoRMSClient extends BaseChecklistClient {
                 Integer nameAphiaID = aphianspt.getAphiaID(name, false);
                 logger.debug("nameAphiaID : " + nameAphiaID);
                 record = aphianspt.getAphiaRecordByID(nameAphiaID);
-                TnrResponse tnrResponse = tnrResponseFromRecord(aphianspt, record);
+                TnrResponse tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.scientificNameExact);
                 query.getTnrResponse().add(tnrResponse);
             } catch(NullPointerException npe) {
                 //FIXME : Workaround for NPE thrown by the aphia stub due to a,
@@ -258,33 +278,62 @@ public class WoRMSClient extends BaseChecklistClient {
             AphiaRecord[] records = aphianspt.getAphiaRecords(name + "%", true, fuzzy, false, 1);
             if(records != null){
                 for (AphiaRecord record : records) {
-                    TnrResponse tnrResponse = tnrResponseFromRecord(aphianspt, record);
+                    TnrResponse tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.scientificNameLike);
                     query.getTnrResponse().add(tnrResponse);
                 }
             }
 
         } catch (RemoteException e) {
-            logger.error("Error in getGUID method in PESINameService", e);
-            throw new DRFChecklistException("Error in getGUID method in PESINameService", e);
+            logger.error("Error in getGUID method in AphiaNameSerice", e);
+            throw new DRFChecklistException("Error in getGUID method in AphiaNameSerice", e);
         }
 
     }
 
     @Override
     public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
 
-    }
+        Query query = singleQueryFrom(tnrMsg);
+        String name = query.getTnrRequest().getTaxonName().getFullName();
+        AphiaNameServicePortType aphianspt = getAphiaNameService();
 
-    @Override
-    public EnumSet<SearchMode> getSearchModes() {
-        return SEARCH_MODES;
+        try {
+            AphiaRecord[] records = aphianspt.getAphiaRecordsByVernacular(name, false, 1);
+            if(records != null){
+                for (AphiaRecord record : records) {
+                    TnrResponse tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.vernacularNameExact);
+                    query.getTnrResponse().add(tnrResponse);
+                }
+            }
+
+        } catch (RemoteException e) {
+            logger.error("Error in getAphiaRecordsByVernacular() in AphiaNameSerice", e);
+            throw new DRFChecklistException("Error in getGUID method in AphiaNameSerice", e);
+        }
+
     }
 
     @Override
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
-        
+
+        Query query = singleQueryFrom(tnrMsg);
+        String name = query.getTnrRequest().getTaxonName().getFullName();
+        AphiaNameServicePortType aphianspt = getAphiaNameService();
+
+        try {
+            AphiaRecord[] records = aphianspt.getAphiaRecordsByVernacular(name, true, 1);
+            if(records != null){
+                for (AphiaRecord record : records) {
+                    TnrResponse tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.vernacularNameLike);
+                    query.getTnrResponse().add(tnrResponse);
+                }
+            }
+
+        } catch (RemoteException e) {
+            logger.error("Error in getAphiaRecordsByVernacular() AphiaNameSerice", e);
+            throw new DRFChecklistException("Error in getGUID method in AphiaNameSerice", e);
+        }
+
     }
 }
 
