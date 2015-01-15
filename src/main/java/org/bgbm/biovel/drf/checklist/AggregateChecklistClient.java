@@ -1,5 +1,7 @@
 package org.bgbm.biovel.drf.checklist;
 
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
+
 
 public abstract class AggregateChecklistClient extends BaseChecklistClient {
 	

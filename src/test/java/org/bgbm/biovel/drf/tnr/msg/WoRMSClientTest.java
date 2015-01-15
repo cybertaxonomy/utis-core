@@ -15,7 +15,7 @@ import org.bgbm.biovel.drf.checklist.Species2000ColClient;
 import org.bgbm.biovel.drf.checklist.WoRMSClient;
 import org.bgbm.biovel.drf.input.DRFCSVInputParser;
 import org.bgbm.biovel.drf.input.DRFInputException;
-import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgException;
@@ -48,7 +48,7 @@ public class WoRMSClientTest {
         ci = new ServiceProviderInfo(WoRMSClient.ID,
                 WoRMSClient.LABEL,
                 WoRMSClient.URL,
-                WoRMSClient.DATA_AGR_URL);
+                WoRMSClient.DATA_AGR_URL, ServiceProviderInfo.DEFAULT_SEARCH_MODE);
     }
 
     @Test

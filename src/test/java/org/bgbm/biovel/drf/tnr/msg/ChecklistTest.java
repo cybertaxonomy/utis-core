@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
-import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.utils.ServiceProviderInfoUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.junit.BeforeClass;

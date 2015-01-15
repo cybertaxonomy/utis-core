@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
@@ -32,7 +33,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
     public static final String URL = "http://ecat-dev.gbif.org/";
     public static final String DATA_AGR_URL = "http://data.gbif.org/tutorial/datauseagreement";
 
-    private static final EnumSet<SearchMode> capability = EnumSet.of(SearchMode.scientificNameExact);
+    public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(SearchMode.scientificNameExact);
 
 
     public GBIFBetaBackboneClient() {
@@ -52,7 +53,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo()  {
-        ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL);
+        ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL, getSearchModes());
 
         URIBuilder uriBuilder = new URIBuilder();
         uriBuilder.setScheme("http");
@@ -73,7 +74,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
                 String key = ((Long)result.get("datasetID")).toString();
                 String title = (String)result.get("title");
                 String url =  "http://ecat-dev.gbif.org/checklist/" + key;
-                checklistInfo.addSubChecklist(new ServiceProviderInfo(key, title,  url, DATA_AGR_URL));
+                checklistInfo.addSubChecklist(new ServiceProviderInfo(key, title,  url, DATA_AGR_URL, getSearchModes()));
             }
 
         } catch (URISyntaxException e) {
@@ -289,7 +290,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 
     @Override
     public EnumSet<SearchMode> getSearchModes() {
-        return capability;
+        return SEARCH_MODES;
     }
 
 

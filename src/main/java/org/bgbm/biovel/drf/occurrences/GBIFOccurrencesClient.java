@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.utils.CSVUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.json.simple.JSONArray;
@@ -27,7 +28,7 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
     // in v0.9 the max limit is 300
     private static final String MAX_PAGING_LIMIT = "300";
     private static final String VERSION = "v0.9";
-    private static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL,VERSION);
+    private static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,ServiceProviderInfo.DEFAULT_SEARCH_MODE,URL,DATA_AGR_URL, VERSION);
 
     private final Map<String, JSONObject> datasetCacheMap = new HashMap<String, JSONObject>();
     private final Map<String, JSONObject> orgCacheMap = new HashMap<String, JSONObject>();

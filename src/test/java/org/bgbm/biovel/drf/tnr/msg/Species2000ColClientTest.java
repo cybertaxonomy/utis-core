@@ -11,7 +11,7 @@ import org.bgbm.biovel.drf.checklist.SearchMode;
 import org.bgbm.biovel.drf.checklist.Species2000ColClient;
 import org.bgbm.biovel.drf.input.DRFCSVInputParser;
 import org.bgbm.biovel.drf.input.DRFInputException;
-import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgException;
@@ -42,7 +42,7 @@ public class Species2000ColClientTest {
         ci = new ServiceProviderInfo(Species2000ColClient.ID,
                 Species2000ColClient.LABEL,
                 Species2000ColClient.URL,
-                Species2000ColClient.DATA_AGR_URL);
+                Species2000ColClient.DATA_AGR_URL, ServiceProviderInfo.DEFAULT_SEARCH_MODE);
     }
 
     @Test

@@ -12,6 +12,7 @@ import org.bgbm.biovel.drf.checklist.pesi.PESINameServiceLocator;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServicePortType;
 import org.bgbm.biovel.drf.checklist.pesi.PESIRecord;
 import org.bgbm.biovel.drf.checklist.worms.AphiaRecord;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
@@ -32,7 +33,7 @@ public class PESIClient extends BaseChecklistClient {
     public static final String URL = "http://www.eu-nomen.eu/portal/index.php";
     public static final String DATA_AGR_URL = "";
 
-    private static final EnumSet<SearchMode> capability = EnumSet.of(SearchMode.scientificNameExact, SearchMode.scientificNameLike);
+    public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(SearchMode.scientificNameExact, SearchMode.scientificNameLike);
 
 
     public PESIClient() {
@@ -48,7 +49,7 @@ public class PESIClient extends BaseChecklistClient {
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {
-        ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL);
+        ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL, getSearchModes());
         return checklistInfo;
     }
 
@@ -62,7 +63,7 @@ public class PESIClient extends BaseChecklistClient {
 
     @Override
     public EnumSet<SearchMode> getSearchModes() {
-        return capability;
+        return SEARCH_MODES;
     }
 
     private Taxon generateAccName(PESIRecord taxon) {

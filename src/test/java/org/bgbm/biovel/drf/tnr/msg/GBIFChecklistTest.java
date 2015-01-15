@@ -11,7 +11,7 @@ import org.bgbm.biovel.drf.checklist.GBIFBackboneClient;
 import org.bgbm.biovel.drf.checklist.SearchMode;
 import org.bgbm.biovel.drf.input.DRFCSVInputParser;
 import org.bgbm.biovel.drf.input.DRFInputException;
-import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgException;
@@ -42,7 +42,7 @@ public class GBIFChecklistTest {
         ci = new ServiceProviderInfo(GBIFBackboneClient.ID,
                 GBIFBackboneClient.LABEL,
                 GBIFBackboneClient.URL,
-                GBIFBackboneClient.DATA_AGR_URL);
+                GBIFBackboneClient.DATA_AGR_URL, ServiceProviderInfo.DEFAULT_SEARCH_MODE);
         ci.addSubChecklist(new ServiceProviderInfo("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c", "GBIF NUB Taxonomy", "http://uat.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"));
     }
 

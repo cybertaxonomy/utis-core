@@ -27,6 +27,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.http.HttpHost;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
@@ -45,7 +46,7 @@ public class Species2000ColClient extends BaseChecklistClient {
     public static final String URL = "http://www.catalogueoflife.org";
     public static final String DATA_AGR_URL = "http://www.catalogueoflife.org/col/info/copyright";
 
-    private static final EnumSet<SearchMode> capability = EnumSet.of(SearchMode.scientificNameExact);
+    public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(SearchMode.scientificNameExact);
 
 
     public Species2000ColClient() {
@@ -62,7 +63,7 @@ public class Species2000ColClient extends BaseChecklistClient {
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {
-        ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL);
+        ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL, getSearchModes());
         return checklistInfo;
     }
 
@@ -198,7 +199,7 @@ public class Species2000ColClient extends BaseChecklistClient {
 
     @Override
     public EnumSet<SearchMode> getSearchModes() {
-        return capability;
+        return SEARCH_MODES;
     }
 
 

@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
 import org.bgbm.biovel.drf.tnr.msg.Source;
@@ -33,9 +34,9 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
     public static final String DATA_AGR_URL = "http://data.gbif.org/tutorial/datauseagreement";
     private static final String MAX_PAGING_LIMIT = "1000";
     private static final String VERSION = "v0.9";
-    public static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL,VERSION);
+    public static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,ServiceProviderInfo.DEFAULT_SEARCH_MODE,URL,DATA_AGR_URL, VERSION);
 
-    private static final EnumSet<SearchMode> capability = EnumSet.of(SearchMode.scientificNameExact);
+    public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(SearchMode.scientificNameExact);
 
     public GBIFBackboneClient() {
         super();
@@ -86,7 +87,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
                     String title = (String)result.get("title");
 
                     String url =  "http://uat.gbif.org/dataset/" + key;
-                    checklistInfo.addSubChecklist(new ServiceProviderInfo(key, title,  url, DATA_AGR_URL));
+                    checklistInfo.addSubChecklist(new ServiceProviderInfo(key, title,  url, DATA_AGR_URL, getSearchModes()));
                 }
 
                 endOfRecords = (Boolean) jsonResponse.get("endOfRecords");
@@ -347,7 +348,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 
     @Override
     public EnumSet<SearchMode> getSearchModes() {
-        return capability;
+        return SEARCH_MODES;
     }
 
 

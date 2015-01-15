@@ -10,6 +10,7 @@ import org.apache.http.HttpHost;
 import org.bgbm.biovel.drf.checklist.worms.AphiaNameServiceLocator;
 import org.bgbm.biovel.drf.checklist.worms.AphiaNameServicePortType;
 import org.bgbm.biovel.drf.checklist.worms.AphiaRecord;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
@@ -30,7 +31,7 @@ public class WoRMSClient extends BaseChecklistClient {
     public static final String URL = "http://www.marinespecies.org/index.php";
     public static final String DATA_AGR_URL = "";
 
-    private static final EnumSet<SearchMode> capability = EnumSet.of(
+    public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
             SearchMode.scientificNameLike);
 
@@ -48,7 +49,7 @@ public class WoRMSClient extends BaseChecklistClient {
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {
-        ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL);
+        ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,URL,DATA_AGR_URL, getSearchModes());
         return checklistInfo;
     }
 
@@ -277,7 +278,7 @@ public class WoRMSClient extends BaseChecklistClient {
 
     @Override
     public EnumSet<SearchMode> getSearchModes() {
-        return capability;
+        return SEARCH_MODES;
     }
 }
 

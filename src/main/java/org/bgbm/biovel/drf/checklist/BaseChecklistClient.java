@@ -16,6 +16,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.rest.TaxoRESTClient;
 import org.bgbm.biovel.drf.tnr.msg.Query.TnrRequest;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;

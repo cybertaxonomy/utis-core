@@ -4,10 +4,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +15,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.bgbm.biovel.drf.checklist.BaseChecklistClient;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.RESTURIBuilder;
-import org.bgbm.biovel.drf.checklist.SearchMode;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +32,7 @@ public abstract class TaxoRESTClient {
     }
 
     public TaxoRESTClient(String checklistInfoJson) throws DRFChecklistException {
-        setChecklistInfo(JSONUtils.convertJsonToObject(checklistInfoJson, BaseChecklistClient.ServiceProviderInfo.class));
+        setChecklistInfo(JSONUtils.convertJsonToObject(checklistInfoJson, ServiceProviderInfo.class));
     }
 
     public TaxoRESTClient(ServiceProviderInfo spInfo) throws DRFChecklistException {
@@ -166,88 +160,6 @@ public abstract class TaxoRESTClient {
             //e.printStackTrace();
         }
         return uri;
-    }
-
-public static class ServiceProviderInfo {
-
-        private String id;
-        private String label;
-        private String documentationUrl;
-        private String copyrightUrl;
-        private String version;
-        private List<ServiceProviderInfo> subChecklists = new ArrayList<ServiceProviderInfo>();
-
-        public ServiceProviderInfo() {
-        }
-
-        public ServiceProviderInfo(String id, String label, String url) {
-            this(id,label,url,"");
-        }
-
-        public ServiceProviderInfo(String id, String label, String url, String copyrightUrl) {
-            this(id,label,url,copyrightUrl, "");
-        }
-
-        public ServiceProviderInfo(String id, String label, String documentationUrl, String copyrightUrl, String version) {
-            this.id = id;
-            this.label = label;
-            this.documentationUrl = documentationUrl;
-            this.copyrightUrl = copyrightUrl;
-            this.version = version;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
-        public String getDocumentationUrl() {
-            return documentationUrl;
-        }
-
-        public String getCopyrightUrl() {
-            return copyrightUrl;
-        }
-
-
-        public String getVersion() {
-            return version;
-        }
-
-        public void addSubChecklist(ServiceProviderInfo ci) {
-            subChecklists.add(ci);
-        }
-
-        public List<ServiceProviderInfo> getSubChecklists() {
-            if(subChecklists != null && subChecklists.size() > 0) {
-                Collections.sort(subChecklists,new ServiceProviderInfoComparator());
-            }
-            return subChecklists;
-        }
-
-        public static ServiceProviderInfo create(String[] ciArray) throws DRFChecklistException {
-            if(ciArray.length != 4) {
-                throw new DRFChecklistException("Not correct number of elements to create Checklist Info");
-            }
-            return new ServiceProviderInfo(ciArray[0],ciArray[1],ciArray[2],ciArray[3]);
-        }
-
-        public class ServiceProviderInfoComparator implements Comparator<ServiceProviderInfo> {
-              @Override
-              public int compare(ServiceProviderInfo spia, ServiceProviderInfo spib) {
-                  return spia.getLabel().compareTo(spib.getLabel());
-              }
-
-        }
-
-        @Override
-        public String toString(){
-            return getId();
-        }
-
     }
 
 }

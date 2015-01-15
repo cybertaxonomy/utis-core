@@ -10,7 +10,7 @@ import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.SearchMode;
 import org.bgbm.biovel.drf.input.DRFCSVInputParser;
 import org.bgbm.biovel.drf.input.DRFInputException;
-import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgException;
@@ -41,11 +41,11 @@ public class BgbmEditChecklistTest {
         ci = new ServiceProviderInfo(BgbmEditClient.ID,
                 BgbmEditClient.LABEL,
                 BgbmEditClient.DOC_URL,
-                BgbmEditClient.COPYRIGHT_URL);
+                BgbmEditClient.COPYRIGHT_URL, ServiceProviderInfo.DEFAULT_SEARCH_MODE);
         ci.addSubChecklist(new ServiceProviderInfo("col",
                 "EDIT - Catalogue Of Life",
                 "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html",
-                "http://www.catalogueoflife.org/col/info/copyright"));
+                "http://www.catalogueoflife.org/col/info/copyright", ServiceProviderInfo.DEFAULT_SEARCH_MODE));
     }
 
     @Test

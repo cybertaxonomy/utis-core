@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.ParseException;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
@@ -39,7 +40,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
     private final Map<String,String> taxonIdMatchStringMap = new HashMap<String, String>();
 
-    private static final EnumSet<SearchMode> capability = EnumSet.of(
+    public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
             SearchMode.scientificNameLike);
 
@@ -60,11 +61,11 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {
-        ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,DOC_URL,COPYRIGHT_URL);
+        ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,DOC_URL,COPYRIGHT_URL, getSearchModes());
         checklistInfo.addSubChecklist(new ServiceProviderInfo("col",
                 "Catalogue Of Life (EDIT - name catalogue end point)",
                 "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html",
-                "http://www.catalogueoflife.org/col/info/copyright"));
+                "http://www.catalogueoflife.org/col/info/copyright", ServiceProviderInfo.DEFAULT_SEARCH_MODE));
         return checklistInfo;
     }
 
@@ -320,7 +321,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
     @Override
     public EnumSet<SearchMode> getSearchModes() {
-        return capability ;
+        return SEARCH_MODES ;
     }
 
 

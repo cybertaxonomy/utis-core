@@ -14,7 +14,7 @@ import org.bgbm.biovel.drf.checklist.PESIClient;
 import org.bgbm.biovel.drf.checklist.Species2000ColClient;
 import org.bgbm.biovel.drf.checklist.WoRMSClient;
 import org.bgbm.biovel.drf.occurrences.GBIFOccurrencesClient;
-import org.bgbm.biovel.drf.rest.TaxoRESTClient.ServiceProviderInfo;
+import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 
 public class ServiceProviderInfoUtils {
 
@@ -79,31 +79,36 @@ public class ServiceProviderInfoUtils {
                         ci = new ServiceProviderInfo(Species2000ColClient.ID,
                                 Species2000ColClient.LABEL,
                                 Species2000ColClient.URL,
-                                Species2000ColClient.DATA_AGR_URL);
+                                Species2000ColClient.DATA_AGR_URL,
+                                Species2000ColClient.SEARCH_MODES);
                     }
                     if(key.equals(BgbmEditClient.ID)) {
                         ci = new ServiceProviderInfo(BgbmEditClient.ID,
                                 BgbmEditClient.LABEL,
                                 BgbmEditClient.DOC_URL,
-                                BgbmEditClient.COPYRIGHT_URL);
+                                BgbmEditClient.COPYRIGHT_URL,
+                                BgbmEditClient.SEARCH_MODES);
                     }
                     if(key.equals(GBIFBackboneClient.ID)) {
                         ci = new ServiceProviderInfo(GBIFBackboneClient.ID,
                                 GBIFBackboneClient.LABEL,
                                 GBIFBackboneClient.URL,
-                                GBIFBackboneClient.DATA_AGR_URL);
+                                GBIFBackboneClient.DATA_AGR_URL,
+                                GBIFBackboneClient.SEARCH_MODES);
                     }
                     if(key.equals(PESIClient.ID)) {
                         ci = new ServiceProviderInfo(PESIClient.ID,
                                 PESIClient.LABEL,
                                 PESIClient.URL,
-                                PESIClient.DATA_AGR_URL);
+                                PESIClient.DATA_AGR_URL,
+                                PESIClient.SEARCH_MODES);
                     }
                     if(key.equals(WoRMSClient.ID)) {
                         ci = new ServiceProviderInfo(WoRMSClient.ID,
                                 WoRMSClient.LABEL,
                                 WoRMSClient.URL,
-                                WoRMSClient.DATA_AGR_URL);
+                                WoRMSClient.DATA_AGR_URL,
+                                WoRMSClient.SEARCH_MODES);
                     }
                     if(ci != null) {
                         ciMap.put(key, ci);
@@ -136,7 +141,8 @@ public class ServiceProviderInfoUtils {
                         ci = new ServiceProviderInfo(GBIFOccurrencesClient.ID,
                                 GBIFOccurrencesClient.LABEL,
                                 GBIFOccurrencesClient.URL,
-                                GBIFOccurrencesClient.DATA_AGR_URL);
+                                GBIFOccurrencesClient.DATA_AGR_URL,
+                                ServiceProviderInfo.DEFAULT_SEARCH_MODE);
                     }
                 }
             }
