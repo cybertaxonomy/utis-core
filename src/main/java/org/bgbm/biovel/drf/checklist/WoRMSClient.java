@@ -271,7 +271,7 @@ public class WoRMSClient extends BaseChecklistClient {
     }
 
     @Override
-    public void resolveVernacularNames(TnrMsg tnrMsg) throws DRFChecklistException {
+    public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
         // TODO Auto-generated method stub
 
     }
@@ -279,6 +279,12 @@ public class WoRMSClient extends BaseChecklistClient {
     @Override
     public EnumSet<SearchMode> getSearchModes() {
         return SEARCH_MODES;
+    }
+
+    @Override
+    public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+        
     }
 }
 

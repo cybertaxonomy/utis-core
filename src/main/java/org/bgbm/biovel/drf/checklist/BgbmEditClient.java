@@ -313,7 +313,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
     }
 
     @Override
-    public void resolveVernacularNames(TnrMsg tnrMsg) throws DRFChecklistException {
+    public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
         // TODO Auto-generated method stub
 
     }
@@ -321,6 +321,12 @@ public class BgbmEditClient extends AggregateChecklistClient {
     @Override
     public EnumSet<SearchMode> getSearchModes() {
         return SEARCH_MODES ;
+    }
+
+    @Override
+    public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+        
     }
 
 

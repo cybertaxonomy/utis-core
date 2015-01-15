@@ -153,8 +153,11 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
             case scientificNameLike:
                 resolveScientificNamesLike(tnrMsg);
                 break;
-            case vernacularName:
-                resolveVernacularNames(tnrMsg);
+            case vernacularNameExact:
+                resolveVernacularNamesExact(tnrMsg);
+                break;
+            case vernacularNameLike:
+                resolveVernacularNamesLike(tnrMsg);
                 break;
             default:
                 throw new DRFChecklistException("Unimplemented SearchMode");
@@ -169,7 +172,9 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
 
     public abstract void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException;
 
-    public abstract void resolveVernacularNames(TnrMsg tnrMsg) throws DRFChecklistException;
+    public abstract void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException;
+
+    public abstract void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException;
 
     public abstract EnumSet<SearchMode> getSearchModes();
 

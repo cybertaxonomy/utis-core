@@ -33,7 +33,17 @@ public class PESIClient extends BaseChecklistClient {
     public static final String URL = "http://www.eu-nomen.eu/portal/index.php";
     public static final String DATA_AGR_URL = "";
 
-    public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(SearchMode.scientificNameExact, SearchMode.scientificNameLike);
+    public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
+            SearchMode.scientificNameExact,
+            SearchMode.scientificNameLike,
+            SearchMode.vernacularNameExact,
+            SearchMode.vernacularNameLike
+            );
+
+    public static final EnumSet<SearchMode> SCIENTIFICNAME_SEARCH_MODES = EnumSet.of(
+            SearchMode.scientificNameExact,
+            SearchMode.scientificNameLike
+            );
 
 
     public PESIClient() {
@@ -66,7 +76,38 @@ public class PESIClient extends BaseChecklistClient {
         return SEARCH_MODES;
     }
 
+    /**
+     * @param pesins
+     * @return
+     * @throws DRFChecklistException
+     */
+    private PESINameServicePortType getPESINameService(PESINameServiceLocator pesins) throws DRFChecklistException {
+        PESINameServicePortType pesinspt;
+        try {
+            pesinspt = pesins.getPESINameServicePort();
+        } catch (ServiceException e) {
+            logger.error("Error in accessing PESINameService", e);
+            throw new DRFChecklistException("Error in accessing PESINameService");
+        }
+        return pesinspt;
+    }
+
     private Taxon generateAccName(PESIRecord taxon) {
+
+        // parse the pesi citation string and source information
+        String pesiCitation = taxon.getCitation();
+
+        String secReference = pesiCitation;
+        String sourceString = null;
+
+//        System.err.println(pesiCitation);
+        String[] citationTokens = pesiCitation.split("\\sAccessed through:\\s");
+        if(false && citationTokens.length == 2){ // TODO understand citatino string and implment parsing
+            secReference = citationTokens[0];
+            sourceString = citationTokens[1];
+        }
+
+        //
         Taxon accName = new Taxon();
         TaxonName taxonName = new TaxonName();
 
@@ -81,23 +122,28 @@ public class PESIClient extends BaseChecklistClient {
         accName.setTaxonName(taxonName);
         accName.setTaxonomicStatus(taxon.getStatus());
 
+        accName.setAccordingTo(secReference);
+
         Taxon.Info info = new Taxon.Info();
         info.setUrl(taxon.getUrl());
         accName.setInfo(info);
 
 
         //FIXME : To fill in
-        String sourceUrl = taxon.getUrl();
         String sourceDatasetID = "";
-        String sourceDatasetName = "";
         String sourceName = "";
 
-        Source source = new Source();
-        source.setDatasetID(sourceDatasetID);
-        source.setDatasetName(sourceDatasetName);
-        source.setName(sourceName);
-        source.setUrl(sourceUrl);
-        accName.setSource(source);
+        if(sourceString != null){
+            Source source = new Source();
+            String[] sourceTokens = sourceString.split("\\sat\\shttp");
+            if(sourceTokens.length == 2){
+                source.setDatasetName(sourceTokens[0]);
+                source.setUrl("http" + sourceTokens[1]);
+            }
+            source.setDatasetID(sourceDatasetID);
+            source.setName(sourceName);
+            accName.setSource(source);
+        }
 
         //FIXME : To fill in
         String accordingTo = taxon.getAuthority();
@@ -124,6 +170,20 @@ public class PESIClient extends BaseChecklistClient {
     private void generateSynonyms(PESIRecord[] synonyms, TnrResponse tnrResponse) {
 
         for(PESIRecord synRecord : synonyms) {
+
+         // parse the pesi citation string and source information
+            String pesiCitation = synRecord.getCitation();
+
+            String secReference = pesiCitation;
+            String sourceString = null;
+
+//            System.err.println(pesiCitation);
+            String[] citationTokens = pesiCitation.split("\\sAccessed through:\\s");
+            if(false && citationTokens.length == 2){ // TODO understand citatino string and implment parsing
+                secReference = citationTokens[0];
+                sourceString = citationTokens[1];
+            }
+
             Synonym synonym = new Synonym();
 
             TaxonName taxonName = new TaxonName();
@@ -144,17 +204,20 @@ public class PESIClient extends BaseChecklistClient {
             synonym.setInfo(info);
 
             //FIXME : To fill in
-            String sourceUrl = synRecord.getUrl();
-            String sourceDatasetID =  "";
-            String sourceDatasetName = "";
+            String sourceDatasetID = "";
             String sourceName = "";
 
-            Source source = new Source();
-            source.setDatasetID(sourceDatasetID);
-            source.setDatasetName(sourceDatasetName);
-            source.setName(sourceName);
-            source.setUrl(sourceUrl);
-            synonym.setSource(source);
+            if(sourceString != null){
+                Source source = new Source();
+                String[] sourceTokens = sourceString.split("\\sat\\shttp");
+                if(sourceTokens.length == 2){
+                    source.setDatasetName(sourceTokens[0]);
+                    source.setUrl("http" + sourceTokens[1]);
+                }
+                source.setDatasetID(sourceDatasetID);
+                source.setName(sourceName);
+                synonym.setSource(source);
+            }
 
             //FIXME : To fill in
             String accordingTo = synRecord.getAuthority();
@@ -183,7 +246,7 @@ public class PESIClient extends BaseChecklistClient {
             if(nameGUID != null){
                 logger.debug("nameGUID : " + nameGUID);
                 PESIRecord record = pesinspt.getPESIRecordByGUID(nameGUID);
-                tnrResponseFromRecord(pesinspt, record);
+                tnrResponseFromRecord(pesinspt, record, null);
             } else {
                 logger.debug("no match for " + name);
             }
@@ -206,7 +269,55 @@ public class PESIClient extends BaseChecklistClient {
             PESIRecord[] records = pesinspt.getPESIRecords(name, true);
             if(records != null){
                 for (PESIRecord record : records) {
-                    TnrResponse tnrResponse = tnrResponseFromRecord(pesinspt, record);
+                    TnrResponse tnrResponse = tnrResponseFromRecord(pesinspt, record, null);
+                    query.getTnrResponse().add(tnrResponse);
+                }
+            }
+        }  catch (RemoteException e) {
+            logger.error("Error in getPESIRecords method in PESINameService", e);
+            throw new DRFChecklistException("Error in getPESIRecords method in PESINameService");
+        }
+
+    }
+
+    @Override
+    public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
+
+        Query query = singleQueryFrom(tnrMsg);
+        String name = query.getTnrRequest().getTaxonName().getFullName();
+        PESINameServiceLocator pesins = new PESINameServiceLocator();
+
+        PESINameServicePortType pesinspt = getPESINameService(pesins);
+
+        try {
+            PESIRecord[] records = pesinspt.getPESIRecordsByVernacular(name);
+            if(records != null){
+                for (PESIRecord record : records) {
+                    TnrResponse tnrResponse = tnrResponseFromRecord(pesinspt, record, null);
+                    query.getTnrResponse().add(tnrResponse);
+                }
+            }
+        }  catch (RemoteException e) {
+            logger.error("Error in getPESIRecords method in PESINameService", e);
+            throw new DRFChecklistException("Error in getPESIRecords method in PESINameService");
+        }
+
+    }
+
+    @Override
+    public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
+
+        Query query = singleQueryFrom(tnrMsg);
+        String name = query.getTnrRequest().getTaxonName().getFullName();
+        PESINameServiceLocator pesins = new PESINameServiceLocator();
+
+        PESINameServicePortType pesinspt = getPESINameService(pesins);
+
+        try {
+            PESIRecord[] records = pesinspt.getPESIRecordsByVernacular(name + "%");
+            if(records != null){
+                for (PESIRecord record : records) {
+                    TnrResponse tnrResponse = tnrResponseFromRecord(pesinspt, record, null);
                     query.getTnrResponse().add(tnrResponse);
                 }
             }
@@ -218,38 +329,19 @@ public class PESIClient extends BaseChecklistClient {
     }
 
     /**
-     * @param pesins
-     * @return
-     * @throws DRFChecklistException
-     */
-    private PESINameServicePortType getPESINameService(PESINameServiceLocator pesins) throws DRFChecklistException {
-        PESINameServicePortType pesinspt;
-        try {
-            pesinspt = pesins.getPESINameServicePort();
-        } catch (ServiceException e) {
-            logger.error("Error in accessing PESINameService", e);
-            throw new DRFChecklistException("Error in accessing PESINameService");
-        }
-        return pesinspt;
-    }
-
-    @Override
-    public void resolveVernacularNames(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
      * @param pesinspt
      * @param record
+     * @param searchMode TODO
      * @throws RemoteException
      */
-    private TnrResponse tnrResponseFromRecord(PESINameServicePortType pesinspt, PESIRecord record) throws RemoteException {
+    private TnrResponse tnrResponseFromRecord(PESINameServicePortType pesinspt, PESIRecord record, SearchMode searchMode) throws RemoteException {
 
         TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
 
         String accNameGUID = record.getValid_guid();
-        tnrResponse.setMatchingNameString(record.getScientificname());
+        if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
+            tnrResponse.setMatchingNameString(record.getScientificname());
+        }
 
         if(accNameGUID != null){
 
@@ -257,13 +349,17 @@ public class PESIClient extends BaseChecklistClient {
             if(record.getGUID() != null && record.getGUID().equals(accNameGUID)) {
                 Taxon accName = generateAccName(record);
                 tnrResponse.setTaxon(accName);
-                tnrResponse.setMatchingNameType(NameType.TAXON);
+                if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
+                    tnrResponse.setMatchingNameType(NameType.TAXON);
+                }
             } else {
                 // case when synonym
                 PESIRecord accNameRecord = pesinspt.getPESIRecordByGUID(accNameGUID);
                 Taxon accName = generateAccName(accNameRecord);
                 tnrResponse.setTaxon(accName);
-                tnrResponse.setMatchingNameType(NameType.SYNONYM);
+                if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
+                    tnrResponse.setMatchingNameType(NameType.SYNONYM);
+                }
             }
 
             PESIRecord[] records = pesinspt.getPESISynonymsByGUID(accNameGUID);
