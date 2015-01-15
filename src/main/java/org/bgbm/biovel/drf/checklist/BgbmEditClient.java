@@ -54,8 +54,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
     @Override
     public HttpHost getHost() {
-        //return new HttpHost("dev.e-taxonomy.eu",80);
-        return new HttpHost("test.e-taxonomy.eu", 8080);
+        return new HttpHost("dev.e-taxonomy.eu", 80);
     }
 
 
