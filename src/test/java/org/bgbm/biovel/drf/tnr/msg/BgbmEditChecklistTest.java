@@ -63,6 +63,10 @@ public class BgbmEditChecklistTest {
         String json = JSONUtils.convertObjectToJson(ci);
         BgbmEditClient bec = new BgbmEditClient(json);
 
+
+        for(Query query : tnrMsg.getQuery()) {
+            query.getTnrRequest().setSearchMode(SearchMode.scientificNameExact.toString());
+        }
         bec.queryChecklist(tnrMsg, SearchMode.scientificNameExact);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);

@@ -149,9 +149,7 @@ public class WoRMSClient extends BaseChecklistClient {
         accName.setTaxonName(taxonName);
         accName.setTaxonomicStatus(taxon.getStatus());
 
-        Taxon.Info info = new Taxon.Info();
-        info.setUrl(taxon.getUrl());
-        accName.setInfo(info);
+        accName.setUrl(taxon.getUrl());
 
 
         //FIXME : To fill in
@@ -207,9 +205,7 @@ public class WoRMSClient extends BaseChecklistClient {
             synonym.setTaxonName(taxonName);
             synonym.setTaxonomicStatus(synRecord.getStatus());
 
-            Synonym.Info info = new Synonym.Info();
-            info.setUrl(synRecord.getUrl());
-            synonym.setInfo(info);
+            synonym.setUrl(synRecord.getUrl());
 
             //FIXME : To fill in
             String sourceUrl = synRecord.getUrl();

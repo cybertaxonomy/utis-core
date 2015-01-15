@@ -148,20 +148,14 @@
               <xsd:element minOccurs="1" name="taxonName"
                 type="tns:taxonName">
               </xsd:element>
-              <xsd:element minOccurs="0" name="info">
-                <xsd:complexType>
-                  <xsd:sequence>
-                    <xsd:element minOccurs="0" name="url"
-                      type="xsd:string">
-                    </xsd:element>
-                    <xsd:element minOccurs="0" name="acceptedNameUrl">
-                      <xsd:complexType>
-                        <xsd:sequence></xsd:sequence>
-                      </xsd:complexType>
-                    </xsd:element>
-                  </xsd:sequence>
-                </xsd:complexType>
-              </xsd:element>
+              <xsd:element name="url" type="xsd:anyURI">
+              <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The URL pointing to the original name record of the checklist provider.")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+            </xsd:element>
               <xsd:element name="source" type="tns:source">
               </xsd:element>
               <xsd:element name="scrutiny" type="tns:scrutiny">
@@ -224,73 +218,34 @@
   </xsd:element>
   <xsd:element name="taxon">
     <xsd:complexType>
-      <xsd:sequence>
-        <xsd:element minOccurs="1" name="taxonName" type="tns:taxonName">
-        </xsd:element>
-        <xsd:element name="accordingTo" minOccurs="0">
-          <xsd:annotation>
-            <xsd:appinfo>
-              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The reference to the source in which the specific taxon concept circumscription is defined or implied - traditionally signified by the Latin 'sensu' or 'sec.' (from secundum, meaning 'according to'). For taxa that result from identifications, a reference to the keys, monographs, experts and other sources should be given. Corresponds to http://rs.tdwg.org/dwc/terms/nameAccordingTo")
-              </annox:annotate>
-            </xsd:appinfo>
-          </xsd:annotation>
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string" />
-          </xsd:simpleType>
-        </xsd:element>
-        <xsd:element minOccurs="0" name="info">
-          <xsd:complexType>
-            <xsd:sequence>
-              <xsd:element minOccurs="0" name="url" type="xsd:string">
-              </xsd:element>
-            </xsd:sequence>
-          </xsd:complexType>
-        </xsd:element>
-        <xsd:element minOccurs="0" ref="tns:classification">
-        </xsd:element>
-        <xsd:element name="taxonomicStatus" minOccurs="0">
-          <xsd:annotation>
-            <xsd:appinfo>
-              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The taxonomic status string like 'invalid', 'misapplied', 'homotypic synonym', 'accepted', 'synonym'. Corresponds to http://rs.tdwg.org/dwc/terms/taxonomicStatus")
-              </annox:annotate>
-            </xsd:appinfo>
-          </xsd:annotation>
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string" />
-          </xsd:simpleType>
-        </xsd:element>
-        <xsd:element name="source" type="tns:source"></xsd:element>
-        <xsd:element name="scrutiny" type="tns:scrutiny"></xsd:element>
-      </xsd:sequence>
+      <xsd:complexContent>
+        <xsd:extension base="tns:taxonBase">
+          <xsd:sequence>
+            <xsd:element name="accordingTo" minOccurs="0">
+              <xsd:annotation>
+                <xsd:appinfo>
+                  <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The reference to the source in which the specific taxon concept circumscription is defined or implied - traditionally signified by the Latin 'sensu' or 'sec.' (from secundum, meaning 'according to'). For taxa that result from identifications, a reference to the keys, monographs, experts and other sources should be given. Corresponds to http://rs.tdwg.org/dwc/terms/nameAccordingTo")
+                  </annox:annotate>
+                </xsd:appinfo>
+              </xsd:annotation>
+             <xsd:simpleType>
+              <xsd:restriction base="xsd:string" />
+            </xsd:simpleType>
+          </xsd:element>
+          <xsd:element minOccurs="0" ref="tns:classification">
+          </xsd:element>
+          </xsd:sequence>
+        </xsd:extension>
+      </xsd:complexContent>
     </xsd:complexType>
   </xsd:element>
   <xsd:element name="synonym">
-    <xsd:complexType>
-      <xsd:sequence>
-        <xsd:element minOccurs="1" name="taxonName" type="tns:taxonName">
-        </xsd:element>
-        <xsd:element minOccurs="0" name="info">
-          <xsd:complexType>
-            <xsd:sequence>
-              <xsd:element minOccurs="0" name="url" type="xsd:string"></xsd:element>
-              <xsd:element minOccurs="0" name="acceptedNameUrl">
-                <xsd:complexType>
-                  <xsd:sequence></xsd:sequence>
-                </xsd:complexType>
-              </xsd:element>
-            </xsd:sequence>
-          </xsd:complexType>
-        </xsd:element>
-        <xsd:element minOccurs="0" name="taxonomicStatus">
-          <xsd:annotation></xsd:annotation>
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string"></xsd:restriction>
-          </xsd:simpleType>
-        </xsd:element>
-        <xsd:element name="source" type="tns:source"></xsd:element>
-        <xsd:element name="scrutiny" type="tns:scrutiny"></xsd:element>
-      </xsd:sequence>
-    </xsd:complexType>
+  <xsd:complexType>
+    <xsd:complexContent>
+      <xsd:extension base="tns:taxonBase">
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
   </xsd:element>
   <xsd:element name="classification">
     <xsd:complexType>
@@ -389,4 +344,32 @@
       <xsd:enumeration value="otherName"></xsd:enumeration>
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:complexType name="taxonBase">
+    <xsd:sequence>
+      <xsd:element minOccurs="1" name="taxonName"
+        type="tns:taxonName">
+      </xsd:element>
+      <xsd:element name="url" type="xsd:anyURI">
+        <xsd:annotation>
+              <xsd:appinfo>
+                <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The URL pointing to the original record of the checklist provider.")
+                </annox:annotate>
+              </xsd:appinfo>
+            </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="taxonomicStatus">
+          <xsd:annotation>
+              <xsd:appinfo>
+                <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The taxonomic status string like 'invalid', 'misapplied', 'homotypic synonym', 'accepted', 'synonym'. Corresponds to http://rs.tdwg.org/dwc/terms/taxonomicStatus")
+                </annox:annotate>
+              </xsd:appinfo>
+          </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string"></xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="source" type="tns:source"></xsd:element>
+      <xsd:element name="scrutiny" type="tns:scrutiny"></xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
 </xsd:schema>

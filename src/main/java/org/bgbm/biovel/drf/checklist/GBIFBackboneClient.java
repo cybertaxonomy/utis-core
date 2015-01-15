@@ -222,9 +222,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 
         Long key = (Long)taxon.get("key");
         String taxonId = key.toString();
-        Taxon.Info info = new Taxon.Info();
-        info.setUrl("http://uat.gbif.org/species/" + taxonId);
-        accName.setInfo(info);
+        accName.setUrl("http://uat.gbif.org/species/" + taxonId);
 
 
         //FIXME : To fill in
@@ -284,9 +282,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 
             Long key = (Long)synonymjs.get("key");
             String synId = key.toString();
-            Synonym.Info info = new Synonym.Info();
-            info.setUrl("http://uat.gbif.org/species/" + synId);
-            synonym.setInfo(info);
+            synonym.setUrl("http://uat.gbif.org/species/" + synId);
 
             //FIXME : To fill in
             String sourceUrl = "http://uat.gbif.org/species/" + synId;
@@ -354,7 +350,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
     @Override
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
         // TODO Auto-generated method stub
-        
+
     }
 
 
