@@ -338,7 +338,7 @@
       <xsd:element name="accordingTo" minOccurs="0">
         <xsd:annotation>
           <xsd:appinfo>
-            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The reference to the source in which the specific taxon concept circumscription is defined or implied - traditionally signified by the Latin 'sensu' or 'sec.' (from secundum, meaning 'according to'). For taxa that result from identifications, a reference to the keys, monographs, experts and other sources should be given. Corresponds to http://rs.tdwg.org/dwc/terms/nameAccordingTo")
+            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The reference to the source in which the specific taxon concept circumscription is defined or implied - traditionally signified by the Latin 'sensu' or 'sec.' (from secundum, meaning 'according to').")
             </annox:annotate>
           </xsd:appinfo>
         </xsd:annotation>

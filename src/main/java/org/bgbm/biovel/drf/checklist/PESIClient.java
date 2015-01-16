@@ -3,6 +3,8 @@ package org.bgbm.biovel.drf.checklist;
 
 import java.rmi.RemoteException;
 import java.util.EnumSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.rpc.ServiceException;
 
@@ -29,6 +31,9 @@ public class PESIClient extends BaseChecklistClient {
     public static final String LABEL = "PESI";
     public static final String URL = "http://www.eu-nomen.eu/portal/index.php";
     public static final String DATA_AGR_URL = "";
+
+    private static Pattern citationPattern = Pattern.compile("^(.*)\\p{Punct} [Aa]ccessed through\\p{Punct}? (PESI|Euro\\+Med PlantBase|Index Fungorum|Fauna Europaea|European Register of Marine Species) at (.*)$");
+
 
     public enum PESISources {
         EUROMED("Euro+Med Plantbase"),
@@ -116,6 +121,26 @@ public class PESIClient extends BaseChecklistClient {
         return pesinspt;
     }
 
+    /**
+     * @param sourceString
+     * @return
+     */
+    private ParsedCitation parsePesiCitation(String sourceString) {
+
+        ParsedCitation parsed = new ParsedCitation();
+
+        Matcher m = citationPattern.matcher(sourceString);
+        if (m.matches()) {
+
+            if(!m.group(2).equals(PESISources.INDEX_FUNGORUM)){
+                parsed.accordingTo = m.group(1);
+            }
+            parsed.sourceTaxonUrl = m.group(3);
+
+        }
+        return parsed;
+    }
+
     private Taxon generateAccName(PESIRecord taxon) {
 
 
@@ -132,15 +157,17 @@ public class PESIClient extends BaseChecklistClient {
 
         accName.setTaxonName(taxonName);
         accName.setTaxonomicStatus(taxon.getStatus());
-
-        accName.setAccordingTo(null); // PESI misses this information
-
         accName.setUrl(taxon.getUrl());
 
-        String sourceString = taxon.getCitation();
-        if(sourceString != null){
+        String sourceString = taxon.getCitation(); // concatenation of sec. reference and url
+        ParsedCitation parsed = parsePesiCitation(sourceString);
+        accName.setAccordingTo(parsed.accordingTo);
+
+        // TODO ask VLIZ for adding all the the sourceFKs to the service and fill additional the data in here
+        if(parsed.sourceTaxonUrl != null){
             Source source = new Source();
-            source.setTitle(sourceString);
+            source.setUrl(parsed.sourceTaxonUrl);
+            source.setTitle(parsed.accordingTo);
             accName.getSources().add(source);
         }
 
@@ -156,7 +183,6 @@ public class PESIClient extends BaseChecklistClient {
         return accName;
     }
 
-
     private void generateSynonyms(PESIRecord[] synonyms, Response tnrResponse) {
 
         for(PESIRecord synRecord : synonyms) {
@@ -169,6 +195,17 @@ public class PESIClient extends BaseChecklistClient {
             taxonName.setFullName(resName + " " + synRecord.getAuthority());
 
             taxonName.setCanonicalName(resName);
+
+            String sourceString = synRecord.getCitation(); // concatenation of sec. reference and url
+            ParsedCitation parsed = parsePesiCitation(sourceString);
+            synonym.setAccordingTo(parsed.accordingTo);
+
+            if(parsed.sourceTaxonUrl != null){
+                Source source = new Source();
+                source.setUrl(parsed.sourceTaxonUrl);
+                source.setTitle(parsed.accordingTo);
+                synonym.getSources().add(source);
+            }
 
             taxonName.setRank(synRecord.getRank());
             taxonName.setAuthorship(synRecord.getAuthority());
@@ -196,7 +233,8 @@ public class PESIClient extends BaseChecklistClient {
             if(nameGUID != null){
                 logger.debug("nameGUID : " + nameGUID);
                 PESIRecord record = pesinspt.getPESIRecordByGUID(nameGUID);
-                tnrResponseFromRecord(pesinspt, record, null);
+                Response tnrResponse = tnrResponseFromRecord(pesinspt, record, SearchMode.valueOf(query.getRequest().getSearchMode()));
+                query.getResponse().add(tnrResponse);
             } else {
                 logger.debug("no match for " + name);
             }
@@ -219,7 +257,7 @@ public class PESIClient extends BaseChecklistClient {
             PESIRecord[] records = pesinspt.getPESIRecords(name, true);
             if(records != null){
                 for (PESIRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, null);
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, SearchMode.valueOf(query.getRequest().getSearchMode()));
                     query.getResponse().add(tnrResponse);
                 }
             }
@@ -243,7 +281,7 @@ public class PESIClient extends BaseChecklistClient {
             PESIRecord[] records = pesinspt.getPESIRecordsByVernacular(name);
             if(records != null){
                 for (PESIRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, null);
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, SearchMode.valueOf(query.getRequest().getSearchMode()));
                     query.getResponse().add(tnrResponse);
                 }
             }
@@ -267,7 +305,7 @@ public class PESIClient extends BaseChecklistClient {
             PESIRecord[] records = pesinspt.getPESIRecordsByVernacular("%" + name + "%");
             if(records != null){
                 for (PESIRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, null);
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, SearchMode.valueOf(query.getRequest().getSearchMode()));
                     query.getResponse().add(tnrResponse);
                 }
             }
@@ -319,6 +357,12 @@ public class PESIClient extends BaseChecklistClient {
         }
 
         return tnrResponse;
+    }
+
+    class ParsedCitation {
+
+        String accordingTo = null;
+        String sourceTaxonUrl = null;
     }
 }
 
