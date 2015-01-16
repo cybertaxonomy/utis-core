@@ -65,9 +65,9 @@
         </xsd:simpleType>
       </xsd:element>
       <xsd:element name="atomisedName" type="tns:atomisedName"
-        minOccurs="0"></xsd:element>
-      <xsd:element name="authorship" maxOccurs="1"
         minOccurs="0">
+      </xsd:element>
+      <xsd:element name="authorship" maxOccurs="1" minOccurs="0">
         <xsd:simpleType>
           <xsd:restriction base="xsd:string" />
         </xsd:simpleType>
@@ -76,6 +76,15 @@
         <xsd:simpleType>
           <xsd:restriction base="xsd:string" />
         </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="nomenclaturalReference" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo>
+            <annox:annotate target="getter">
+                @com.wordnik.swagger.annotations.ApiModelProperty("A reference for the publication in which the scientificName was originally established under the rules of the associated nomenclaturalCode.")
+            </annox:annotate>
+          </xsd:appinfo>
+        </xsd:annotation>
       </xsd:element>
     </xsd:sequence>
   </xsd:complexType>
