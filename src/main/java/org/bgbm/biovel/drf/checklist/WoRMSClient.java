@@ -13,13 +13,12 @@ import org.bgbm.biovel.drf.checklist.worms.AphiaRecord;
 import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
-import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
+import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 
@@ -163,16 +162,7 @@ public class WoRMSClient extends BaseChecklistClient {
         source.setDatasetName(sourceDatasetName);
         source.setName(sourceName);
         source.setUrl(sourceUrl);
-        accName.setSource(source);
-
-        //FIXME : To fill in
-        String accordingTo = taxon.getAuthority();
-        String modified = "";
-
-        Scrutiny scrutiny = new Scrutiny();
-        scrutiny.setAccordingTo(accordingTo);
-        scrutiny.setModified(modified);
-        accName.setScrutiny(scrutiny);
+        accName.getSources().add(source);
 
         Classification c = new Classification();
         c.setKingdom(taxon.getKingdom());
@@ -218,16 +208,7 @@ public class WoRMSClient extends BaseChecklistClient {
             source.setDatasetName(sourceDatasetName);
             source.setName(sourceName);
             source.setUrl(sourceUrl);
-            synonym.setSource(source);
-
-            //FIXME : To fill in
-            String accordingTo = synRecord.getAuthority();
-            String modified = "";
-
-            Scrutiny scrutiny = new Scrutiny();
-            scrutiny.setAccordingTo(accordingTo);
-            scrutiny.setModified(modified);
-            synonym.setScrutiny(scrutiny);
+            synonym.getSources().add(source);
 
             tnrResponse.getSynonym().add(synonym);
         }

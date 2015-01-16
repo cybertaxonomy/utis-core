@@ -3,7 +3,6 @@ package org.bgbm.biovel.drf.checklist;
 
 import java.rmi.RemoteException;
 import java.util.EnumSet;
-import java.util.List;
 
 import javax.xml.rpc.ServiceException;
 
@@ -11,17 +10,15 @@ import org.apache.http.HttpHost;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServiceLocator;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServicePortType;
 import org.bgbm.biovel.drf.checklist.pesi.PESIRecord;
-import org.bgbm.biovel.drf.checklist.worms.AphiaRecord;
 import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
-import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
+import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 
@@ -32,6 +29,33 @@ public class PESIClient extends BaseChecklistClient {
     public static final String LABEL = "PESI";
     public static final String URL = "http://www.eu-nomen.eu/portal/index.php";
     public static final String DATA_AGR_URL = "";
+
+    public enum PESISources {
+        EUROMED("Euro+Med Plantbase"),
+        FAUNA_EUROPAEA ("Fauna Europaea"),
+        ERMS ("European Register of Marine Species"),
+        INDEX_FUNGORUM ("Index Fungorum");
+
+        private String value;
+
+        PESISources(String v) {
+            value = v;
+        }
+
+        public String value() {
+            return value;
+        }
+
+        public static PESISources fromValue(String v) {
+            for (PESISources c: PESISources.values()) {
+                if (c.value.equals(v)) {
+                    return c;
+                }
+            }
+            throw new IllegalArgumentException(v);
+        }
+
+    }
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
@@ -94,20 +118,7 @@ public class PESIClient extends BaseChecklistClient {
 
     private Taxon generateAccName(PESIRecord taxon) {
 
-        // parse the pesi citation string and source information
-        String pesiCitation = taxon.getCitation();
 
-        String secReference = pesiCitation;
-        String sourceString = null;
-
-//        System.err.println(pesiCitation);
-        String[] citationTokens = pesiCitation.split("\\sAccessed through:\\s");
-        if(false && citationTokens.length == 2){ // TODO understand citatino string and implment parsing
-            secReference = citationTokens[0];
-            sourceString = citationTokens[1];
-        }
-
-        //
         Taxon accName = new Taxon();
         TaxonName taxonName = new TaxonName();
 
@@ -122,35 +133,16 @@ public class PESIClient extends BaseChecklistClient {
         accName.setTaxonName(taxonName);
         accName.setTaxonomicStatus(taxon.getStatus());
 
-        accName.setAccordingTo(secReference);
+        accName.setAccordingTo(null); // PESI misses this information
 
         accName.setUrl(taxon.getUrl());
 
-
-        //FIXME : To fill in
-        String sourceDatasetID = "";
-        String sourceName = "";
-
+        String sourceString = taxon.getCitation();
         if(sourceString != null){
             Source source = new Source();
-            String[] sourceTokens = sourceString.split("\\sat\\shttp");
-            if(sourceTokens.length == 2){
-                source.setDatasetName(sourceTokens[0]);
-                source.setUrl("http" + sourceTokens[1]);
-            }
-            source.setDatasetID(sourceDatasetID);
-            source.setName(sourceName);
-            accName.setSource(source);
+            source.setTitle(sourceString);
+            accName.getSources().add(source);
         }
-
-        //FIXME : To fill in
-        String accordingTo = taxon.getAuthority();
-        String modified = "";
-
-        Scrutiny scrutiny = new Scrutiny();
-        scrutiny.setAccordingTo(accordingTo);
-        scrutiny.setModified(modified);
-        accName.setScrutiny(scrutiny);
 
         Classification c = new Classification();
         c.setKingdom(taxon.getKingdom());
@@ -169,19 +161,6 @@ public class PESIClient extends BaseChecklistClient {
 
         for(PESIRecord synRecord : synonyms) {
 
-         // parse the pesi citation string and source information
-            String pesiCitation = synRecord.getCitation();
-
-            String secReference = pesiCitation;
-            String sourceString = null;
-
-//            System.err.println(pesiCitation);
-            String[] citationTokens = pesiCitation.split("\\sAccessed through:\\s");
-            if(false && citationTokens.length == 2){ // TODO understand citatino string and implment parsing
-                secReference = citationTokens[0];
-                sourceString = citationTokens[1];
-            }
-
             Synonym synonym = new Synonym();
 
             TaxonName taxonName = new TaxonName();
@@ -198,31 +177,6 @@ public class PESIClient extends BaseChecklistClient {
             synonym.setTaxonomicStatus(synRecord.getStatus());
 
             synonym.setUrl(synRecord.getUrl());
-
-            //FIXME : To fill in
-            String sourceDatasetID = "";
-            String sourceName = "";
-
-            if(sourceString != null){
-                Source source = new Source();
-                String[] sourceTokens = sourceString.split("\\sat\\shttp");
-                if(sourceTokens.length == 2){
-                    source.setDatasetName(sourceTokens[0]);
-                    source.setUrl("http" + sourceTokens[1]);
-                }
-                source.setDatasetID(sourceDatasetID);
-                source.setName(sourceName);
-                synonym.setSource(source);
-            }
-
-            //FIXME : To fill in
-            String accordingTo = synRecord.getAuthority();
-            String modified = "";
-
-            Scrutiny scrutiny = new Scrutiny();
-            scrutiny.setAccordingTo(accordingTo);
-            scrutiny.setModified(modified);
-            synonym.setScrutiny(scrutiny);
 
             tnrResponse.getSynonym().add(synonym);
         }

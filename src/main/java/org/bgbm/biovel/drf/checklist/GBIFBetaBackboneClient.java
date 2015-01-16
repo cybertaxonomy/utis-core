@@ -6,20 +6,18 @@ import java.net.URISyntaxException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
 import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
-import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
+import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
@@ -185,7 +183,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
     }
 
     private Taxon generateAccName(JSONObject taxon) {
-        Taxon accName = new Taxon();
+        Taxon accTaxon = new Taxon();
         TaxonName taxonName = new TaxonName();
 
         String resName = (String) taxon.get("scientificName");
@@ -195,8 +193,9 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 
         taxonName.setRank((String) taxon.get("rank"));
 
-        accName.setTaxonName(taxonName);
-        accName.setTaxonomicStatus((String)taxon.get("taxonomicStatus"));
+        accTaxon.setTaxonName(taxonName);
+        accTaxon.setTaxonomicStatus((String)taxon.get("taxonomicStatus"));
+        accTaxon.setAccordingTo((String)taxon.get("accordingTo"));
 
         //FIXME : To fill in
         String sourceUrl = "";
@@ -204,23 +203,14 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
         String sourceDatasetID = datasetIDNumber.toString();
 
         String sourceDatasetName = (String)taxon.get("datasetName");
-        String sourceName = (String)taxon.get("accordingTo");		;
+        String sourceName = ""; // TODO
 
         Source source = new Source();
         source.setDatasetID(sourceDatasetID);
         source.setDatasetName(sourceDatasetName);
         source.setName(sourceName);
         source.setUrl(sourceUrl);
-        accName.setSource(source);
-
-        //FIXME : To fill in
-        String accordingTo = "";
-        String modified = "";
-
-        Scrutiny scrutiny = new Scrutiny();
-        scrutiny.setAccordingTo(accordingTo);
-        scrutiny.setModified(modified);
-        accName.setScrutiny(scrutiny);
+        accTaxon.getSources().add(source);
 
         Classification c = new Classification();
         c.setKingdom((String) taxon.get("kingdom"));
@@ -229,9 +219,9 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
         c.setOrder((String) taxon.get("order"));
         c.setFamily((String) taxon.get("family"));
         c.setGenus((String) taxon.get("genus"));
-        accName.setClassification(c);
+        accTaxon.setClassification(c);
 
-        return accName;
+        return accTaxon;
     }
 
     private void generateSynonyms(JSONObject synonym, TnrResponse tnrResponse) {
@@ -248,6 +238,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 
         syn.setTaxonName(taxonName);
         syn.setTaxonomicStatus((String) synonym.get("taxonomicStatus"));
+        syn.setAccordingTo((String) synonym.get("accordingTo"));
 
         //FIXME : To fill in
         String sourceUrl = "";
@@ -262,16 +253,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
         source.setDatasetName(sourceDatasetName);
         source.setName(sourceName);
         source.setUrl(sourceUrl);
-        syn.setSource(source);
-
-        //FIXME : To fill in
-        String accordingTo = "";
-        String modified = "";
-
-        Scrutiny scrutiny = new Scrutiny();
-        scrutiny.setAccordingTo(accordingTo);
-        scrutiny.setModified(modified);
-        syn.setScrutiny(scrutiny);
+        syn.getSources().add(source);
 
         tnrResponse.getSynonym().add(syn);
     }
@@ -296,7 +278,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
     @Override
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
         // TODO Auto-generated method stub
-        
+
     }
 
 

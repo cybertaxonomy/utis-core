@@ -94,7 +94,7 @@
     <xsd:sequence>
       <xsd:element name="url">
         <xsd:simpleType>
-          <xsd:restriction base="xsd:string" />
+          <xsd:restriction base="xsd:anyURI" />
         </xsd:simpleType>
       </xsd:element>
       <xsd:element name="datasetID">
@@ -112,13 +112,13 @@
           <xsd:restriction base="xsd:string" />
         </xsd:simpleType>
       </xsd:element>
-    </xsd:sequence>
-  </xsd:complexType>
-  <xsd:complexType name="scrutiny">
-    <xsd:sequence>
-      <xsd:element name="accordingTo" type="xsd:string">
-      </xsd:element>
-      <xsd:element name="modified" type="xsd:string">
+      <xsd:element name="title" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo>
+            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty("The full not atomized source string.")
+            </annox:annotate>
+          </xsd:appinfo>
+        </xsd:annotation>
       </xsd:element>
     </xsd:sequence>
   </xsd:complexType>
@@ -150,9 +150,7 @@
                   </xsd:appinfo>
                 </xsd:annotation>
             </xsd:element>
-              <xsd:element name="source" type="tns:source">
-              </xsd:element>
-              <xsd:element name="scrutiny" type="tns:scrutiny">
+              <xsd:element name="sources" minOccurs="0" maxOccurs="unbounded" type="tns:source">
               </xsd:element>
             </xsd:sequence>
           </xsd:complexType>
@@ -215,17 +213,6 @@
       <xsd:complexContent>
         <xsd:extension base="tns:taxonBase">
           <xsd:sequence>
-            <xsd:element name="accordingTo" minOccurs="0">
-              <xsd:annotation>
-                <xsd:appinfo>
-                  <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The reference to the source in which the specific taxon concept circumscription is defined or implied - traditionally signified by the Latin 'sensu' or 'sec.' (from secundum, meaning 'according to'). For taxa that result from identifications, a reference to the keys, monographs, experts and other sources should be given. Corresponds to http://rs.tdwg.org/dwc/terms/nameAccordingTo")
-                  </annox:annotate>
-                </xsd:appinfo>
-              </xsd:annotation>
-             <xsd:simpleType>
-              <xsd:restriction base="xsd:string" />
-            </xsd:simpleType>
-          </xsd:element>
           <xsd:element minOccurs="0" ref="tns:classification">
           </xsd:element>
           </xsd:sequence>
@@ -343,6 +330,17 @@
       <xsd:element minOccurs="1" name="taxonName"
         type="tns:taxonName">
       </xsd:element>
+      <xsd:element name="accordingTo" minOccurs="0">
+        <xsd:annotation>
+          <xsd:appinfo>
+            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The reference to the source in which the specific taxon concept circumscription is defined or implied - traditionally signified by the Latin 'sensu' or 'sec.' (from secundum, meaning 'according to'). For taxa that result from identifications, a reference to the keys, monographs, experts and other sources should be given. Corresponds to http://rs.tdwg.org/dwc/terms/nameAccordingTo")
+            </annox:annotate>
+          </xsd:appinfo>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
       <xsd:element name="url" type="xsd:anyURI">
         <xsd:annotation>
               <xsd:appinfo>
@@ -362,8 +360,7 @@
           <xsd:restriction base="xsd:string"></xsd:restriction>
         </xsd:simpleType>
       </xsd:element>
-      <xsd:element name="source" type="tns:source"></xsd:element>
-      <xsd:element name="scrutiny" type="tns:scrutiny"></xsd:element>
+      <xsd:element name="sources" type="tns:source" maxOccurs="unbounded" minOccurs="0"></xsd:element>
     </xsd:sequence>
   </xsd:complexType>
 </xsd:schema>

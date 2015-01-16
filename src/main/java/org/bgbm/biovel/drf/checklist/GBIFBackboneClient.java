@@ -6,20 +6,18 @@ import java.net.URISyntaxException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
 import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
-import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
+import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
@@ -205,7 +203,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
     }
 
     private Taxon generateAccName(JSONObject taxon) {
-        Taxon accName = new Taxon();
+        Taxon accTaxon = new Taxon();
         TaxonName taxonName = new TaxonName();
 
         String resName = (String) taxon.get("scientificName");
@@ -217,12 +215,13 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 
         taxonName.setAuthorship((String) taxon.get("authorship"));
 
-        accName.setTaxonName(taxonName);
-        accName.setTaxonomicStatus((String)taxon.get("taxonomicStatus"));
+        accTaxon.setTaxonName(taxonName);
+        accTaxon.setTaxonomicStatus((String)taxon.get("taxonomicStatus"));
+        accTaxon.setAccordingTo((String) taxon.get("accordingTo"));
 
         Long key = (Long)taxon.get("key");
         String taxonId = key.toString();
-        accName.setUrl("http://uat.gbif.org/species/" + taxonId);
+        accTaxon.setUrl("http://uat.gbif.org/species/" + taxonId);
 
 
         //FIXME : To fill in
@@ -236,16 +235,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
         source.setDatasetName(sourceDatasetName);
         source.setName(sourceName);
         source.setUrl(sourceUrl);
-        accName.setSource(source);
-
-        //FIXME : To fill in
-        String accordingTo = (String) taxon.get("accordingTo");
-        String modified = "";
-
-        Scrutiny scrutiny = new Scrutiny();
-        scrutiny.setAccordingTo(accordingTo);
-        scrutiny.setModified(modified);
-        accName.setScrutiny(scrutiny);
+        accTaxon.getSources().add(source);
 
         Classification c = new Classification();
         c.setKingdom((String) taxon.get("kingdom"));
@@ -254,9 +244,9 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
         c.setOrder((String) taxon.get("order"));
         c.setFamily((String) taxon.get("family"));
         c.setGenus((String) taxon.get("genus"));
-        accName.setClassification(c);
+        accTaxon.setClassification(c);
 
-        return accName;
+        return accTaxon;
     }
 
     private void generateSynonyms(JSONObject pagedSynonyms, TnrResponse tnrResponse) {
@@ -279,6 +269,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 
             synonym.setTaxonName(taxonName);
             synonym.setTaxonomicStatus((String)synonymjs.get("taxonomicStatus"));
+            synonym.setAccordingTo((String) synonymjs.get("accordingTo"));
 
             Long key = (Long)synonymjs.get("key");
             String synId = key.toString();
@@ -295,16 +286,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
             source.setDatasetName(sourceDatasetName);
             source.setName(sourceName);
             source.setUrl(sourceUrl);
-            synonym.setSource(source);
-
-            //FIXME : To fill in
-            String accordingTo = (String) synonymjs.get("accordingTo");
-            String modified = "";
-
-            Scrutiny scrutiny = new Scrutiny();
-            scrutiny.setAccordingTo(accordingTo);
-            scrutiny.setModified(modified);
-            synonym.setScrutiny(scrutiny);
+            synonym.getSources().add(source);
 
             tnrResponse.getSynonym().add(synonym);
         }

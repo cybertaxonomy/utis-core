@@ -14,13 +14,12 @@ import org.apache.http.ParseException;
 import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
-import org.bgbm.biovel.drf.tnr.msg.Scrutiny;
+import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.gbif.nameparser.NameParser;
@@ -142,7 +141,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
     }
 
     private Taxon generateAccName(JSONObject taxon) {
-        Taxon accName = new Taxon();
+        Taxon accTaxon = new Taxon();
         TaxonName taxonName = new TaxonName();
 
         String resName = (String) taxon.get("name");
@@ -153,8 +152,13 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
         taxonName.setRank((String) taxon.get("rank"));
 
-        accName.setTaxonName(taxonName);
-        accName.setTaxonomicStatus((String)taxon.get("taxonStatus"));
+        JSONObject scrutinyjs = (JSONObject)taxon.get("taxonomicScrutiny");
+        String accordingTo = (String) scrutinyjs.get("accordingTo");
+        String modified = (String) scrutinyjs.get("modified");
+
+        accTaxon.setTaxonName(taxonName);
+        accTaxon.setTaxonomicStatus((String)taxon.get("taxonStatus"));
+        accTaxon.setAccordingTo(accordingTo);
 
         JSONObject sourcejs = (JSONObject)taxon.get("source");
         String sourceUrl = (String) sourcejs.get("url");
@@ -167,16 +171,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
         source.setDatasetName(sourceDatasetName);
         source.setName(sourceName);
         source.setUrl(sourceUrl);
-        accName.setSource(source);
-
-        JSONObject scrutinyjs = (JSONObject)taxon.get("taxonomicScrutiny");
-        String accordingTo = (String) scrutinyjs.get("accordingTo");
-        String modified = (String) scrutinyjs.get("modified");
-
-        Scrutiny scrutiny = new Scrutiny();
-        scrutiny.setAccordingTo(accordingTo);
-        scrutiny.setModified(modified);
-        accName.setScrutiny(scrutiny);
+        accTaxon.getSources().add(source);
 
         JSONObject classification =(JSONObject)taxon.get("classification");
         if(classification != null) {
@@ -187,9 +182,9 @@ public class BgbmEditClient extends AggregateChecklistClient {
             c.setOrder((String) classification.get("Order"));
             c.setFamily((String) classification.get("Family"));
             c.setGenus((String) classification.get("Genus"));
-            accName.setClassification(c);
+            accTaxon.setClassification(c);
         }
-        return accName;
+        return accTaxon;
     }
 
     private void generateSynonyms(JSONArray relatedTaxa, TnrResponse tnrResponse) {
@@ -213,8 +208,10 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
                 taxonName.setRank((String) synonymjs.get("rank"));
 
-
                 synonym.setTaxonName(taxonName);
+
+                JSONObject scrutinyjs = (JSONObject)synonymjs.get("taxonomicScrutiny"); // TODO this will change in future releases of the service
+                synonym.setAccordingTo((String) scrutinyjs.get("accordingTo"));
 
                 JSONObject sourcejs = (JSONObject)synonymjs.get("source");
                 String sourceUrl = (String) sourcejs.get("url");
@@ -227,16 +224,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
                 source.setDatasetName(sourceDatasetName);
                 source.setName(sourceName);
                 source.setUrl(sourceUrl);
-                synonym.setSource(source);
-
-                JSONObject scrutinyjs = (JSONObject)synonymjs.get("taxonomicScrutiny");
-                String accordingTo = (String) scrutinyjs.get("accordingTo");
-                String modified = (String) scrutinyjs.get("modified");
-
-                Scrutiny scrutiny = new Scrutiny();
-                scrutiny.setAccordingTo(accordingTo);
-                scrutiny.setModified(modified);
-                synonym.setScrutiny(scrutiny);
+                synonym.getSources().add(source);
 
                 tnrResponse.getSynonym().add(synonym);
             }
@@ -326,7 +314,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
     @Override
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
         // TODO Auto-generated method stub
-        
+
     }
 
 
