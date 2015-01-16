@@ -25,6 +25,7 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.bgbm.biovel.drf.checklist.SearchMode;
 import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Query.ClientStatus;
@@ -146,26 +147,24 @@ public class TnrMsgUtils {
             return finalTnrMsgList;
         }
 
-        public static TnrMsg convertStringToTnrMsg(String name) {
+        public static TnrMsg convertStringToTnrMsg(String name, SearchMode searchMode) {
             TnrMsg tnrMsg = new TnrMsg();
             Query query = new Query();
             Request request = new Request();
-            TaxonName taxonName = new TaxonName();
 
-            taxonName.setFullName(name);
-
-            request.setTaxonName(taxonName);
+            request.setName(name);
+            request.setSearchMode(searchMode.toString());
             query.setRequest(request);
             tnrMsg.getQuery().add(query);
 
             return tnrMsg;
         }
 
-        public static List<TnrMsg> convertStringListToTnrMsgList(List<String> names) {
+        public static List<TnrMsg> convertStringListToTnrMsgList(List<String> names, SearchMode searchMode) {
             List<TnrMsg> tnrMsgList = new ArrayList<TnrMsg>();
             Iterator<String> itrStringMsg = names.iterator();
             while(itrStringMsg.hasNext()) {
-                TnrMsg tnrMsg = convertStringToTnrMsg(itrStringMsg.next());
+                TnrMsg tnrMsg = convertStringToTnrMsg(itrStringMsg.next(), searchMode);
                 tnrMsgList.add(tnrMsg);
             }
             return tnrMsgList;
@@ -179,7 +178,7 @@ public class TnrMsgUtils {
                 Iterator<Query> itrQuery = currentTnrMsg.getQuery().iterator();
                 while(itrQuery.hasNext()) {
                     Query currentQuery = itrQuery.next();
-                    String nameComplete = currentQuery.getRequest().getTaxonName().getFullName();
+                    String nameComplete = currentQuery.getRequest().getName();
                     Query query = nameQueryMap.get(nameComplete);
                     if(query == null) {
                         nameQueryMap.put(nameComplete, currentQuery);

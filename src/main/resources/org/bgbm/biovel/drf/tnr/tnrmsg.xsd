@@ -267,8 +267,24 @@
         <xsd:element name="request">
           <xsd:complexType>
             <xsd:sequence>
-              <xsd:element name="taxonName" type="tns:taxonName"></xsd:element>
-              <xsd:element name="searchMode" type="xsd:string"></xsd:element>
+              <xsd:element name="name" type="xsd:string">
+              <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">
+                      @com.wordnik.swagger.annotations.ApiModelProperty("The query string to either match a scientific name or a vernacular name depending on the searchMode")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+              <xsd:element name="searchMode" type="xsd:string">
+              <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">
+                      @com.wordnik.swagger.annotations.ApiModelProperty("Specified the search mode to be usedPossible search modes are: scientificNameExact, scientificNameLike (begins with), vernacularNameExact, vernacularNameLike (contains).")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>

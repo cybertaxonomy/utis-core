@@ -220,7 +220,7 @@ public class WoRMSClient extends BaseChecklistClient {
     public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getRequest().getTaxonName().getFullName();
+        String name = query.getRequest().getName();
         AphiaNameServicePortType aphianspt = getAphiaNameService();
 
         try {
@@ -247,7 +247,7 @@ public class WoRMSClient extends BaseChecklistClient {
     public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getRequest().getTaxonName().getFullName();
+        String name = query.getRequest().getName();
         AphiaNameServicePortType aphianspt = getAphiaNameService();
         boolean fuzzy = false;
 
@@ -271,7 +271,7 @@ public class WoRMSClient extends BaseChecklistClient {
     public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getRequest().getTaxonName().getFullName();
+        String name = query.getRequest().getName();
         AphiaNameServicePortType aphianspt = getAphiaNameService();
 
         try {
@@ -294,7 +294,7 @@ public class WoRMSClient extends BaseChecklistClient {
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getRequest().getTaxonName().getFullName();
+        String name = query.getRequest().getName();
         AphiaNameServicePortType aphianspt = getAphiaNameService();
 
         try {

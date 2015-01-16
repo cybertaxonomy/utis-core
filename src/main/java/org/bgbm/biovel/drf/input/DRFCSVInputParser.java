@@ -229,7 +229,7 @@ public class DRFCSVInputParser {
                             if(taxonName.getAtomisedName() != null || taxonName.getFullName() != null) {
 
                                 Query.Request tnrRequest = new Query.Request();
-                                tnrRequest.setTaxonName(taxonName);
+                                tnrRequest.setName(taxonName.getFullName());
 
                                 Query query = new Query();
                                 query.setRequest(tnrRequest);
@@ -261,20 +261,5 @@ public class DRFCSVInputParser {
         return tnrMsgs;
     }
 
-    private TaxonName getDataObjectFromSciName(String sciName) {
-
-        Iterator<TnrMsg> itrTnrMsg = tnrMsgs.iterator();
-        while(itrTnrMsg.hasNext()) {
-            List<Query> queries = itrTnrMsg.next().getQuery();
-            Iterator<Query> itrQueries = queries.iterator();
-            while (itrQueries.hasNext()) {
-                TaxonName taxonName = itrQueries.next().getRequest().getTaxonName();
-                if (taxonName != null && taxonName.getFullName().equals(sciName)) {
-                    return taxonName;
-                }
-            }
-        }
-        return null;
-    }
 
 }

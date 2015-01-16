@@ -49,7 +49,7 @@ public class TnrRequestTest {
         Iterator<String> itrNc = nameCompleteList.iterator();
         while(itrTr.hasNext() && itrNc.hasNext()) {
             TnrMsg tnrMsg = itrTr.next();
-            String sciName = tnrMsg.getQuery().get(0).getRequest().getTaxonName().getFullName();
+            String sciName = tnrMsg.getQuery().get(0).getRequest().getName();
             System.out.println("Scientific Name : " + sciName);
 
             Assert.assertEquals("nameComplete differs",sciName,itrNc.next());

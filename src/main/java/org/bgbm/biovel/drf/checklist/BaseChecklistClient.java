@@ -89,7 +89,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
 
         for(Query query : queryList) {
             Request tnrRequest = query.getRequest();
-            String queryString = tnrRequest.getTaxonName().getFullName();
+            String queryString = tnrRequest.getName();
             if(likeModes.contains(SearchMode.valueOf(tnrRequest.getSearchMode()))){
                 queryString += likeModeWildcard;
             }
@@ -108,7 +108,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
             String endpointSuffix,
             String queryKey,
             Map<String, String> paramMap) {
-        return buildUriFromQueryString(query.getRequest().getTaxonName().getFullName(),
+        return buildUriFromQueryString(query.getRequest().getName(),
                 endpointSuffix,
                 queryKey,
                 paramMap);
@@ -117,7 +117,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
     public URI buildUriFromQuery(Query query,
             String regexpUrl,
             Map<String, String> paramMap) {
-        String url = regexpUrl.replace(QUERY_PLACEHOLDER, query.getRequest().getTaxonName().getFullName());
+        String url = regexpUrl.replace(QUERY_PLACEHOLDER, query.getRequest().getName());
         return buildUriFromQueryString(url, paramMap);
     }
 
