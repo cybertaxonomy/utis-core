@@ -18,7 +18,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.rest.TaxoRESTClient;
-import org.bgbm.biovel.drf.tnr.msg.Query.TnrRequest;
+import org.bgbm.biovel.drf.tnr.msg.Query.Request;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.utils.JSONUtils;
@@ -88,7 +88,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
         EnumSet<SearchMode> likeModes = EnumSet.of(SearchMode.scientificNameLike);
 
         for(Query query : queryList) {
-            TnrRequest tnrRequest = query.getTnrRequest();
+            Request tnrRequest = query.getRequest();
             String queryString = tnrRequest.getTaxonName().getFullName();
             if(likeModes.contains(SearchMode.valueOf(tnrRequest.getSearchMode()))){
                 queryString += likeModeWildcard;
@@ -108,7 +108,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
             String endpointSuffix,
             String queryKey,
             Map<String, String> paramMap) {
-        return buildUriFromQueryString(query.getTnrRequest().getTaxonName().getFullName(),
+        return buildUriFromQueryString(query.getRequest().getTaxonName().getFullName(),
                 endpointSuffix,
                 queryKey,
                 paramMap);
@@ -117,7 +117,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
     public URI buildUriFromQuery(Query query,
             String regexpUrl,
             Map<String, String> paramMap) {
-        String url = regexpUrl.replace(QUERY_PLACEHOLDER, query.getTnrRequest().getTaxonName().getFullName());
+        String url = regexpUrl.replace(QUERY_PLACEHOLDER, query.getRequest().getTaxonName().getFullName());
         return buildUriFromQueryString(url, paramMap);
     }
 

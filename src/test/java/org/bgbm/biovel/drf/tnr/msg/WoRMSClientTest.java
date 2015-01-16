@@ -66,7 +66,7 @@ public class WoRMSClientTest {
         Iterator<TnrMsg> tnrMsgItr = tnrMsgs.iterator();
         while(tnrMsgItr.hasNext()) {
             TnrMsg tnrMsg = tnrMsgItr.next();
-            logger.info("Querying WoRMS for name : " + tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().getFullName());
+            logger.info("Querying WoRMS for name : " + tnrMsg.getQuery().get(0).getRequest().getTaxonName().getFullName());
             wormsc.queryChecklist(tnrMsg, SearchMode.scientificNameExact);
             String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
             logger.info(outputXML);
@@ -82,11 +82,11 @@ public class WoRMSClientTest {
         WoRMSClient wormsc =  new WoRMSClient();
         // strip off the last to characters of the names since we will do a like query
         for (TnrMsg tnrMsg : tnrMsgs) {
-            String name = tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().getFullName();
+            String name = tnrMsg.getQuery().get(0).getRequest().getTaxonName().getFullName();
             String nameTrunk = name.substring(0, name.length() - 2);
             logger.info("Querying WoRMS for name : " + nameTrunk);
 
-            tnrMsg.getQuery().get(0).getTnrRequest().getTaxonName().setFullName(nameTrunk);
+            tnrMsg.getQuery().get(0).getRequest().getTaxonName().setFullName(nameTrunk);
             wormsc.resolveScientificNamesLike(tnrMsg);
             String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
             logger.info(outputXML);

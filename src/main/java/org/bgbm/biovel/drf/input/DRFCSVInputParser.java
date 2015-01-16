@@ -140,7 +140,6 @@ public class DRFCSVInputParser {
 
         TaxonName taxonName;
         AtomisedName atomisedName;
-        AtomisedName.SubGenus subGenus;
         CSVReader reader;
         try {
             reader = new CSVReader(new StringReader(csvData));
@@ -195,20 +194,18 @@ public class DRFCSVInputParser {
                                                     .equals("")) || (infraspecific_epithet_index >= 0 && !nextLine[infraspecific_epithet_index]
                                                             .equals("")))) {
                                 atomisedName = new AtomisedName();
-                                subGenus = new AtomisedName.SubGenus();
-                                subGenus.setGenusPart(nextLine[genus_part_index]);
-                                subGenus.setInfragenericEpithet((infrageneric_epithet_index >= 0) ? nextLine[infrageneric_epithet_index]
+                                atomisedName.setGenusOrUninomial(nextLine[genus_part_index]);
+                                atomisedName.setInfragenericEpithet((infrageneric_epithet_index >= 0) ? nextLine[infrageneric_epithet_index]
                                         : "");
-                                subGenus.setSpecificEpithet((specific_epithet_index >= 0) ? nextLine[specific_epithet_index]
+                                atomisedName.setSpecificEpithet((specific_epithet_index >= 0) ? nextLine[specific_epithet_index]
                                         : "");
-                                subGenus.setInfraspecificEpithet((infrageneric_epithet_index >= 0) ? nextLine[infraspecific_epithet_index]
+                                atomisedName.setInfraspecificEpithet((infrageneric_epithet_index >= 0) ? nextLine[infraspecific_epithet_index]
                                         : "");
-                                atomisedName.setSubGenus(subGenus);
                                 taxonName.setAtomisedName(atomisedName);
                             } else if (uninomial_index >= 0
                                     && !nextLine[uninomial_index].equals("")) {
                                 atomisedName = new AtomisedName();
-                                atomisedName.setUninomial(nextLine[uninomial_index]);
+                                atomisedName.setGenusOrUninomial(nextLine[uninomial_index]);
                                 taxonName.setAtomisedName(atomisedName);
                             } else if (name_complete_index >= 0
                                     && !nextLine[name_complete_index]
@@ -231,11 +228,11 @@ public class DRFCSVInputParser {
 
                             if(taxonName.getAtomisedName() != null || taxonName.getFullName() != null) {
 
-                                Query.TnrRequest tnrRequest = new Query.TnrRequest();
+                                Query.Request tnrRequest = new Query.Request();
                                 tnrRequest.setTaxonName(taxonName);
 
                                 Query query = new Query();
-                                query.setTnrRequest(tnrRequest);
+                                query.setRequest(tnrRequest);
 
                                 TnrMsg tnrMsg = new TnrMsg();
                                 List<Query> queries = tnrMsg.getQuery();
@@ -271,7 +268,7 @@ public class DRFCSVInputParser {
             List<Query> queries = itrTnrMsg.next().getQuery();
             Iterator<Query> itrQueries = queries.iterator();
             while (itrQueries.hasNext()) {
-                TaxonName taxonName = itrQueries.next().getTnrRequest().getTaxonName();
+                TaxonName taxonName = itrQueries.next().getRequest().getTaxonName();
                 if (taxonName != null && taxonName.getFullName().equals(sciName)) {
                     return taxonName;
                 }

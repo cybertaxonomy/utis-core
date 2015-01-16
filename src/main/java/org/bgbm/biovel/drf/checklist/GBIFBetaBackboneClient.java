@@ -18,7 +18,7 @@ import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
+import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.json.simple.JSONArray;
@@ -148,7 +148,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 
             }
 
-            TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(checklistInfo);
+            Response tnrResponse = TnrMsgUtils.tnrResponseFor(checklistInfo);
 
             URI taxonUri = buildUriFromQuery(query, "/ws/usage/" + taxonId, null);
             String responseBody = processRESTService(taxonUri);
@@ -158,7 +158,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
             Taxon accName = generateAccName(jsonAccName);
             tnrResponse.setTaxon(accName);
             if(query != null) {
-                query.getTnrResponse().add(tnrResponse);
+                query.getResponse().add(tnrResponse);
             }
             JSONArray synonyms = (JSONArray) jsonAccName.get("synonyms");
 
@@ -224,7 +224,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
         return accTaxon;
     }
 
-    private void generateSynonyms(JSONObject synonym, TnrResponse tnrResponse) {
+    private void generateSynonyms(JSONObject synonym, Response tnrResponse) {
         Synonym syn = new Synonym();
 
         TaxonName taxonName = new TaxonName();

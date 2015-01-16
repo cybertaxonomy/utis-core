@@ -19,7 +19,7 @@ import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
+import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 
 
@@ -98,9 +98,9 @@ public class WoRMSClient extends BaseChecklistClient {
      * @return
      * @throws RemoteException
      */
-    private TnrResponse tnrResponseFromRecord(AphiaNameServicePortType aphianspt, AphiaRecord record, SearchMode searchMode)
+    private Response tnrResponseFromRecord(AphiaNameServicePortType aphianspt, AphiaRecord record, SearchMode searchMode)
             throws RemoteException {
-        TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
+        Response tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
 
         int accNameGUID = record.getValid_AphiaID();
         String matchingName = record.getScientificname();
@@ -177,7 +177,7 @@ public class WoRMSClient extends BaseChecklistClient {
     }
 
 
-    private void generateSynonyms(AphiaRecord[] synonyms, TnrResponse tnrResponse) {
+    private void generateSynonyms(AphiaRecord[] synonyms, Response tnrResponse) {
 
         for(AphiaRecord synRecord : synonyms) {
             Synonym synonym = new Synonym();
@@ -220,7 +220,7 @@ public class WoRMSClient extends BaseChecklistClient {
     public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getTnrRequest().getTaxonName().getFullName();
+        String name = query.getRequest().getTaxonName().getFullName();
         AphiaNameServicePortType aphianspt = getAphiaNameService();
 
         try {
@@ -229,8 +229,8 @@ public class WoRMSClient extends BaseChecklistClient {
                 Integer nameAphiaID = aphianspt.getAphiaID(name, false);
                 logger.debug("nameAphiaID : " + nameAphiaID);
                 record = aphianspt.getAphiaRecordByID(nameAphiaID);
-                TnrResponse tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.scientificNameExact);
-                query.getTnrResponse().add(tnrResponse);
+                Response tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.scientificNameExact);
+                query.getResponse().add(tnrResponse);
             } catch(NullPointerException npe) {
                 //FIXME : Workaround for NPE thrown by the aphia stub due to a,
                 //        null aphia id (Integer), when the name is not present
@@ -247,7 +247,7 @@ public class WoRMSClient extends BaseChecklistClient {
     public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getTnrRequest().getTaxonName().getFullName();
+        String name = query.getRequest().getTaxonName().getFullName();
         AphiaNameServicePortType aphianspt = getAphiaNameService();
         boolean fuzzy = false;
 
@@ -255,8 +255,8 @@ public class WoRMSClient extends BaseChecklistClient {
             AphiaRecord[] records = aphianspt.getAphiaRecords(name + "%", true, fuzzy, false, 1);
             if(records != null){
                 for (AphiaRecord record : records) {
-                    TnrResponse tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.scientificNameLike);
-                    query.getTnrResponse().add(tnrResponse);
+                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.scientificNameLike);
+                    query.getResponse().add(tnrResponse);
                 }
             }
 
@@ -271,15 +271,15 @@ public class WoRMSClient extends BaseChecklistClient {
     public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getTnrRequest().getTaxonName().getFullName();
+        String name = query.getRequest().getTaxonName().getFullName();
         AphiaNameServicePortType aphianspt = getAphiaNameService();
 
         try {
             AphiaRecord[] records = aphianspt.getAphiaRecordsByVernacular(name, false, 1);
             if(records != null){
                 for (AphiaRecord record : records) {
-                    TnrResponse tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.vernacularNameExact);
-                    query.getTnrResponse().add(tnrResponse);
+                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.vernacularNameExact);
+                    query.getResponse().add(tnrResponse);
                 }
             }
 
@@ -294,15 +294,15 @@ public class WoRMSClient extends BaseChecklistClient {
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getTnrRequest().getTaxonName().getFullName();
+        String name = query.getRequest().getTaxonName().getFullName();
         AphiaNameServicePortType aphianspt = getAphiaNameService();
 
         try {
             AphiaRecord[] records = aphianspt.getAphiaRecordsByVernacular(name, true, 1);
             if(records != null){
                 for (AphiaRecord record : records) {
-                    TnrResponse tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.vernacularNameLike);
-                    query.getTnrResponse().add(tnrResponse);
+                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.vernacularNameLike);
+                    query.getResponse().add(tnrResponse);
                 }
             }
 

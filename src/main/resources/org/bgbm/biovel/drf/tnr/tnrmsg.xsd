@@ -15,41 +15,30 @@
     </xsd:complexType>
   </xsd:element>
   <xsd:complexType name="atomisedName">
-    <xsd:choice>
-      <xsd:element name="uninomial">
+    <xsd:sequence>
+      <xsd:element name="genusOrUninomial">
         <xsd:simpleType>
           <xsd:restriction base="xsd:string" />
         </xsd:simpleType>
       </xsd:element>
-      <xsd:element name="subGenus" minOccurs="1">
-        <xsd:complexType>
-          <xsd:sequence>
-            <xsd:element name="genusPart">
-              <xsd:simpleType>
-                <xsd:restriction base="xsd:string" />
-              </xsd:simpleType>
-            </xsd:element>
-            <xsd:element name="infragenericEpithet"
-              minOccurs="0">
-              <xsd:simpleType>
-                <xsd:restriction base="xsd:string" />
-              </xsd:simpleType>
-            </xsd:element>
-            <xsd:element name="specificEpithet" minOccurs="0">
-              <xsd:simpleType>
-                <xsd:restriction base="xsd:string" />
-              </xsd:simpleType>
-            </xsd:element>
-            <xsd:element name="infraspecificEpithet"
-              minOccurs="0">
-              <xsd:simpleType>
-                <xsd:restriction base="xsd:string" />
-              </xsd:simpleType>
-            </xsd:element>
-          </xsd:sequence>
-        </xsd:complexType>
+      <xsd:element name="infragenericEpithet"
+        minOccurs="0">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
       </xsd:element>
-    </xsd:choice>
+      <xsd:element name="specificEpithet" minOccurs="0">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="infraspecificEpithet"
+        minOccurs="0">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+    </xsd:sequence>
   </xsd:complexType>
   <xsd:complexType name="taxonName">
     <xsd:sequence>
@@ -123,7 +112,7 @@
     </xsd:sequence>
   </xsd:complexType>
 
-  <xsd:element name="tnrResponse">
+  <xsd:element name="Response">
     <xsd:complexType>
       <xsd:sequence>
         <xsd:element minOccurs="0" maxOccurs="1" ref="tns:taxon">
@@ -275,7 +264,7 @@
   <xsd:element name="query">
     <xsd:complexType>
       <xsd:sequence>
-        <xsd:element name="tnrRequest">
+        <xsd:element name="request">
           <xsd:complexType>
             <xsd:sequence>
               <xsd:element name="taxonName" type="tns:taxonName"></xsd:element>
@@ -284,9 +273,9 @@
           </xsd:complexType>
         </xsd:element>
         <xsd:element minOccurs="1" maxOccurs="unbounded"
-          ref="tns:tnrResponse">
+          ref="tns:Response">
         </xsd:element>
-        <xsd:element name="tnrClientStatus" maxOccurs="unbounded"
+        <xsd:element name="clientStatus" maxOccurs="unbounded"
           minOccurs="0">
           <xsd:complexType>
             <xsd:sequence>

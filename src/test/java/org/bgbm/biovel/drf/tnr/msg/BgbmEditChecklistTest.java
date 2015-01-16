@@ -65,7 +65,7 @@ public class BgbmEditChecklistTest {
 
 
         for(Query query : tnrMsg.getQuery()) {
-            query.getTnrRequest().setSearchMode(SearchMode.scientificNameExact.toString());
+            query.getRequest().setSearchMode(SearchMode.scientificNameExact.toString());
         }
         bec.queryChecklist(tnrMsg, SearchMode.scientificNameExact);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);

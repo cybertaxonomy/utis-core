@@ -18,7 +18,7 @@ import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
+import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.json.simple.JSONArray;
@@ -149,7 +149,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
                 Number acceptedKey = (Number)res.get("acceptedKey");
                 boolean synonym = (Boolean)res.get("synonym");
 
-                TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
+                Response tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
 
                 // case when accepted name
                 if(!synonym && (acceptedKey == null)) {
@@ -178,7 +178,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
 
 
                 if(query != null) {
-                    query.getTnrResponse().add(tnrResponse);
+                    query.getResponse().add(tnrResponse);
                 }
                 int offset = 0;
                 paramMap.put("limit", MAX_PAGING_LIMIT);
@@ -249,7 +249,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient {
         return accTaxon;
     }
 
-    private void generateSynonyms(JSONObject pagedSynonyms, TnrResponse tnrResponse) {
+    private void generateSynonyms(JSONObject pagedSynonyms, Response tnrResponse) {
 
 
         JSONArray synonyms = (JSONArray)pagedSynonyms.get("results");

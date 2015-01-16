@@ -20,7 +20,7 @@ import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
+import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.gbif.nameparser.NameParser;
 import org.json.simple.JSONArray;
@@ -187,7 +187,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
         return accTaxon;
     }
 
-    private void generateSynonyms(JSONArray relatedTaxa, TnrResponse tnrResponse) {
+    private void generateSynonyms(JSONArray relatedTaxa, Response tnrResponse) {
 
 
         Iterator<JSONObject> itrSynonyms = relatedTaxa.iterator();
@@ -283,7 +283,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
             String taxonUuid = (String) taxonRequest.get("taxonUuid");
 
             if(taxon != null) {
-                TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
+                Response tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
 
                 String matchingName = taxonIdMatchStringMap.get(taxonUuid);
                 tnrResponse.setMatchingNameString(matchingName);
@@ -294,7 +294,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
                 generateSynonyms(relatedTaxa, tnrResponse);
                 Query query = taxonIdQueryMap.get(taxonUuid);
                 if(query != null) {
-                    query.getTnrResponse().add(tnrResponse);
+                    query.getResponse().add(tnrResponse);
                 }
             }
         }

@@ -19,7 +19,7 @@ import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
+import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 
 
@@ -157,7 +157,7 @@ public class PESIClient extends BaseChecklistClient {
     }
 
 
-    private void generateSynonyms(PESIRecord[] synonyms, TnrResponse tnrResponse) {
+    private void generateSynonyms(PESIRecord[] synonyms, Response tnrResponse) {
 
         for(PESIRecord synRecord : synonyms) {
 
@@ -186,7 +186,7 @@ public class PESIClient extends BaseChecklistClient {
     public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getTnrRequest().getTaxonName().getFullName();
+        String name = query.getRequest().getTaxonName().getFullName();
         PESINameServiceLocator pesins = new PESINameServiceLocator();
 
         PESINameServicePortType pesinspt = getPESINameService(pesins);
@@ -210,7 +210,7 @@ public class PESIClient extends BaseChecklistClient {
     @Override
     public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getTnrRequest().getTaxonName().getFullName();
+        String name = query.getRequest().getTaxonName().getFullName();
         PESINameServiceLocator pesins = new PESINameServiceLocator();
 
         PESINameServicePortType pesinspt = getPESINameService(pesins);
@@ -219,8 +219,8 @@ public class PESIClient extends BaseChecklistClient {
             PESIRecord[] records = pesinspt.getPESIRecords(name, true);
             if(records != null){
                 for (PESIRecord record : records) {
-                    TnrResponse tnrResponse = tnrResponseFromRecord(pesinspt, record, null);
-                    query.getTnrResponse().add(tnrResponse);
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, null);
+                    query.getResponse().add(tnrResponse);
                 }
             }
         }  catch (RemoteException e) {
@@ -234,7 +234,7 @@ public class PESIClient extends BaseChecklistClient {
     public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getTnrRequest().getTaxonName().getFullName();
+        String name = query.getRequest().getTaxonName().getFullName();
         PESINameServiceLocator pesins = new PESINameServiceLocator();
 
         PESINameServicePortType pesinspt = getPESINameService(pesins);
@@ -243,8 +243,8 @@ public class PESIClient extends BaseChecklistClient {
             PESIRecord[] records = pesinspt.getPESIRecordsByVernacular(name);
             if(records != null){
                 for (PESIRecord record : records) {
-                    TnrResponse tnrResponse = tnrResponseFromRecord(pesinspt, record, null);
-                    query.getTnrResponse().add(tnrResponse);
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, null);
+                    query.getResponse().add(tnrResponse);
                 }
             }
         }  catch (RemoteException e) {
@@ -258,7 +258,7 @@ public class PESIClient extends BaseChecklistClient {
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getTnrRequest().getTaxonName().getFullName();
+        String name = query.getRequest().getTaxonName().getFullName();
         PESINameServiceLocator pesins = new PESINameServiceLocator();
 
         PESINameServicePortType pesinspt = getPESINameService(pesins);
@@ -267,8 +267,8 @@ public class PESIClient extends BaseChecklistClient {
             PESIRecord[] records = pesinspt.getPESIRecordsByVernacular("%" + name + "%");
             if(records != null){
                 for (PESIRecord record : records) {
-                    TnrResponse tnrResponse = tnrResponseFromRecord(pesinspt, record, null);
-                    query.getTnrResponse().add(tnrResponse);
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, null);
+                    query.getResponse().add(tnrResponse);
                 }
             }
         }  catch (RemoteException e) {
@@ -284,9 +284,9 @@ public class PESIClient extends BaseChecklistClient {
      * @param searchMode TODO
      * @throws RemoteException
      */
-    private TnrResponse tnrResponseFromRecord(PESINameServicePortType pesinspt, PESIRecord record, SearchMode searchMode) throws RemoteException {
+    private Response tnrResponseFromRecord(PESINameServicePortType pesinspt, PESIRecord record, SearchMode searchMode) throws RemoteException {
 
-        TnrResponse tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
+        Response tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
 
         String accNameGUID = record.getValid_guid();
         if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){

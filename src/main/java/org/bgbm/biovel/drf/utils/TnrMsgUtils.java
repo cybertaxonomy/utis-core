@@ -27,11 +27,11 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Query;
-import org.bgbm.biovel.drf.tnr.msg.Query.TnrClientStatus;
-import org.bgbm.biovel.drf.tnr.msg.Query.TnrRequest;
+import org.bgbm.biovel.drf.tnr.msg.Query.ClientStatus;
+import org.bgbm.biovel.drf.tnr.msg.Query.Request;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
+import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
@@ -119,11 +119,11 @@ public class TnrMsgUtils {
             return (TnrMsg) um.unmarshal(new StringReader(xmlMsg));
         }
 
-        public static TnrResponse convertXMLToTnrResponse(String xmlMsg) throws JAXBException, ParserConfigurationException, SAXException, IOException {
-            JAXBContext context = JAXBContext.newInstance(TnrResponse.class);
+        public static Response convertXMLToTnrResponse(String xmlMsg) throws JAXBException, ParserConfigurationException, SAXException, IOException {
+            JAXBContext context = JAXBContext.newInstance(Response.class);
 
             Unmarshaller um = context.createUnmarshaller();
-            return (TnrResponse) um.unmarshal(new StringReader(xmlMsg));
+            return (Response) um.unmarshal(new StringReader(xmlMsg));
         }
 
         public static TnrMsg convertXMLListToTnrMsg(List<String> xmlMsg) throws JAXBException {
@@ -149,13 +149,13 @@ public class TnrMsgUtils {
         public static TnrMsg convertStringToTnrMsg(String name) {
             TnrMsg tnrMsg = new TnrMsg();
             Query query = new Query();
-            TnrRequest request = new TnrRequest();
+            Request request = new Request();
             TaxonName taxonName = new TaxonName();
 
             taxonName.setFullName(name);
 
             request.setTaxonName(taxonName);
-            query.setTnrRequest(request);
+            query.setRequest(request);
             tnrMsg.getQuery().add(query);
 
             return tnrMsg;
@@ -179,12 +179,12 @@ public class TnrMsgUtils {
                 Iterator<Query> itrQuery = currentTnrMsg.getQuery().iterator();
                 while(itrQuery.hasNext()) {
                     Query currentQuery = itrQuery.next();
-                    String nameComplete = currentQuery.getTnrRequest().getTaxonName().getFullName();
+                    String nameComplete = currentQuery.getRequest().getTaxonName().getFullName();
                     Query query = nameQueryMap.get(nameComplete);
                     if(query == null) {
                         nameQueryMap.put(nameComplete, currentQuery);
                     } else {
-                        query.getTnrResponse().addAll(currentQuery.getTnrResponse());
+                        query.getResponse().addAll(currentQuery.getResponse());
                     }
                 }
             }
@@ -201,16 +201,16 @@ public class TnrMsgUtils {
          * @param ci
          * @return
          */
-        public static TnrResponse tnrResponseFor(ServiceProviderInfo ci) {
-            TnrResponse tnrResponse = new TnrResponse();
+        public static Response tnrResponseFor(ServiceProviderInfo ci) {
+            Response tnrResponse = new Response();
             tnrResponse.setChecklistId(ci.getId());
             tnrResponse.setChecklist(ci.getLabel());
             tnrResponse.setChecklistUrl(ci.getDocumentationUrl());
             return tnrResponse;
         }
 
-        public static TnrClientStatus tnrClientStatusFor(ServiceProviderInfo ci) {
-            TnrClientStatus tnrClientStatus = new TnrClientStatus();
+        public static ClientStatus tnrClientStatusFor(ServiceProviderInfo ci) {
+            ClientStatus tnrClientStatus = new ClientStatus();
             tnrClientStatus.setChecklistId(ci.getId());
             return tnrClientStatus;
         }

@@ -30,7 +30,7 @@ import org.apache.http.HttpHost;
 import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.Query;
-import org.bgbm.biovel.drf.tnr.msg.TnrResponse;
+import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.w3c.dom.Document;
@@ -163,8 +163,8 @@ public class Species2000ColClient extends BaseChecklistClient {
 
             String tnrResponseXML = outputWriter.toString();
             System.out.println(tnrResponseXML);
-            TnrResponse tnrResponse = TnrMsgUtils.convertXMLToTnrResponse(tnrResponseXML);
-            query.getTnrResponse().add(tnrResponse);
+            Response tnrResponse = TnrMsgUtils.convertXMLToTnrResponse(tnrResponseXML);
+            query.getResponse().add(tnrResponse);
         } catch (TransformerException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
