@@ -1,4 +1,4 @@
-<tnrResponse xmlns="http://bgbm.org/biovel/drf/tnr/msg"
+<Response xmlns="http://bgbm.org/biovel/drf/tnr/msg"
   checklist="GBIF Backbone Taxonomy" checklist_url="http://ecat-dev.gbif.org/checklist/1">
   <taxon>
     <taxonomicStatus>accepted</taxonomicStatus>
@@ -26,4 +26,4 @@
       <modified />
     </scrutiny>
   </taxon>
-</tnrResponse>
+</Response>
