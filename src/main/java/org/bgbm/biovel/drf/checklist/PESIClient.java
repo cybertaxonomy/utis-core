@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 import javax.xml.rpc.ServiceException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServiceLocator;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServicePortType;
@@ -33,7 +34,7 @@ public class PESIClient extends BaseChecklistClient {
     public static final String DATA_AGR_URL = "";
 
     private static Pattern citationPattern = Pattern.compile("^(.*)\\p{Punct} [Aa]ccessed through\\p{Punct}? (PESI|Euro\\+Med PlantBase|Index Fungorum|Fauna Europaea|European Register of Marine Species) at (.*)$");
-
+    private static Pattern Lsid_pattern = Pattern.compile(".*(urn:lsid:\\S*).*");
 
     public enum PESISources {
         EUROMED("Euro+Med Plantbase"),
@@ -141,6 +142,18 @@ public class PESIClient extends BaseChecklistClient {
         return parsed;
     }
 
+    private String parseLSIDfromSourceTaxonUrl(String pesiTaxonUrl){
+        if(pesiTaxonUrl == null){
+            return null;
+        }
+
+        Matcher m = Lsid_pattern.matcher(pesiTaxonUrl);
+        if (m.matches() && m.groupCount() == 1) {
+            return m.group(1);
+        }
+        return null;
+    }
+
     private Taxon generateAccName(PESIRecord taxon) {
 
 
@@ -159,15 +172,20 @@ public class PESIClient extends BaseChecklistClient {
         accName.setTaxonomicStatus(taxon.getStatus());
         accName.setUrl(taxon.getUrl());
 
+        String lsid = parseLSIDfromSourceTaxonUrl(taxon.getUrl());
+        accName.setIdentifier(lsid);
+
         String sourceString = taxon.getCitation(); // concatenation of sec. reference and url
         ParsedCitation parsed = parsePesiCitation(sourceString);
         accName.setAccordingTo(parsed.accordingTo);
+
 
         // TODO ask VLIZ for adding all the the sourceFKs to the service and fill additional the data in here
         if(parsed.sourceTaxonUrl != null){
             Source source = new Source();
             source.setUrl(parsed.sourceTaxonUrl);
             source.setTitle(parsed.accordingTo);
+            source.setIdentifier(lsid);
             accName.getSources().add(source);
         }
 

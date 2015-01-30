@@ -206,7 +206,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
         String sourceName = ""; // TODO
 
         Source source = new Source();
-        source.setDatasetID(sourceDatasetID);
+        source.setIdentifier(sourceDatasetID);
         source.setDatasetName(sourceDatasetName);
         source.setName(sourceName);
         source.setUrl(sourceUrl);
@@ -249,7 +249,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
         String sourceName = (String) synonym.get("accordingTo");		;
 
         Source source = new Source();
-        source.setDatasetID(sourceDatasetID);
+        source.setIdentifier(sourceDatasetID);
         source.setDatasetName(sourceDatasetName);
         source.setName(sourceName);
         source.setUrl(sourceUrl);

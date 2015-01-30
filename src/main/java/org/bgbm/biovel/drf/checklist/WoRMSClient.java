@@ -158,7 +158,7 @@ public class WoRMSClient extends BaseChecklistClient {
         String sourceName = "";
 
         Source source = new Source();
-        source.setDatasetID(sourceDatasetID);
+        source.setIdentifier(sourceDatasetID);
         source.setDatasetName(sourceDatasetName);
         source.setName(sourceName);
         source.setUrl(sourceUrl);
@@ -204,7 +204,7 @@ public class WoRMSClient extends BaseChecklistClient {
             String sourceName = "";
 
             Source source = new Source();
-            source.setDatasetID(sourceDatasetID);
+            source.setIdentifier(sourceDatasetID);
             source.setDatasetName(sourceDatasetName);
             source.setName(sourceName);
             source.setUrl(sourceUrl);
