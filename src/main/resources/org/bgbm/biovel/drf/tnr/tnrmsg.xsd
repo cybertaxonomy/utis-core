@@ -311,7 +311,7 @@
                 <xsd:annotation>
                   <xsd:appinfo>
                     <annox:annotate target="getter">
-                      @com.wordnik.swagger.annotations.ApiModelProperty("Duration of the request in milliseconds")
+                      @com.wordnik.swagger.annotations.ApiModelProperty("Duration of the request processing in the specific checklist client in milliseconds.")
                     </annox:annotate>
                   </xsd:appinfo>
                 </xsd:annotation>
