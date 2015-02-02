@@ -214,6 +214,19 @@ public class TnrMsgUtils {
             return tnrClientStatus;
         }
 
+        /**
+         * Sets the given <code>searchMode</code> to the requests in all queries of the TnrMsg
+         *
+         * @deprecated this is a temporary solution to overcome the inconsistencies in the
+         * current implementation of the SearchModes i the library
+         */
+        @Deprecated
+        public static void updateWithSearchMode(TnrMsg tnrMsg, SearchMode searchMode){
+            for(Query query :  tnrMsg.getQuery()){
+                query.getRequest().setSearchMode(searchMode.toString());
+            }
+        }
+
 
 
 

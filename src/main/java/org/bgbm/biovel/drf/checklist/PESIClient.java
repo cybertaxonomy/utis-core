@@ -34,7 +34,12 @@ public class PESIClient extends BaseChecklistClient {
     public static final String DATA_AGR_URL = "";
 
     private static Pattern citationPattern = Pattern.compile("^(.*)\\p{Punct} [Aa]ccessed through\\p{Punct}? (PESI|Euro\\+Med PlantBase|Index Fungorum|Fauna Europaea|European Register of Marine Species) at (.*)$");
+
+    // to match e.g.: http://www.eu-nomen.eu/portal/taxon.php?GUID=urn:lsid:marinespecies.org:taxname:140389
     private static Pattern Lsid_pattern = Pattern.compile(".*(urn:lsid:\\S*).*");
+
+    // to match e.g.: http://www.eu-nomen.eu/portal/taxon.php?GUID=0EB6CA37-3365-4AF5-A800-8FC4B8C366FA
+    private static Pattern uuid_pattern = Pattern.compile(".*GUID=([A-Z0-9\\-]{36}).*");
 
     public enum PESISources {
         EUROMED("Euro+Med Plantbase"),
@@ -142,15 +147,22 @@ public class PESIClient extends BaseChecklistClient {
         return parsed;
     }
 
-    private String parseLSIDfromSourceTaxonUrl(String pesiTaxonUrl){
+    private String parseIdentifierfromEunomenTaxonUrl(String pesiTaxonUrl){
         if(pesiTaxonUrl == null){
             return null;
         }
 
+        // 1. check for an LSID (Fauna Europaea, Index Fungorum, ERMS)
         Matcher m = Lsid_pattern.matcher(pesiTaxonUrl);
         if (m.matches() && m.groupCount() == 1) {
             return m.group(1);
         }
+        // 2. check for an UUID as used in Euro+Med
+        m = uuid_pattern.matcher(pesiTaxonUrl);
+        if (m.matches() && m.groupCount() == 1) {
+            return m.group(1);
+        }
+
         return null;
     }
 
@@ -172,7 +184,7 @@ public class PESIClient extends BaseChecklistClient {
         accName.setTaxonomicStatus(taxon.getStatus());
         accName.setUrl(taxon.getUrl());
 
-        String lsid = parseLSIDfromSourceTaxonUrl(taxon.getUrl());
+        String lsid = parseIdentifierfromEunomenTaxonUrl(taxon.getUrl());
         accName.setIdentifier(lsid);
 
         String sourceString = taxon.getCitation(); // concatenation of sec. reference and url

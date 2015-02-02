@@ -22,6 +22,7 @@ import org.bgbm.biovel.drf.tnr.msg.Query.Request;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.utils.JSONUtils;
+import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,6 +142,8 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
     }
 
     public void resolveNames(TnrMsg tnrMsg, SearchMode mode) throws DRFChecklistException {
+
+        TnrMsgUtils.updateWithSearchMode(tnrMsg, mode);
 
         if(!getSearchModes().contains(mode)){
             throw new DRFChecklistException("Unsupported SearchMode");
