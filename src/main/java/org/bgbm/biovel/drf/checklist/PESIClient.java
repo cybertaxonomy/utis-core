@@ -259,15 +259,14 @@ public class PESIClient extends BaseChecklistClient {
         PESINameServicePortType pesinspt = getPESINameService(pesins);
 
         try {
-            String nameGUID = pesinspt.getGUID(name);
-            if(nameGUID != null){
-                logger.debug("nameGUID : " + nameGUID);
-                PESIRecord record = pesinspt.getPESIRecordByGUID(nameGUID);
-                Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest());
-                query.getResponse().add(tnrResponse);
-            } else {
-                logger.debug("no match for " + name);
+            PESIRecord[] records = pesinspt.getPESIRecords(name, false);
+            if(records != null){
+                for (PESIRecord record : records) {
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest());
+                    query.getResponse().add(tnrResponse);
+                }
             }
+
         }  catch (RemoteException e) {
             logger.error("Error in getGUID method in PESINameService", e);
             throw new DRFChecklistException("Error in getGUID method in PESINameService");
