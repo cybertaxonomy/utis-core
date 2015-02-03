@@ -147,24 +147,25 @@ public class TnrMsgUtils {
             return finalTnrMsgList;
         }
 
-        public static TnrMsg convertStringToTnrMsg(String name, SearchMode searchMode) {
+        public static TnrMsg convertStringToTnrMsg(String name, SearchMode searchMode, boolean addSynonymy) {
             TnrMsg tnrMsg = new TnrMsg();
             Query query = new Query();
             Request request = new Request();
 
             request.setName(name);
             request.setSearchMode(searchMode.toString());
+            request.setAddSynonymy(addSynonymy);
             query.setRequest(request);
             tnrMsg.getQuery().add(query);
 
             return tnrMsg;
         }
 
-        public static List<TnrMsg> convertStringListToTnrMsgList(List<String> names, SearchMode searchMode) {
+        public static List<TnrMsg> convertStringListToTnrMsgList(List<String> names, SearchMode searchMode, boolean addSynonymy) {
             List<TnrMsg> tnrMsgList = new ArrayList<TnrMsg>();
             Iterator<String> itrStringMsg = names.iterator();
             while(itrStringMsg.hasNext()) {
-                TnrMsg tnrMsg = convertStringToTnrMsg(itrStringMsg.next(), searchMode);
+                TnrMsg tnrMsg = convertStringToTnrMsg(itrStringMsg.next(), searchMode, addSynonymy);
                 tnrMsgList.add(tnrMsg);
             }
             return tnrMsgList;

@@ -141,6 +141,14 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
         return query;
     }
 
+    /**
+     *
+     * @param tnrMsg
+     * @param mode
+     * @throws DRFChecklistException
+     *
+     * TODO remove parameter SearchMode, since it in now included in the TnrMsg.query.request
+     */
     public void resolveNames(TnrMsg tnrMsg, SearchMode mode) throws DRFChecklistException {
 
         TnrMsgUtils.updateWithSearchMode(tnrMsg, mode);

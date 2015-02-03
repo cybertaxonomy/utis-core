@@ -236,6 +236,11 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
         List<Query> queryList = tnrMsg.getQuery();
 
+        // selecting one request as representative, only
+        // the search mode and addSynonmy flag are important
+        // for the further usage of the request object
+        Query.Request request = queryList.get(0).getRequest();
+
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
             URI namesUri = buildUriFromQueryList(queryList,
                     "/cdmserver/" + checklistInfo.getId() + "/name_catalogue.json",
@@ -253,7 +258,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
                         "taxonUuid",
                         null);
                 String taxonResponseBody = processRESTService(taxonUri);
-                updateQueriesWithResponse(taxonResponseBody, checklistInfo);
+                updateQueriesWithResponse(taxonResponseBody, checklistInfo, request);
             }
         }
     }
@@ -265,7 +270,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
     }
 
-    private void updateQueriesWithResponse(String responseBody, ServiceProviderInfo ci) throws DRFChecklistException {
+    private void updateQueriesWithResponse(String responseBody, ServiceProviderInfo ci, Query.Request request) throws DRFChecklistException {
 
         JSONArray responseBodyJson = parseResponseBody(responseBody);
 
@@ -291,7 +296,11 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
                 Taxon accName = generateAccName(taxon);
                 tnrResponse.setTaxon(accName);
-                generateSynonyms(relatedTaxa, tnrResponse);
+
+                if(request.isAddSynonymy()){
+                    generateSynonyms(relatedTaxa, tnrResponse);
+                }
+
                 Query query = taxonIdQueryMap.get(taxonUuid);
                 if(query != null) {
                     query.getResponse().add(tnrResponse);

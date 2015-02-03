@@ -98,9 +98,12 @@ public class WoRMSClient extends BaseChecklistClient {
      * @return
      * @throws RemoteException
      */
-    private Response tnrResponseFromRecord(AphiaNameServicePortType aphianspt, AphiaRecord record, SearchMode searchMode)
+    private Response tnrResponseFromRecord(AphiaNameServicePortType aphianspt, AphiaRecord record, Query.Request request)
             throws RemoteException {
+
         Response tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
+
+        SearchMode searchMode = SearchMode.valueOf(request.getSearchMode());
 
         int accNameGUID = record.getValid_AphiaID();
         String matchingName = record.getScientificname();
@@ -127,7 +130,7 @@ public class WoRMSClient extends BaseChecklistClient {
 
         AphiaRecord[] synonyms = aphianspt.getAphiaSynonymsByID(accNameGUID);
 
-        if(synonyms != null && synonyms.length > 0) {
+        if(request.isAddSynonymy() && synonyms != null && synonyms.length > 0) {
             generateSynonyms(synonyms, tnrResponse);
         }
         return tnrResponse;
@@ -229,7 +232,7 @@ public class WoRMSClient extends BaseChecklistClient {
                 Integer nameAphiaID = aphianspt.getAphiaID(name, false);
                 logger.debug("nameAphiaID : " + nameAphiaID);
                 record = aphianspt.getAphiaRecordByID(nameAphiaID);
-                Response tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.scientificNameExact);
+                Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest());
                 query.getResponse().add(tnrResponse);
             } catch(NullPointerException npe) {
                 //FIXME : Workaround for NPE thrown by the aphia stub due to a,
@@ -255,7 +258,7 @@ public class WoRMSClient extends BaseChecklistClient {
             AphiaRecord[] records = aphianspt.getAphiaRecords(name + "%", true, fuzzy, false, 1);
             if(records != null){
                 for (AphiaRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.scientificNameLike);
+                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest());
                     query.getResponse().add(tnrResponse);
                 }
             }
@@ -278,7 +281,7 @@ public class WoRMSClient extends BaseChecklistClient {
             AphiaRecord[] records = aphianspt.getAphiaRecordsByVernacular(name, false, 1);
             if(records != null){
                 for (AphiaRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.vernacularNameExact);
+                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest());
                     query.getResponse().add(tnrResponse);
                 }
             }
@@ -301,7 +304,7 @@ public class WoRMSClient extends BaseChecklistClient {
             AphiaRecord[] records = aphianspt.getAphiaRecordsByVernacular(name, true, 1);
             if(records != null){
                 for (AphiaRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, SearchMode.vernacularNameLike);
+                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest());
                     query.getResponse().add(tnrResponse);
                 }
             }

@@ -88,7 +88,7 @@ public class GBIFChecklistTest {
     @Test
     public void nameCompleteStringListTest() throws DRFChecklistException, DRFInputException, JAXBException, TnrMsgException {
         parser = new DRFCSVInputParser();
-        List<TnrMsg> tnrMsgs = TnrMsgUtils.convertStringListToTnrMsgList(nameCompleteList, SearchMode.scientificNameExact);
+        List<TnrMsg> tnrMsgs = TnrMsgUtils.convertStringListToTnrMsgList(nameCompleteList, SearchMode.scientificNameExact, false);
         //List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/singleNameCompleteOnly.csv","UTF-8"));
         List<String> chosenKeyList = new ArrayList<String>();
         chosenKeyList.add("7ddf754f-d193-4cc9-b351-99906754a03b");

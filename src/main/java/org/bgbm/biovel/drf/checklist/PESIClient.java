@@ -263,7 +263,7 @@ public class PESIClient extends BaseChecklistClient {
             if(nameGUID != null){
                 logger.debug("nameGUID : " + nameGUID);
                 PESIRecord record = pesinspt.getPESIRecordByGUID(nameGUID);
-                Response tnrResponse = tnrResponseFromRecord(pesinspt, record, SearchMode.valueOf(query.getRequest().getSearchMode()));
+                Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest());
                 query.getResponse().add(tnrResponse);
             } else {
                 logger.debug("no match for " + name);
@@ -287,7 +287,7 @@ public class PESIClient extends BaseChecklistClient {
             PESIRecord[] records = pesinspt.getPESIRecords(name, true);
             if(records != null){
                 for (PESIRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, SearchMode.valueOf(query.getRequest().getSearchMode()));
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest());
                     query.getResponse().add(tnrResponse);
                 }
             }
@@ -311,7 +311,7 @@ public class PESIClient extends BaseChecklistClient {
             PESIRecord[] records = pesinspt.getPESIRecordsByVernacular(name);
             if(records != null){
                 for (PESIRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, SearchMode.valueOf(query.getRequest().getSearchMode()));
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest());
                     query.getResponse().add(tnrResponse);
                 }
             }
@@ -335,7 +335,7 @@ public class PESIClient extends BaseChecklistClient {
             PESIRecord[] records = pesinspt.getPESIRecordsByVernacular("%" + name + "%");
             if(records != null){
                 for (PESIRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, SearchMode.valueOf(query.getRequest().getSearchMode()));
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest());
                     query.getResponse().add(tnrResponse);
                 }
             }
@@ -352,9 +352,11 @@ public class PESIClient extends BaseChecklistClient {
      * @param searchMode TODO
      * @throws RemoteException
      */
-    private Response tnrResponseFromRecord(PESINameServicePortType pesinspt, PESIRecord record, SearchMode searchMode) throws RemoteException {
+    private Response tnrResponseFromRecord(PESINameServicePortType pesinspt, PESIRecord record, Query.Request request) throws RemoteException {
 
         Response tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
+
+        SearchMode searchMode = SearchMode.valueOf(request.getSearchMode());
 
         String accNameGUID = record.getValid_guid();
         if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
@@ -381,7 +383,7 @@ public class PESIClient extends BaseChecklistClient {
             }
 
             PESIRecord[] records = pesinspt.getPESISynonymsByGUID(accNameGUID);
-            if(records != null && records.length > 0) {
+            if(request.isAddSynonymy() &&  records != null && records.length > 0) {
                 generateSynonyms(records,tnrResponse);
             }
         }

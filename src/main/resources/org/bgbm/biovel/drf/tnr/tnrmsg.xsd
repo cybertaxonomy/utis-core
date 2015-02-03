@@ -295,6 +295,15 @@
                   </xsd:appinfo>
                 </xsd:annotation>
               </xsd:element>
+              <xsd:element name="addSynonymy" type="xsd:boolean">
+              <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">
+                      @com.wordnik.swagger.annotations.ApiModelProperty("Indicates whether the synonymy of the accepted taxon should be included into the response. Turning this option on may lead to an increased response time.")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
