@@ -83,6 +83,7 @@ public class WoRMSClientTest {
         // strip off the last to characters of the names since we will do a like query
         for (TnrMsg tnrMsg : tnrMsgs) {
             String name = tnrMsg.getQuery().get(0).getRequest().getName();
+            tnrMsg.getQuery().get(0).getRequest().setSearchMode(SearchMode.scientificNameExact.toString());
             String nameTrunk = name.substring(0, name.length() - 2);
             logger.info("Querying WoRMS for name : " + nameTrunk);
 
