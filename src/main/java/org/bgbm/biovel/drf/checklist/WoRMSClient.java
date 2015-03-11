@@ -136,26 +136,27 @@ public class WoRMSClient extends BaseChecklistClient {
         return tnrResponse;
     }
 
-    private Taxon generateAccName(AphiaRecord taxon) {
+    private Taxon generateAccName(AphiaRecord taxonRecord) {
         Taxon accName = new Taxon();
         TaxonName taxonName = new TaxonName();
 
-        String resName = taxon.getScientificname();
-        taxonName.setFullName(resName + " " + taxon.getAuthority());
+        String resName = taxonRecord.getScientificname();
+        taxonName.setFullName(resName + " " + taxonRecord.getAuthority());
 
         taxonName.setCanonicalName(resName);
 
-        taxonName.setRank(taxon.getRank());
-        taxonName.setAuthorship(taxon.getAuthority());
+        taxonName.setRank(taxonRecord.getRank());
+        taxonName.setAuthorship(taxonRecord.getAuthority());
 
         accName.setTaxonName(taxonName);
-        accName.setTaxonomicStatus(taxon.getStatus());
+        accName.setTaxonomicStatus(taxonRecord.getStatus());
 
-        accName.setUrl(taxon.getUrl());
+        accName.setUrl(taxonRecord.getUrl());
+        accName.setIdentifier(taxonRecord.getLsid());
 
 
         //FIXME : To fill in
-        String sourceUrl = taxon.getUrl();
+        String sourceUrl = taxonRecord.getUrl();
         String sourceDatasetID = "";
         String sourceDatasetName = "";
         String sourceName = "";
@@ -168,12 +169,12 @@ public class WoRMSClient extends BaseChecklistClient {
         accName.getSources().add(source);
 
         Classification c = new Classification();
-        c.setKingdom(taxon.getKingdom());
-        c.setPhylum(taxon.getPhylum());
+        c.setKingdom(taxonRecord.getKingdom());
+        c.setPhylum(taxonRecord.getPhylum());
         c.setClazz("");
-        c.setOrder(taxon.getOrder());
-        c.setFamily(taxon.getFamily());
-        c.setGenus(taxon.getGenus());
+        c.setOrder(taxonRecord.getOrder());
+        c.setFamily(taxonRecord.getFamily());
+        c.setGenus(taxonRecord.getGenus());
         accName.setClassification(c);
 
         return accName;

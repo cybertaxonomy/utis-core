@@ -53,7 +53,8 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
     @Override
     public HttpHost getHost() {
-        return new HttpHost("dev.e-taxonomy.eu", 80);
+//        return new HttpHost("dev.e-taxonomy.eu", 80);
+        return new HttpHost("test.e-taxonomy.eu", 80);
     }
 
 
@@ -151,6 +152,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
         taxonName.setCanonicalName(nameCanonical);
 
         taxonName.setRank((String) taxon.get("rank"));
+        String lsid = (String) taxon.get("lsid");
 
         JSONObject scrutinyjs = (JSONObject)taxon.get("taxonomicScrutiny");
         String accordingTo = (String) scrutinyjs.get("accordingTo");
@@ -159,6 +161,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
         accTaxon.setTaxonName(taxonName);
         accTaxon.setTaxonomicStatus((String)taxon.get("taxonStatus"));
         accTaxon.setAccordingTo(accordingTo);
+        accTaxon.setIdentifier(lsid);
 
         JSONObject sourcejs = (JSONObject)taxon.get("source");
         String sourceUrl = (String) sourcejs.get("url");

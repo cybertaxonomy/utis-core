@@ -147,25 +147,6 @@ public class PESIClient extends BaseChecklistClient {
         return parsed;
     }
 
-    private String parseIdentifierfromEunomenTaxonUrl(String pesiTaxonUrl){
-        if(pesiTaxonUrl == null){
-            return null;
-        }
-
-        // 1. check for an LSID (Fauna Europaea, Index Fungorum, ERMS)
-        Matcher m = Lsid_pattern.matcher(pesiTaxonUrl);
-        if (m.matches() && m.groupCount() == 1) {
-            return m.group(1);
-        }
-        // 2. check for an UUID as used in Euro+Med
-        m = uuid_pattern.matcher(pesiTaxonUrl);
-        if (m.matches() && m.groupCount() == 1) {
-            return m.group(1);
-        }
-
-        return null;
-    }
-
     private Taxon generateAccName(PESIRecord taxon) {
 
 
@@ -184,7 +165,7 @@ public class PESIClient extends BaseChecklistClient {
         accName.setTaxonomicStatus(taxon.getStatus());
         accName.setUrl(taxon.getUrl());
 
-        String lsid = parseIdentifierfromEunomenTaxonUrl(taxon.getUrl());
+        String lsid = taxon.getValid_guid();
         accName.setIdentifier(lsid);
 
         String sourceString = taxon.getCitation(); // concatenation of sec. reference and url
