@@ -281,6 +281,17 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient {
 
     }
 
+    @Override
+    public boolean isSupportedIdentifier(String value) {
+        return value != null;
+    }
+
+    @Override
+    public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
 
 
 }

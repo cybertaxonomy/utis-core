@@ -23,6 +23,7 @@ import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.Response;
+import org.bgbm.biovel.drf.utils.IdentifierUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 
 
@@ -72,7 +73,8 @@ public class PESIClient extends BaseChecklistClient {
             SearchMode.scientificNameExact,
             SearchMode.scientificNameLike,
             SearchMode.vernacularNameExact,
-            SearchMode.vernacularNameLike
+            SearchMode.vernacularNameLike,
+            SearchMode.findByIdentifier
             );
 
     public static final EnumSet<SearchMode> SCIENTIFICNAME_SEARCH_MODES = EnumSet.of(
@@ -326,6 +328,29 @@ public class PESIClient extends BaseChecklistClient {
 
     }
 
+    @Override
+    public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
+        Query query = singleQueryFrom(tnrMsg);
+        String name = query.getRequest().getName();
+        PESINameServiceLocator pesins = new PESINameServiceLocator();
+
+        PESINameServicePortType pesinspt = getPESINameService(pesins);
+
+        try {
+            PESIRecord record = pesinspt.getPESIRecordByGUID(name);
+            if(record != null){
+                Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest());
+                query.getResponse().add(tnrResponse);
+            }
+
+        }  catch (RemoteException e) {
+            logger.error("Error in getGUID method in PESINameService", e);
+            throw new DRFChecklistException("Error in getGUID method in PESINameService");
+        }
+
+
+    }
+
     /**
      * @param pesinspt
      * @param record
@@ -375,6 +400,11 @@ public class PESIClient extends BaseChecklistClient {
 
         String accordingTo = null;
         String sourceTaxonUrl = null;
+    }
+
+    @Override
+    public boolean isSupportedIdentifier(String value) {
+        return IdentifierUtils.checkLSID(value) || IdentifierUtils.checkUUID(value);
     }
 }
 

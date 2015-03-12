@@ -21,11 +21,15 @@ import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.Response;
+import org.bgbm.biovel.drf.utils.IdentifierUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.gbif.nameparser.NameParser;
 import org.json.simple.JSONArray;
+import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+
+import com.fasterxml.jackson.databind.deser.std.JacksonDeserializers;
 
 public class BgbmEditClient extends AggregateChecklistClient {
 
@@ -41,7 +45,9 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
-            SearchMode.scientificNameLike);
+            SearchMode.scientificNameLike,
+            SearchMode.findByIdentifier
+            );
 
     public BgbmEditClient() {
         super();
@@ -74,16 +80,17 @@ public class BgbmEditClient extends AggregateChecklistClient {
     }
 
     /**
-     * Adds the acceptedTaxonUuids found in the <code>responseBody</code> to the private field <code>taxonIdQueryMap</code>
+     * Adds the acceptedTaxonUuids found in the <code>responseBody</code> to the
+     * private field <code>taxonIdQueryMap</code>
      * and populates the <code>taxonIdMatchStringMap</code>
      *
      * @param queryList
      * @param responseBodyJson
      * @throws DRFChecklistException
      */
-    private void buildTaxonIdMaps(List<Query> queryList , String responseBody) throws DRFChecklistException {
+    private void buildTaxonIdMapsFromCatalogueServiceResponse(List<Query> queryList , String responseBody) throws DRFChecklistException {
 
-        JSONArray responseBodyJson = parseResponseBody(responseBody);
+        JSONArray responseBodyJson = parseResponseBody(responseBody, JSONArray.class);
 
         if(responseBodyJson.size() != queryList.size()){
             throw new DRFChecklistException("Query and Response lists have different lengths");
@@ -118,27 +125,75 @@ public class BgbmEditClient extends AggregateChecklistClient {
     }
 
     /**
+     * Adds the acceptedTaxonUuids found in the <code>responseBody</code> to the
+     * private field <code>taxonIdQueryMap</code>
+     * and populates the <code>taxonIdMatchStringMap</code>
+     *
+     * @param queryList
+     * @param responseBodyJson
+     * @throws DRFChecklistException
+     */
+    private void buildTaxonIdMapsFromIdentifierServiceResponse(List<Query> queryList , String responseBody) throws DRFChecklistException {
+
+        /*
+         * {"class":"DefaultPagerImpl","count":8,"currentIndex":0,"firstRecord":1,"indices":[0],"lastRecord":8,"nextIndex":0,"pageSize":30,"pagesAvailable":1,"prevIndex":0,
+            "records":[
+                  {
+                  "cdmEntity":{
+                      "cdmUuid":"0cf5a6fe-b1df-4f4f-85a8-31fef4be2a68",
+                      "class":"CdmEntity",
+                      "titleCache":"Abies alba Mill. sec. SCHMEIL-FITSCHEN, Flora von Deutschland und angrenzenden Ländern, 89. Aufl"},
+                  "class":"FindByIdentifierDTO",
+                   "identifier":{"class":"AlternativeIdentifier","identifier":"1","typeLabel":"Florein Identifier","typeUuid":"8b67291e-96e0-4556-8d6a-c94e8750b301"}},{"cdmEntity":{"cdmUuid":"3d256539-d7f7-4dd1-ad7f-cd6e4c141f24","class":"CdmEntity","titleCache":"Abies alba Mill. sec. OBERDORFER, Pflanzensoziologische Exkursionsflora, ed. 7"},"class":"FindByIdentifierDTO","identifier":{"class":"AlternativeIdentifier","identifier":"1","typeLabel":"Florein Identifier","typeUuid":"8b67291e-96e0-4556-8d6a-c94e8750b301"}},{"cdmEntity":{"cdmUuid":"61c2bc4f-a23d-4160-8f14-625b4484fc2f","class":"CdmEntity","titleCache":"Abies alba Mill. sec. HEGI, Illustrierte Flora von Mitteleuropa, Aufl. 2 u. 3"},"class":"FindByIdentifierDTO","identifier":{"class":"AlternativeIdentifier","identifier":"1","typeLabel":"Florein Identifier","typeUuid":"8b67291e-96e0-4556-8d6a-c94e8750b301"}},{"cdmEntity":{"cdmUuid":"7a63f215-0a41-4b7e-9394-bda4521d6ad1","class":"CdmEntity","titleCache":"Abies alba Mill. sec. GREUTER et. al., Med-Checklist bisher Bde. 1, 3 und 4"},"class":"FindByIdentifierDTO","identifier":{"class":"AlternativeIdentifier","identifier":"1","typeLabel":"Florein Identifier","typeUuid":"8b67291e-96e0-4556-8d6a-c94e8750b301"}},{"cdmEntity":{"cdmUuid":"872088a4-95f4-472c-ae79-a29028bb3fbf","class":"CdmEntity","titleCache":"Abies alba Mill. sec. Wisskirchen & Haeupler, 1998"},"class":"FindByIdentifierDTO","identifier":{"class":"AlternativeIdentifier","identifier":"1","typeLabel":"Florein Identifier","typeUuid":"8b67291e-96e0-4556-8d6a-c94e8750b301"}},{"cdmEntity":{"cdmUuid":"90ee17be-d455-4564-949d-9c53e27a6a6f","class":"CdmEntity","titleCache":"Abies alba Mill. sec. TUTIN et al., Flora Europaea"},"class":"FindByIdentifierDTO","identifier":{"class":"AlternativeIdentifier","identifier":"1","typeLabel":"Florein Identifier","typeUuid":"8b67291e-96e0-4556-8d6a-c94e8750b301"}},{"cdmEntity":{"cdmUuid":"b0d35335-63e6-41ab-bdb0-d01851134e9c","class":"CdmEntity","titleCache":"Abies alba Mill. sec. EHRENDORFER, Liste der Gefäßpflanzen Mitteleuropas, 2. Aufl"},"class":"FindByIdentifierDTO","identifier":{"class":"AlternativeIdentifier","identifier":"1","typeLabel":"Florein Identifier","typeUuid":"8b67291e-96e0-4556-8d6a-c94e8750b301"}},{"cdmEntity":{"cdmUuid":"b7a352aa-1f73-41f3-a4e3-b24fc1c2cd5f","class":"CdmEntity","titleCache":"Abies alba Mill. sec. ROTHMALER, 1990"},"class":"FindByIdentifierDTO","identifier":{"class":"AlternativeIdentifier","identifier":"1","typeLabel":"Florein Identifier","typeUuid":"8b67291e-96e0-4556-8d6a-c94e8750b301"}}],"suggestion":""}
+        */
+
+        if(queryList.size() > 1){
+            throw new DRFChecklistException("Only single Querys are supported");
+        }
+
+        Query query = queryList.get(0);
+
+        JSONObject jsonPager = parseResponseBody(responseBody, JSONObject.class);
+
+        JSONArray jsonRecords = (JSONArray) jsonPager.get("records");
+
+
+        Iterator<JSONObject> resIterator = jsonRecords.iterator();
+        while (resIterator.hasNext()) {
+            JSONObject record = resIterator.next();
+            JSONObject cdmEntity = (JSONObject) record.get("cdmEntity");
+            String uuid = cdmEntity.get("cdmUuid").toString();
+            taxonIdQueryMap.put(uuid, query);
+        }
+
+    }
+
+    /**
      * @param responseBody
      * @return
      * @throws DRFChecklistException
      */
-    private JSONArray parseResponseBody(String responseBody) throws DRFChecklistException {
+    private <T extends JSONAware> T parseResponseBody(String responseBody, Class<T> jsonType) throws DRFChecklistException {
+        // TODO use Jackson instead? it is much faster!
         JSONParser parser = new JSONParser();
         Object obj;
         try {
             obj = parser.parse(responseBody);
         } catch (ParseException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("parseResponseBody() - ", e);
             throw new DRFChecklistException(e);
         } catch (org.json.simple.parser.ParseException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+
+            logger.error("parseResponseBody() - ", e);
             throw new DRFChecklistException(e);
         }
 
-        JSONArray jsonArray = (JSONArray ) obj;
-        return jsonArray;
+        if(jsonType.isAssignableFrom(obj.getClass())){
+            return jsonType.cast(obj);
+        } else {
+            throw new DRFChecklistException("parseResponseBody() - deserialized responseBody is not of type " + jsonType ) ;
+        }
+
     }
 
     private Taxon generateAccName(JSONObject taxon) {
@@ -251,7 +306,8 @@ public class BgbmEditClient extends AggregateChecklistClient {
                     "*", null);
 
             String searchResponseBody = processRESTService(namesUri);
-            buildTaxonIdMaps(queryList, searchResponseBody);
+
+            buildTaxonIdMapsFromCatalogueServiceResponse(queryList, searchResponseBody);
 
             List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
 
@@ -273,9 +329,64 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
     }
 
+    @Override
+    public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
+
+        List<Query> queryList = tnrMsg.getQuery();
+
+        if(queryList.size() > 1){
+            throw new DRFChecklistException("Only single Querys are supported");
+        }
+
+        Query.Request request = queryList.get(0).getRequest();
+        Map<String, String> parameters = new HashMap<String,String>();
+        parameters.put("includeEntity", "1");
+
+        for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
+            // taxon/findByIdentifier.json?identifier=1&includeEntity=1
+            URI namesUri = buildUriFromQueryList(queryList,
+                    "/cdmserver/" + checklistInfo.getId() + "/taxon/findByIdentifier.json",
+                    "identifier",
+                    null, // like search for identifiers not supported by this client
+                    parameters );
+
+            String responseBody = processRESTService(namesUri);
+
+            buildTaxonIdMapsFromIdentifierServiceResponse(queryList, responseBody);
+
+            List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
+
+            if(taxonIdList.size() > 0) {
+                URI taxonUri = buildUriFromQueryStringList(taxonIdList,
+                        "/cdmserver/" + checklistInfo.getId() + "/name_catalogue/taxon.json",
+                        "taxonUuid",
+                        null);
+                String taxonResponseBody = processRESTService(taxonUri);
+                updateQueriesWithResponse(taxonResponseBody, checklistInfo, request);
+            }
+        }
+
+    }
+
     private void updateQueriesWithResponse(String responseBody, ServiceProviderInfo ci, Query.Request request) throws DRFChecklistException {
 
-        JSONArray responseBodyJson = parseResponseBody(responseBody);
+        if(responseBody == null || responseBody.isEmpty()){
+            return;
+        }
+
+        JSONArray responseBodyJson = parseResponseBody(responseBody, JSONArray.class);
 
         Iterator<JSONObject> itrTaxonMsgs = responseBodyJson.iterator();
 
@@ -313,20 +424,14 @@ public class BgbmEditClient extends AggregateChecklistClient {
     }
 
     @Override
-    public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
     public EnumSet<SearchMode> getSearchModes() {
         return SEARCH_MODES ;
     }
 
     @Override
-    public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
-
+    public boolean isSupportedIdentifier(String value) {
+        // return IdentifierUtils.checkLSID(value) || IdentifierUtils.checkUUID(value);
+        return value != null;
     }
 
 

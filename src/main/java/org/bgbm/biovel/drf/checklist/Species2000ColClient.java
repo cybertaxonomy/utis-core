@@ -32,6 +32,7 @@ import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
+import org.bgbm.biovel.drf.utils.IdentifierUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -205,7 +206,18 @@ public class Species2000ColClient extends BaseChecklistClient {
     @Override
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
         // TODO Auto-generated method stub
-        
+
+    }
+
+    @Override
+    public boolean isSupportedIdentifier(String value) {
+        return IdentifierUtils.checkLSID(value);
+    }
+
+    @Override
+    public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
+        // TODO Auto-generated method stub
+
     }
 
 

@@ -1,27 +1,17 @@
 package org.bgbm.biovel.drf.checklist;
 
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.rest.TaxoRESTClient;
+import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Query.Request;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.Query;
-import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,12 +156,39 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
             case vernacularNameLike:
                 resolveVernacularNamesLike(tnrMsg);
                 break;
+            case findByIdentifier:
+                if(checkSupportedIdentifieres(tnrMsg)){
+                    findByIdentifier(tnrMsg);
+                } else {
+                    logger.info("The queries contain unsupported identifier strings");
+                    throw new UnsupportedIdentifierException("Queries contain unsupported identifier strings");
+                }
+                break;
             default:
                 throw new DRFChecklistException("Unimplemented SearchMode");
             }
         } else {
             logger.info("Search mode " + mode + " not supported by this ChecklistClient implementation");
         }
+    }
+
+    /**
+     * Checks all the queries of the <code>tnrMsg</code> of they
+     * contain a query string which is supported as identifier by the
+     * implementing checklist client.
+     * <p>
+     * Fails if only one of the query string is not supported!
+     *
+     * @param tnrMsg
+     * @return
+     */
+    private boolean checkSupportedIdentifieres(TnrMsg tnrMsg) {
+        for (Query q : tnrMsg.getQuery()){
+            if(! isSupportedIdentifier(q.getRequest().getName())){
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -206,8 +223,16 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
      */
     public abstract void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException;
 
+    /**
+     * Searches taxa having a specific identifier
+     *
+     * @param tnrMsg
+     * @throws DRFChecklistException
+     */
+    public abstract void  findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException;
+
     public abstract EnumSet<SearchMode> getSearchModes();
 
-
+    public abstract boolean isSupportedIdentifier(String value);
 
 }
