@@ -60,7 +60,8 @@ public class Species2000ColClientTest {
         Iterator<TnrMsg> tnrMsgItr = tnrMsgs.iterator();
         while(tnrMsgItr.hasNext()) {
             TnrMsg tnrMsg = tnrMsgItr.next();
-            scc.queryChecklist(tnrMsg, SearchMode.scientificNameExact);
+            TnrMsgUtils.updateWithSearchMode(tnrMsg, SearchMode.scientificNameExact);
+            scc.queryChecklist(tnrMsg);
             String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
             System.out.println(outputXML);
         }

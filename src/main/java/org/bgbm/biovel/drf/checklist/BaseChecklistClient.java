@@ -49,26 +49,6 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
         super(spInfo);
     }
 
-    public void queryChecklist(TnrMsg tnrMsg, SearchMode searchMode) throws DRFChecklistException {
-        resolveNames(tnrMsg, searchMode);
-    }
-
-    public TnrMsg queryChecklist(List<TnrMsg> tnrMsgs) throws DRFChecklistException {
-
-        TnrMsg finalTnrMsg = new TnrMsg();
-        Iterator<TnrMsg> itrTnrMsg = tnrMsgs.iterator();
-        while(itrTnrMsg.hasNext()) {
-            Iterator<Query> itrQuery = itrTnrMsg.next().getQuery().iterator();
-            while(itrQuery.hasNext()) {
-                finalTnrMsg.getQuery().add(itrQuery.next());
-            }
-        }
-
-        resolveScientificNamesExact(finalTnrMsg);
-
-        return finalTnrMsg;
-    }
-
     /**
      *
      * @param queryList
@@ -141,17 +121,33 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
         return query;
     }
 
+    public void queryChecklist(List<TnrMsg> tnrMsgs) throws DRFChecklistException {
+
+        TnrMsg finalTnrMsg = new TnrMsg();
+        Iterator<TnrMsg> itrTnrMsg = tnrMsgs.iterator();
+        while(itrTnrMsg.hasNext()) {
+            Iterator<Query> itrQuery = itrTnrMsg.next().getQuery().iterator();
+            while(itrQuery.hasNext()) {
+                finalTnrMsg.getQuery().add(itrQuery.next());
+            }
+        }
+
+        queryChecklist(finalTnrMsg);
+    }
+
     /**
      *
      * @param tnrMsg
-     * @param mode
      * @throws DRFChecklistException
      *
      * TODO remove parameter SearchMode, since it in now included in the TnrMsg.query.request
      */
-    public void resolveNames(TnrMsg tnrMsg, SearchMode mode) throws DRFChecklistException {
+    public void queryChecklist(TnrMsg tnrMsg) throws DRFChecklistException {
 
-        TnrMsgUtils.updateWithSearchMode(tnrMsg, mode);
+//        TnrMsgUtils.updateWithSearchMode(tnrMsg, mode); // ...... remove
+        TnrMsgUtils.assertSearchModeSet(tnrMsg, true);
+
+        SearchMode mode = TnrMsgUtils.getSearchMode(tnrMsg);
 
         if(!getSearchModes().contains(mode)){
             throw new DRFChecklistException("Unsupported SearchMode");

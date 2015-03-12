@@ -219,13 +219,39 @@ public class TnrMsgUtils {
          * Sets the given <code>searchMode</code> to the requests in all queries of the TnrMsg
          *
          * @deprecated this is a temporary solution to overcome the inconsistencies in the
-         * current implementation of the SearchModes i the library
+         * current implementation of the SearchModes in the library. It should only be used
+         * in test classes
          */
         @Deprecated
         public static void updateWithSearchMode(TnrMsg tnrMsg, SearchMode searchMode){
             for(Query query :  tnrMsg.getQuery()){
                 query.getRequest().setSearchMode(searchMode.toString());
             }
+        }
+
+        public static void assertSearchModeSet(TnrMsg tnrMsg, boolean unique){
+
+            String lastSearchMode = null;
+            for(Query query :  tnrMsg.getQuery()){
+                String searchMode = query.getRequest().getSearchMode();
+                if(searchMode == null){
+                    throw new AssertionError("SearchMode missing in query : " + query.toString());
+                }
+                if(unique && lastSearchMode != null && !lastSearchMode.equals(searchMode)){
+                    throw new AssertionError("mixed searchModes in queries");
+                }
+            }
+        }
+
+        public static SearchMode getSearchMode(TnrMsg tnrMsg){
+
+            for(Query query :  tnrMsg.getQuery()){
+                String searchMode = query.getRequest().getSearchMode();
+                if(searchMode != null){
+                    return SearchMode.valueOf(searchMode);
+                }
+            }
+            return null;
         }
 
 
