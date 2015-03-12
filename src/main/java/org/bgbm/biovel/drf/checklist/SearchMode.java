@@ -5,6 +5,7 @@ public enum SearchMode {
     scientificNameExact,
     scientificNameLike,
     vernacularNameExact,
-    vernacularNameLike;
+    vernacularNameLike,
+    findByIdentifier;
 
 }
