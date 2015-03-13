@@ -25,6 +25,7 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.lang3.StringUtils;
 import org.bgbm.biovel.drf.checklist.SearchMode;
 import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Query;
@@ -211,7 +212,18 @@ public class TnrMsgUtils {
 
         public static ClientStatus tnrClientStatusFor(ServiceProviderInfo ci) {
             ClientStatus tnrClientStatus = new ClientStatus();
-            tnrClientStatus.setChecklistId(ci.getId());
+            StringBuilder checklistId = new StringBuilder(ci.getId());
+            if(!ci.getSubChecklists().isEmpty()){
+                ArrayList<String> subIds = new ArrayList<String>(ci.getSubChecklists().size());
+                for(ServiceProviderInfo sci : ci.getSubChecklists()){
+                    subIds.add(sci.getId());
+                }
+                StringUtils.join(subIds, ',');
+
+                checklistId.append('[').append(StringUtils.join(subIds, ',')).append(']');
+            }
+
+            tnrClientStatus.setChecklistId(checklistId.toString());
             return tnrClientStatus;
         }
 
