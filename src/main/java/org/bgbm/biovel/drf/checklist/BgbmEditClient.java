@@ -133,7 +133,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
      * @param responseBodyJson
      * @throws DRFChecklistException
      */
-    private void buildTaxonIdMapsFromIdentifierServiceResponse(List<Query> queryList , String responseBody) throws DRFChecklistException {
+    private void addTaxaToTaxonIdMapFromIdentifierServiceResponse(List<Query> queryList , String responseBody) throws DRFChecklistException {
 
         /*
          * {"class":"DefaultPagerImpl","count":8,"currentIndex":0,"firstRecord":1,"indices":[0],"lastRecord":8,"nextIndex":0,"pageSize":30,"pagesAvailable":1,"prevIndex":0,
@@ -165,6 +165,21 @@ public class BgbmEditClient extends AggregateChecklistClient {
             String uuid = cdmEntity.get("cdmUuid").toString();
             taxonIdQueryMap.put(uuid, query);
         }
+
+    }
+
+    private void addTaxonToTaxonIdMap(List<Query> queryList , String responseBody) throws DRFChecklistException {
+
+
+        if(queryList.size() > 1){
+            throw new DRFChecklistException("Only single Querys are supported");
+        }
+
+        Query query = queryList.get(0);
+
+        JSONObject cdmEntity = parseResponseBody(responseBody, JSONObject.class);
+        String uuid = cdmEntity.get("uuid").toString();
+        taxonIdQueryMap.put(uuid, query);
 
     }
 
@@ -351,20 +366,33 @@ public class BgbmEditClient extends AggregateChecklistClient {
         }
 
         Query.Request request = queryList.get(0).getRequest();
-        Map<String, String> parameters = new HashMap<String,String>();
-        parameters.put("includeEntity", "1");
+        Map<String, String> findByIdentifierParameters = new HashMap<String,String>();
+        findByIdentifierParameters.put("includeEntity", "1");
+
+        String identifier = request.getName();
+
 
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
             // taxon/findByIdentifier.json?identifier=1&includeEntity=1
-            URI namesUri = buildUriFromQueryList(queryList,
-                    "/cdmserver/" + checklistInfo.getId() + "/taxon/findByIdentifier.json",
-                    "identifier",
-                    null, // like search for identifiers not supported by this client
-                    parameters );
+            if(IdentifierUtils.checkLSID(identifier)){
+                URI namesUri = buildUriFromQueryList(queryList,
+                        "/cdmserver/" + checklistInfo.getId() + "/authority/metadata.do",
+                        "lsid",
+                        null,
+                        null );
 
-            String responseBody = processRESTService(namesUri);
+                String responseBody = processRESTService(namesUri);
+                addTaxonToTaxonIdMap(queryList, responseBody);
+            } else {
+                URI namesUri = buildUriFromQueryList(queryList,
+                        "/cdmserver/" + checklistInfo.getId() + "/taxon/findByIdentifier.json",
+                        "identifier",
+                        null, // like search for identifiers not supported by this client
+                        findByIdentifierParameters );
 
-            buildTaxonIdMapsFromIdentifierServiceResponse(queryList, responseBody);
+                String responseBody = processRESTService(namesUri);
+                addTaxaToTaxonIdMapFromIdentifierServiceResponse(queryList, responseBody);
+            }
 
             List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
 
@@ -405,8 +433,10 @@ public class BgbmEditClient extends AggregateChecklistClient {
                 Response tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
 
                 String matchingName = taxonIdMatchStringMap.get(taxonUuid);
-                tnrResponse.setMatchingNameString(matchingName);
-                tnrResponse.setMatchingNameType(matchingName.equals(taxon.get("name").toString()) ? NameType.TAXON : NameType.SYNONYM);
+                if(matchingName != null){
+                    tnrResponse.setMatchingNameString(matchingName);
+                    tnrResponse.setMatchingNameType(matchingName.equals(taxon.get("name").toString()) ? NameType.TAXON : NameType.SYNONYM);
+                }
 
                 Taxon accName = generateAccName(taxon);
                 tnrResponse.setTaxon(accName);
