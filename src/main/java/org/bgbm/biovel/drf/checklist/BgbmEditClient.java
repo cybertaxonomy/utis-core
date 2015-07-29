@@ -15,12 +15,12 @@ import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Query;
+import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.utils.IdentifierUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.gbif.nameparser.NameParser;
@@ -29,14 +29,13 @@ import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import com.fasterxml.jackson.databind.deser.std.JacksonDeserializers;
-
 public class BgbmEditClient extends AggregateChecklistClient {
 
     public static final String ID = "bgbm-cdm-server";
     public static final String LABEL = "Name catalogues served by the BGBM CDM Server";
     public static final String DOC_URL = "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html";
     public static final String COPYRIGHT_URL = "http://wp5.e-taxonomy.eu/cdmlib/license.html";
+    private static final String SERVER_PATH_PREFIX = "/";
 
 
     private final Map<String,Query> taxonIdQueryMap = new HashMap<String,Query>();
@@ -59,8 +58,8 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
     @Override
     public HttpHost getHost() {
-//        return new HttpHost("dev.e-taxonomy.eu", 80);
-        return new HttpHost("test.e-taxonomy.eu", 80);
+        return new HttpHost("api.cybertaxonomy.org", 80);
+//        return new HttpHost("test.e-taxonomy.eu", 80);
     }
 
 
@@ -316,7 +315,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
             URI namesUri = buildUriFromQueryList(queryList,
-                    "/cdmserver/" + checklistInfo.getId() + "/name_catalogue.json",
+                    SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue.json",
                     "query",
                     "*", null);
 
@@ -328,7 +327,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
             if(taxonIdList.size() > 0) {
                 URI taxonUri = buildUriFromQueryStringList(taxonIdList,
-                        "/cdmserver/" + checklistInfo.getId() + "/name_catalogue/taxon.json",
+                        SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue/taxon.json",
                         "taxonUuid",
                         null);
                 String taxonResponseBody = processRESTService(taxonUri);
@@ -376,7 +375,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
             // taxon/findByIdentifier.json?identifier=1&includeEntity=1
             if(IdentifierUtils.checkLSID(identifier)){
                 URI namesUri = buildUriFromQueryList(queryList,
-                        "/cdmserver/" + checklistInfo.getId() + "/authority/metadata.do",
+                        SERVER_PATH_PREFIX + checklistInfo.getId() + "/authority/metadata.do",
                         "lsid",
                         null,
                         null );
@@ -385,7 +384,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
                 addTaxonToTaxonIdMap(queryList, responseBody);
             } else {
                 URI namesUri = buildUriFromQueryList(queryList,
-                        "/cdmserver/" + checklistInfo.getId() + "/taxon/findByIdentifier.json",
+                        SERVER_PATH_PREFIX + checklistInfo.getId() + "/taxon/findByIdentifier.json",
                         "identifier",
                         null, // like search for identifiers not supported by this client
                         findByIdentifierParameters );
@@ -398,7 +397,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
 
             if(taxonIdList.size() > 0) {
                 URI taxonUri = buildUriFromQueryStringList(taxonIdList,
-                        "/cdmserver/" + checklistInfo.getId() + "/name_catalogue/taxon.json",
+                        SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue/taxon.json",
                         "taxonUuid",
                         null);
                 String taxonResponseBody = processRESTService(taxonUri);
