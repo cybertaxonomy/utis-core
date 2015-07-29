@@ -60,7 +60,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
 
         for(Query query : queryList) {
             Request tnrRequest = query.getRequest();
-            String queryString = tnrRequest.getName();
+            String queryString = tnrRequest.getQueryString();
             if(likeModes.contains(SearchMode.valueOf(tnrRequest.getSearchMode()))){
                 queryString += likeModeWildcard;
             }
@@ -79,7 +79,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
             String endpointSuffix,
             String queryKey,
             Map<String, String> paramMap) {
-        return buildUriFromQueryString(query.getRequest().getName(),
+        return buildUriFromQueryString(query.getRequest().getQueryString(),
                 endpointSuffix,
                 queryKey,
                 paramMap);
@@ -88,7 +88,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
     public URI buildUriFromQuery(Query query,
             String regexpUrl,
             Map<String, String> paramMap) {
-        String url = regexpUrl.replace(QUERY_PLACEHOLDER, query.getRequest().getName());
+        String url = regexpUrl.replace(QUERY_PLACEHOLDER, query.getRequest().getQueryString());
         return buildUriFromQueryString(url, paramMap);
     }
 
@@ -184,7 +184,7 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
      */
     private boolean checkSupportedIdentifieres(TnrMsg tnrMsg) {
         for (Query q : tnrMsg.getQuery()){
-            if(! isSupportedIdentifier(q.getRequest().getName())){
+            if(! isSupportedIdentifier(q.getRequest().getQueryString())){
                 return false;
             }
         }

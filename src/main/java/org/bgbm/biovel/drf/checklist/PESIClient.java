@@ -236,7 +236,7 @@ public class PESIClient extends BaseChecklistClient {
     public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getRequest().getName();
+        String name = query.getRequest().getQueryString();
         PESINameServiceLocator pesins = new PESINameServiceLocator();
 
         PESINameServicePortType pesinspt = getPESINameService(pesins);
@@ -260,7 +260,7 @@ public class PESIClient extends BaseChecklistClient {
     @Override
     public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getRequest().getName();
+        String name = query.getRequest().getQueryString();
         PESINameServiceLocator pesins = new PESINameServiceLocator();
 
         PESINameServicePortType pesinspt = getPESINameService(pesins);
@@ -284,7 +284,7 @@ public class PESIClient extends BaseChecklistClient {
     public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getRequest().getName();
+        String name = query.getRequest().getQueryString();
         PESINameServiceLocator pesins = new PESINameServiceLocator();
 
         PESINameServicePortType pesinspt = getPESINameService(pesins);
@@ -308,7 +308,7 @@ public class PESIClient extends BaseChecklistClient {
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
 
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getRequest().getName();
+        String name = query.getRequest().getQueryString();
         PESINameServiceLocator pesins = new PESINameServiceLocator();
 
         PESINameServicePortType pesinspt = getPESINameService(pesins);
@@ -331,7 +331,7 @@ public class PESIClient extends BaseChecklistClient {
     @Override
     public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
         Query query = singleQueryFrom(tnrMsg);
-        String name = query.getRequest().getName();
+        String name = query.getRequest().getQueryString();
         PESINameServiceLocator pesins = new PESINameServiceLocator();
 
         PESINameServicePortType pesinspt = getPESINameService(pesins);

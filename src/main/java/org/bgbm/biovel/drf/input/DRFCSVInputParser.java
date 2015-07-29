@@ -229,7 +229,7 @@ public class DRFCSVInputParser {
                             if(taxonName.getAtomisedName() != null || taxonName.getFullName() != null) {
 
                                 Query.Request tnrRequest = new Query.Request();
-                                tnrRequest.setName(taxonName.getFullName());
+                                tnrRequest.setQueryString(taxonName.getFullName());
 
                                 Query query = new Query();
                                 query.setRequest(tnrRequest);

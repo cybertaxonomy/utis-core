@@ -153,7 +153,7 @@ public class TnrMsgUtils {
             Query query = new Query();
             Request request = new Request();
 
-            request.setName(name);
+            request.setQueryString(name);
             request.setSearchMode(searchMode.toString());
             request.setAddSynonymy(addSynonymy);
             query.setRequest(request);
@@ -180,7 +180,7 @@ public class TnrMsgUtils {
                 Iterator<Query> itrQuery = currentTnrMsg.getQuery().iterator();
                 while(itrQuery.hasNext()) {
                     Query currentQuery = itrQuery.next();
-                    String nameComplete = currentQuery.getRequest().getName();
+                    String nameComplete = currentQuery.getRequest().getQueryString();
                     Query query = nameQueryMap.get(nameComplete);
                     if(query == null) {
                         nameQueryMap.put(nameComplete, currentQuery);

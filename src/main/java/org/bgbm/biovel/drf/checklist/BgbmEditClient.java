@@ -369,7 +369,7 @@ public class BgbmEditClient extends AggregateChecklistClient {
         Map<String, String> findByIdentifierParameters = new HashMap<String,String>();
         findByIdentifierParameters.put("includeEntity", "1");
 
-        String identifier = request.getName();
+        String identifier = request.getQueryString();
 
 
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
