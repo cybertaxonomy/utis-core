@@ -1,16 +1,19 @@
-package org.bgbm.biovel.drf.tnr.msg;
+package org.bgbm.biovel.drf.checklist;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
-import org.bgbm.biovel.drf.checklist.BgbmEditClient;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
+import org.bgbm.biovel.drf.checklist.PESIClient;
 import org.bgbm.biovel.drf.checklist.SearchMode;
+import org.bgbm.biovel.drf.checklist.Species2000ColClient;
 import org.bgbm.biovel.drf.client.ServiceProviderInfo;
 import org.bgbm.biovel.drf.input.DRFCSVInputParser;
 import org.bgbm.biovel.drf.input.DRFInputException;
+import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgException;
@@ -18,7 +21,7 @@ import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class BgbmEditChecklistTest {
+public class PESIClientTest {
 
     private static DRFCSVInputParser parser;
     private static List<String> nameCompleteList;
@@ -38,14 +41,10 @@ public class BgbmEditChecklistTest {
         nameCompleteList.add("Chelicorophium curvispinum");
 
 
-        ci = new ServiceProviderInfo(BgbmEditClient.ID,
-                BgbmEditClient.LABEL,
-                BgbmEditClient.DOC_URL,
-                BgbmEditClient.COPYRIGHT_URL, ServiceProviderInfo.DEFAULT_SEARCH_MODE);
-        ci.addSubChecklist(new ServiceProviderInfo("col",
-                "EDIT - Catalogue Of Life",
-                "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html",
-                "http://www.catalogueoflife.org/col/info/copyright", ServiceProviderInfo.DEFAULT_SEARCH_MODE));
+        ci = new ServiceProviderInfo(Species2000ColClient.ID,
+                Species2000ColClient.LABEL,
+                Species2000ColClient.URL,
+                Species2000ColClient.DATA_AGR_URL, ServiceProviderInfo.DEFAULT_SEARCH_MODE);
     }
 
     @Test
@@ -57,19 +56,20 @@ public class BgbmEditChecklistTest {
     @Test
     public void nameCompleteTest() throws DRFChecklistException, DRFInputException, JAXBException, TnrMsgException {
         parser = new DRFCSVInputParser();
-        List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/vibrant.csv","UTF-8"));
-        //List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/nameCompleteOnly.csv","UTF-8"));
-        TnrMsg tnrMsg = TnrMsgUtils.mergeTnrMsgs(tnrMsgs);
-        String json = JSONUtils.convertObjectToJson(ci);
-        BgbmEditClient bec = new BgbmEditClient(json);
+        //List<String> inputXMLList = parser.parseToXML(BiovelUtils.getCSVAsString("org/bgbm/biovel/drf/tnr/nameCompleteOnly.csv","UTF-8"));
+        List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/nameCompleteOnly.csv","UTF-8"));
+//		List<String> chosenKeyList = new ArrayList<String>();
+//		chosenKeyList.add("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c");
 
-
-        for(Query query : tnrMsg.getQuery()) {
-            query.getRequest().setSearchMode(SearchMode.scientificNameExact.toString());
+        PESIClient pesic =  new PESIClient();
+        Iterator<TnrMsg> tnrMsgItr = tnrMsgs.iterator();
+        while(tnrMsgItr.hasNext()) {
+            TnrMsg tnrMsg = tnrMsgItr.next();
+            TnrMsgUtils.updateWithSearchMode(tnrMsg, SearchMode.scientificNameExact);
+            pesic.queryChecklist(tnrMsg);
+            String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+            System.out.println(outputXML);
         }
-        TnrMsgUtils.updateWithSearchMode(tnrMsg, SearchMode.scientificNameExact);
-        bec.queryChecklist(tnrMsg);
-        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
-        System.out.println(outputXML);
     }
 }
+

@@ -1,4 +1,4 @@
-package org.bgbm.biovel.drf.tnr.msg;
+package org.bgbm.biovel.drf.checklist;
 
 import java.util.ArrayList;
 import java.util.Iterator;
