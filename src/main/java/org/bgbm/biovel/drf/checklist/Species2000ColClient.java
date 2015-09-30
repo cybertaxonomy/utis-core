@@ -8,7 +8,6 @@ import java.io.Writer;
 import java.net.URI;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.JAXBException;
@@ -27,10 +26,11 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.http.HttpHost;
-import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
-import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
+import org.bgbm.biovel.drf.client.ServiceProviderInfo;
+import org.bgbm.biovel.drf.query.RestClient;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Response;
+import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
 import org.bgbm.biovel.drf.utils.IdentifierUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
@@ -40,8 +40,12 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 
-public class Species2000ColClient extends BaseChecklistClient {
+public class Species2000ColClient extends BaseChecklistClient<RestClient> {
 
+    /**
+     *
+     */
+    private static final HttpHost HTTP_HOST = new HttpHost("www.catalogueoflife.org",80);
     public static final String ID = "species2000col";
     public static final String LABEL = "Species2000 - Catalogue Of Life";
     public static final String URL = "http://www.catalogueoflife.org";
@@ -52,15 +56,16 @@ public class Species2000ColClient extends BaseChecklistClient {
 
     public Species2000ColClient() {
         super();
-
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public HttpHost getHost() {
-        // TODO Auto-generated method stub
-        return new HttpHost("www.catalogueoflife.org",80);
-    }
+    public void initQueryClient() {
+        queryClient = new RestClient(HTTP_HOST);
 
+    }
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {
@@ -81,12 +86,12 @@ public class Species2000ColClient extends BaseChecklistClient {
 
         paramMap.put("response", "full");
 
-        URI taxonUri = buildUriFromQuery(query,
+        URI taxonUri = queryClient.buildUriFromQuery(query,
                 "/col/webservice",
                 "name",
                 paramMap);
 
-        String responseBody = processRESTService(taxonUri);
+        String responseBody = queryClient.processRESTService(taxonUri);
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder parser;
@@ -106,12 +111,12 @@ public class Species2000ColClient extends BaseChecklistClient {
                 if(synTaxonIdNode != null) {
                     String synTaxonId = synTaxonIdNode.getTextContent();
                     //http://www.catalogueoflife.org/col/webservice?response=full&id={sciId}
-                    taxonUri = buildUriFromQueryString(synTaxonId,
+                    taxonUri = queryClient.buildUriFromQueryString(synTaxonId,
                             "/col/webservice",
                             "id",
                             paramMap);
 
-                    responseBody = processRESTService(taxonUri);
+                    responseBody = queryClient.processRESTService(taxonUri);
                 } else {
                     responseBody = null;
                 }
@@ -219,7 +224,6 @@ public class Species2000ColClient extends BaseChecklistClient {
         // TODO Auto-generated method stub
 
     }
-
 
 
 }

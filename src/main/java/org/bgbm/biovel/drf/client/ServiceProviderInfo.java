@@ -1,4 +1,4 @@
-package org.bgbm.biovel.drf.rest;
+package org.bgbm.biovel.drf.client;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -27,7 +27,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.lang3.StringUtils;
 import org.bgbm.biovel.drf.checklist.SearchMode;
-import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
+import org.bgbm.biovel.drf.client.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Query.ClientStatus;
 import org.bgbm.biovel.drf.tnr.msg.Query.Request;

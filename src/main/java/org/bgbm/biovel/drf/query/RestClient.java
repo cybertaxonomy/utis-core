@@ -1,9 +1,19 @@
-package org.bgbm.biovel.drf.rest;
+/**
+ * Copyright (C) 2015 EDIT
+ * European Distributed Institute of Taxonomy
+ * http://www.e-taxonomy.eu
+ *
+ * The contents of this file are subject to the Mozilla Public License Version 1.1
+ * See LICENSE.TXT at the top of this package for the full license terms.
+ */
+package org.bgbm.biovel.drf.query;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -17,44 +27,31 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.RESTURIBuilder;
-import org.bgbm.biovel.drf.utils.JSONUtils;
+import org.bgbm.biovel.drf.checklist.SearchMode;
+import org.bgbm.biovel.drf.tnr.msg.Query;
+import org.bgbm.biovel.drf.tnr.msg.Query.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class TaxoRESTClient {
+/**
+ * @author a.kohlbecker
+ * @date Sep 30, 2015
+ *
+ */
+public class RestClient implements IQueryClient{
 
-    protected Logger logger = LoggerFactory.getLogger(TaxoRESTClient.class);
+    protected Logger logger = LoggerFactory.getLogger(RestClient.class);
 
-    private ServiceProviderInfo spInfo;
+    public final static String QUERY_PLACEHOLDER = "{q}";
 
-    public TaxoRESTClient() {
-        spInfo = buildServiceProviderInfo();
+    private final HttpHost httpHost;
+
+    public HttpHost getHost() {
+        return this.httpHost;
     }
 
-    public TaxoRESTClient(String checklistInfoJson) throws DRFChecklistException {
-        setChecklistInfo(JSONUtils.convertJsonToObject(checklistInfoJson, ServiceProviderInfo.class));
-    }
-
-    public TaxoRESTClient(ServiceProviderInfo spInfo) throws DRFChecklistException {
-        setChecklistInfo(spInfo);
-    }
-
-    public abstract ServiceProviderInfo buildServiceProviderInfo();
-
-    public ServiceProviderInfo getServiceProviderInfo() {
-        return spInfo;
-    }
-
-    public String getChecklistInfoAsJson() throws DRFChecklistException {
-
-        if(getServiceProviderInfo() != null) {
-            return JSONUtils.convertObjectToJson(spInfo);
-        }
-        return null;
-    }
-
-    public void setChecklistInfo(ServiceProviderInfo checklistInfo) {
-        this.spInfo = checklistInfo;
+    public RestClient(HttpHost httpHost) {
+        this.httpHost = httpHost;
     }
 
     /**
@@ -90,11 +87,6 @@ public abstract class TaxoRESTClient {
         }
         return null;
     }
-
-    public abstract HttpHost getHost();
-
-    public abstract int getMaxPageSize();
-
 
     public URI buildUriFromQueryStringList(List<String> queryList,
             String endpointSuffix,
@@ -161,5 +153,60 @@ public abstract class TaxoRESTClient {
         }
         return uri;
     }
+
+    /**
+     *
+     * @param queryList
+     * @param endpointSuffix
+     * @param queryKey
+     * @param likeModeWildcard the wildcard to add to the query string in case of like search modes
+     * @param paramMap
+     * @return
+     */
+    public URI buildUriFromQueryList(List<Query> queryList,
+            String endpointSuffix,
+            String queryKey,
+            String likeModeWildcard,
+            Map<String, String> paramMap) {
+
+        List<String> queries = new ArrayList<String>();
+
+        EnumSet<SearchMode> likeModes = EnumSet.of(SearchMode.scientificNameLike);
+
+        for(Query query : queryList) {
+            Request tnrRequest = query.getRequest();
+            String queryString = tnrRequest.getQueryString();
+            if(likeModes.contains(SearchMode.valueOf(tnrRequest.getSearchMode()))){
+                queryString += likeModeWildcard;
+            }
+            queries.add(queryString);
+        }
+
+        logger.debug("Query size : " + queries.size());
+
+        return buildUriFromQueryStringList(queries,
+                endpointSuffix,
+                queryKey,
+                paramMap);
+    }
+
+    public URI buildUriFromQuery(Query query,
+            String endpointSuffix,
+            String queryKey,
+            Map<String, String> paramMap) {
+        return buildUriFromQueryString(query.getRequest().getQueryString(),
+                endpointSuffix,
+                queryKey,
+                paramMap);
+    }
+
+    public URI buildUriFromQuery(Query query,
+            String regexpUrl,
+            Map<String, String> paramMap) {
+        String url = regexpUrl.replace(QUERY_PLACEHOLDER, query.getRequest().getQueryString());
+        return buildUriFromQueryString(url, paramMap);
+    }
+
+
 
 }

@@ -12,15 +12,20 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
-import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
+import org.bgbm.biovel.drf.client.ServiceProviderInfo;
+import org.bgbm.biovel.drf.query.RestClient;
 import org.bgbm.biovel.drf.utils.CSVUtils;
 import org.bgbm.biovel.drf.utils.JSONUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-public class GBIFOccurrencesClient extends BaseOccurrencesClient {
+public class GBIFOccurrencesClient extends BaseOccurrencesClient<RestClient> {
 
 
+    /**
+     *
+     */
+    private static final HttpHost HTTP_HOST = new HttpHost("api.gbif.org",80);
     public static final String ID = "gbif";
     public static final String LABEL = "GBIF Occurrence Bank";
     public static final String URL = "http://uat.gbif.org/developer/species";
@@ -34,10 +39,14 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
     private final Map<String, JSONObject> orgCacheMap = new HashMap<String, JSONObject>();
     public final static List<String> nameidList = new ArrayList<String>();
 
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public HttpHost getHost() {
-        // TODO Auto-generated method stub
-        return new HttpHost("api.gbif.org",80);
+    public void initQueryClient() {
+        queryClient = new RestClient(HTTP_HOST);
+
     }
 
     @Override
@@ -45,7 +54,6 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
         // TODO Auto-generated method stub
         return 0;
     }
-
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {
@@ -56,8 +64,8 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
     @Override
     public String getOccurrences(String nameid) throws DRFChecklistException {
 
-        URI namesUri = buildUriFromQueryString(nameid, "/" + CINFO.getVersion() + "/species/match", "name", null);
-        String nameResponse = processRESTService(namesUri);
+        URI namesUri = queryClient.buildUriFromQueryString(nameid, "/" + CINFO.getVersion() + "/species/match", "name", null);
+        String nameResponse = queryClient.processRESTService(namesUri);
         JSONObject nameJsonResponse = JSONUtils.parseJsonToObject(nameResponse);
         StringBuilder occurrences = new StringBuilder();
         if(nameJsonResponse.get("usageKey") != null) {
@@ -75,9 +83,9 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
                 int count = 0;
                 do {
                     paramMap.put("offset", Integer.toString(offset));
-                    URI occUri = buildUriFromQueryString(usageKey, "/" + CINFO.getVersion() + "/occurrence/search", "taxonKey", paramMap);
+                    URI occUri = queryClient.buildUriFromQueryString(usageKey, "/" + CINFO.getVersion() + "/occurrence/search", "taxonKey", paramMap);
 
-                    String occResponse = processRESTService(occUri);
+                    String occResponse = queryClient.processRESTService(occUri);
 
                     JSONObject jsonOccResponse = JSONUtils.parseJsonToObject(occResponse);
                     JSONArray results = (JSONArray) jsonOccResponse.get("results");
@@ -210,8 +218,8 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
                                 String datasetKey = (String) jsonOccurence.get("datasetKey");
                                 datasetJsonResponse = datasetCacheMap.get(datasetKey);
                                 if(datasetJsonResponse == null) {
-                                    URI datasetUri = buildUriFromQueryString("/" + CINFO.getVersion() + "/dataset/" + datasetKey, null);
-                                    String datasetResponse = processRESTService(datasetUri);
+                                    URI datasetUri = queryClient.buildUriFromQueryString("/" + CINFO.getVersion() + "/dataset/" + datasetKey, null);
+                                    String datasetResponse = queryClient.processRESTService(datasetUri);
                                     datasetJsonResponse = JSONUtils.parseJsonToObject(datasetResponse);
                                     datasetCacheMap.put(datasetKey, datasetJsonResponse);
                                 }
@@ -222,8 +230,8 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
                                 String owningOrganizationKey = (String) datasetJsonResponse.get("owningOrganizationKey");
                                 orgJsonResponse = orgCacheMap.get(owningOrganizationKey);
                                 if(orgJsonResponse == null) {
-                                    URI orgUri = buildUriFromQueryString("/" + CINFO.getVersion() + "/organization/" + owningOrganizationKey, null);
-                                    String orgResponse = processRESTService(orgUri);
+                                    URI orgUri = queryClient.buildUriFromQueryString("/" + CINFO.getVersion() + "/organization/" + owningOrganizationKey, null);
+                                    String orgResponse = queryClient.processRESTService(orgUri);
                                     orgJsonResponse = JSONUtils.parseJsonToObject(orgResponse);
                                     orgCacheMap.put(owningOrganizationKey, orgJsonResponse);
                                 }
@@ -266,8 +274,5 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient {
         }
         return occurrences.toString();
     }
-
-
-
 
 }

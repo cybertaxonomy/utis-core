@@ -10,22 +10,27 @@ import org.apache.http.HttpHost;
 import org.bgbm.biovel.drf.checklist.worms.AphiaNameServiceLocator;
 import org.bgbm.biovel.drf.checklist.worms.AphiaNameServicePortType;
 import org.bgbm.biovel.drf.checklist.worms.AphiaRecord;
-import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
+import org.bgbm.biovel.drf.client.ServiceProviderInfo;
+import org.bgbm.biovel.drf.query.SoapClient;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Query;
+import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.utils.IdentifierUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 
 
-public class WoRMSClient extends BaseChecklistClient {
+public class WoRMSClient extends BaseChecklistClient<SoapClient> {
 
+    /**
+     *
+     */
+    private static final HttpHost HTTP_HOST = new HttpHost("http://www.marinespecies.org",80);
     public static final String ID = "worms";
     public static final String LABEL = "WoRMS";
     public static final String URL = "http://www.marinespecies.org/index.php";
@@ -51,11 +56,13 @@ public class WoRMSClient extends BaseChecklistClient {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public HttpHost getHost() {
-        return new HttpHost("http://www.marinespecies.org",80);
+    public void initQueryClient() {
+        queryClient = new SoapClient();
     }
-
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {

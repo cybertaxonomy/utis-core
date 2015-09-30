@@ -13,8 +13,8 @@ import org.bgbm.biovel.drf.checklist.GBIFBackboneClient;
 import org.bgbm.biovel.drf.checklist.PESIClient;
 import org.bgbm.biovel.drf.checklist.Species2000ColClient;
 import org.bgbm.biovel.drf.checklist.WoRMSClient;
+import org.bgbm.biovel.drf.client.ServiceProviderInfo;
 import org.bgbm.biovel.drf.occurrences.GBIFOccurrencesClient;
-import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
 
 public class ServiceProviderInfoUtils {
 

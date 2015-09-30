@@ -11,7 +11,8 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.ParseException;
-import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
+import org.bgbm.biovel.drf.client.ServiceProviderInfo;
+import org.bgbm.biovel.drf.query.RestClient;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Query;
@@ -29,13 +30,17 @@ import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-public class BgbmEditClient extends AggregateChecklistClient {
+public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
+    /**
+     *
+     */
     public static final String ID = "bgbm-cdm-server";
     public static final String LABEL = "Name catalogues served by the BGBM CDM Server";
     public static final String DOC_URL = "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html";
     public static final String COPYRIGHT_URL = "http://wp5.e-taxonomy.eu/cdmlib/license.html";
     private static final String SERVER_PATH_PREFIX = "/";
+    private static final HttpHost HTTP_HOST = new HttpHost("api.cybertaxonomy.org", 80); // new HttpHost("test.e-taxonomy.eu", 80);
 
 
     private final Map<String,Query> taxonIdQueryMap = new HashMap<String,Query>();
@@ -57,9 +62,8 @@ public class BgbmEditClient extends AggregateChecklistClient {
     }
 
     @Override
-    public HttpHost getHost() {
-        return new HttpHost("api.cybertaxonomy.org", 80);
-//        return new HttpHost("test.e-taxonomy.eu", 80);
+    public void initQueryClient() {
+        queryClient = new RestClient(HTTP_HOST);
     }
 
 
@@ -314,23 +318,23 @@ public class BgbmEditClient extends AggregateChecklistClient {
         Query.Request request = queryList.get(0).getRequest();
 
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
-            URI namesUri = buildUriFromQueryList(queryList,
+            URI namesUri = queryClient.buildUriFromQueryList(queryList,
                     SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue.json",
                     "query",
                     "*", null);
 
-            String searchResponseBody = processRESTService(namesUri);
+            String searchResponseBody = queryClient.processRESTService(namesUri);
 
             buildTaxonIdMapsFromCatalogueServiceResponse(queryList, searchResponseBody);
 
             List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
 
             if(taxonIdList.size() > 0) {
-                URI taxonUri = buildUriFromQueryStringList(taxonIdList,
+                URI taxonUri = queryClient.buildUriFromQueryStringList(taxonIdList,
                         SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue/taxon.json",
                         "taxonUuid",
                         null);
-                String taxonResponseBody = processRESTService(taxonUri);
+                String taxonResponseBody = queryClient.processRESTService(taxonUri);
                 updateQueriesWithResponse(taxonResponseBody, checklistInfo, request);
             }
         }
@@ -374,33 +378,33 @@ public class BgbmEditClient extends AggregateChecklistClient {
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
             // taxon/findByIdentifier.json?identifier=1&includeEntity=1
             if(IdentifierUtils.checkLSID(identifier)){
-                URI namesUri = buildUriFromQueryList(queryList,
+                URI namesUri = queryClient.buildUriFromQueryList(queryList,
                         SERVER_PATH_PREFIX + checklistInfo.getId() + "/authority/metadata.do",
                         "lsid",
                         null,
                         null );
 
-                String responseBody = processRESTService(namesUri);
+                String responseBody = queryClient.processRESTService(namesUri);
                 addTaxonToTaxonIdMap(queryList, responseBody);
             } else {
-                URI namesUri = buildUriFromQueryList(queryList,
+                URI namesUri = queryClient.buildUriFromQueryList(queryList,
                         SERVER_PATH_PREFIX + checklistInfo.getId() + "/taxon/findByIdentifier.json",
                         "identifier",
                         null, // like search for identifiers not supported by this client
                         findByIdentifierParameters );
 
-                String responseBody = processRESTService(namesUri);
+                String responseBody = queryClient.processRESTService(namesUri);
                 addTaxaToTaxonIdMapFromIdentifierServiceResponse(queryList, responseBody);
             }
 
             List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
 
             if(taxonIdList.size() > 0) {
-                URI taxonUri = buildUriFromQueryStringList(taxonIdList,
+                URI taxonUri = queryClient.buildUriFromQueryStringList(taxonIdList,
                         SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue/taxon.json",
                         "taxonUuid",
                         null);
-                String taxonResponseBody = processRESTService(taxonUri);
+                String taxonResponseBody = queryClient.processRESTService(taxonUri);
                 updateQueriesWithResponse(taxonResponseBody, checklistInfo, request);
             }
         }

@@ -1,26 +1,22 @@
 package org.bgbm.biovel.drf.checklist;
 
-import java.net.URI;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
-import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
-import org.bgbm.biovel.drf.rest.TaxoRESTClient;
+import org.bgbm.biovel.drf.client.AbstractClient;
+import org.bgbm.biovel.drf.client.ServiceProviderInfo;
+import org.bgbm.biovel.drf.query.IQueryClient;
 import org.bgbm.biovel.drf.tnr.msg.Query;
-import org.bgbm.biovel.drf.tnr.msg.Query.Request;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class BaseChecklistClient extends TaxoRESTClient {
+public abstract class BaseChecklistClient<QC extends IQueryClient> extends AbstractClient<QC> {
 
     protected Logger logger = LoggerFactory.getLogger(BaseChecklistClient.class);
 
-    public final static String QUERY_PLACEHOLDER = "{q}";
 
     protected final static String CHECKLIST_KEY = "checklist";
     protected final static String CHECKLIST_URL_KEY = "checklist_url";
@@ -37,59 +33,6 @@ public abstract class BaseChecklistClient extends TaxoRESTClient {
 
     public BaseChecklistClient(ServiceProviderInfo spInfo) throws DRFChecklistException {
         super(spInfo);
-    }
-
-    /**
-     *
-     * @param queryList
-     * @param endpointSuffix
-     * @param queryKey
-     * @param likeModeWildcard the wildcard to add to the query string in case of like search modes
-     * @param paramMap
-     * @return
-     */
-    public URI buildUriFromQueryList(List<Query> queryList,
-            String endpointSuffix,
-            String queryKey,
-            String likeModeWildcard,
-            Map<String, String> paramMap) {
-
-        List<String> queries = new ArrayList<String>();
-
-        EnumSet<SearchMode> likeModes = EnumSet.of(SearchMode.scientificNameLike);
-
-        for(Query query : queryList) {
-            Request tnrRequest = query.getRequest();
-            String queryString = tnrRequest.getQueryString();
-            if(likeModes.contains(SearchMode.valueOf(tnrRequest.getSearchMode()))){
-                queryString += likeModeWildcard;
-            }
-            queries.add(queryString);
-        }
-
-        logger.debug("Query size : " + queries.size());
-
-        return buildUriFromQueryStringList(queries,
-                endpointSuffix,
-                queryKey,
-                paramMap);
-    }
-
-    public URI buildUriFromQuery(Query query,
-            String endpointSuffix,
-            String queryKey,
-            Map<String, String> paramMap) {
-        return buildUriFromQueryString(query.getRequest().getQueryString(),
-                endpointSuffix,
-                queryKey,
-                paramMap);
-    }
-
-    public URI buildUriFromQuery(Query query,
-            String regexpUrl,
-            Map<String, String> paramMap) {
-        String url = regexpUrl.replace(QUERY_PLACEHOLDER, query.getRequest().getQueryString());
-        return buildUriFromQueryString(url, paramMap);
     }
 
 

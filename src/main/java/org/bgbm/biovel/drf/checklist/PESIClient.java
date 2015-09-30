@@ -8,27 +8,31 @@ import java.util.regex.Pattern;
 
 import javax.xml.rpc.ServiceException;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServiceLocator;
 import org.bgbm.biovel.drf.checklist.pesi.PESINameServicePortType;
 import org.bgbm.biovel.drf.checklist.pesi.PESIRecord;
-import org.bgbm.biovel.drf.rest.ServiceProviderInfo;
+import org.bgbm.biovel.drf.client.ServiceProviderInfo;
+import org.bgbm.biovel.drf.query.SoapClient;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Query;
+import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.utils.IdentifierUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 
 
-public class PESIClient extends BaseChecklistClient {
+public class PESIClient extends BaseChecklistClient<SoapClient> {
 
+    /**
+     *
+     */
+    private static final HttpHost HTTP_HOST = new HttpHost("http://www.eu-nomen.eu",80);
     public static final String ID = "pesi";
     public static final String LABEL = "PESI";
     public static final String URL = "http://www.eu-nomen.eu/portal/index.php";
@@ -88,11 +92,13 @@ public class PESIClient extends BaseChecklistClient {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public HttpHost getHost() {
-        return new HttpHost("http://www.eu-nomen.eu",80);
+    public void initQueryClient() {
+        queryClient = new SoapClient();
     }
-
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {
@@ -406,6 +412,7 @@ public class PESIClient extends BaseChecklistClient {
     public boolean isSupportedIdentifier(String value) {
         return IdentifierUtils.checkLSID(value) || IdentifierUtils.checkUUID(value);
     }
+
 }
 
 
