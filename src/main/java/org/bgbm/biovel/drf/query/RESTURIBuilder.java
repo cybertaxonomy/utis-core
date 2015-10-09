@@ -1,4 +1,4 @@
-package org.bgbm.biovel.drf.checklist;
+package org.bgbm.biovel.drf.query;
 
 import java.util.Map;
 

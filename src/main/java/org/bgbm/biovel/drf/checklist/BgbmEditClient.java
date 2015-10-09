@@ -77,11 +77,6 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         return checklistInfo;
     }
 
-    @Override
-    public int getMaxPageSize() {
-        return 10;
-    }
-
     /**
      * Adds the acceptedTaxonUuids found in the <code>responseBody</code> to the
      * private field <code>taxonIdQueryMap</code>
@@ -323,7 +318,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                     "query",
                     "*", null);
 
-            String searchResponseBody = queryClient.processRESTService(namesUri);
+            String searchResponseBody = queryClient.get(namesUri);
 
             buildTaxonIdMapsFromCatalogueServiceResponse(queryList, searchResponseBody);
 
@@ -334,7 +329,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                         SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue/taxon.json",
                         "taxonUuid",
                         null);
-                String taxonResponseBody = queryClient.processRESTService(taxonUri);
+                String taxonResponseBody = queryClient.get(taxonUri);
                 updateQueriesWithResponse(taxonResponseBody, checklistInfo, request);
             }
         }
@@ -384,7 +379,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                         null,
                         null );
 
-                String responseBody = queryClient.processRESTService(namesUri);
+                String responseBody = queryClient.get(namesUri);
                 addTaxonToTaxonIdMap(queryList, responseBody);
             } else {
                 URI namesUri = queryClient.buildUriFromQueryList(queryList,
@@ -393,7 +388,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                         null, // like search for identifiers not supported by this client
                         findByIdentifierParameters );
 
-                String responseBody = queryClient.processRESTService(namesUri);
+                String responseBody = queryClient.get(namesUri);
                 addTaxaToTaxonIdMapFromIdentifierServiceResponse(queryList, responseBody);
             }
 
@@ -404,7 +399,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                         SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue/taxon.json",
                         "taxonUuid",
                         null);
-                String taxonResponseBody = queryClient.processRESTService(taxonUri);
+                String taxonResponseBody = queryClient.get(taxonUri);
                 updateQueriesWithResponse(taxonResponseBody, checklistInfo, request);
             }
         }

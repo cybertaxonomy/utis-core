@@ -52,9 +52,4 @@ public abstract class AbstractClient<QC extends IQueryClient> {
         this.spInfo = checklistInfo;
     }
 
-
-    public abstract int getMaxPageSize();
-
-
-
 }

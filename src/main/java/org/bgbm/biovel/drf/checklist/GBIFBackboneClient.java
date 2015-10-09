@@ -78,7 +78,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
                 uriBuilder.setParameter("offset", Integer.toString(offset));
                 uri = uriBuilder.build();
                 System.out.println("buildChecklistMap");
-                String responseBody = queryClient.processRESTService(uri);
+                String responseBody = queryClient.get(uri);
 
                 JSONObject jsonResponse = JSONUtils.parseJsonToObject(responseBody);
                 JSONArray results = (JSONArray) jsonResponse.get("results");
@@ -126,15 +126,10 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
 
             URI namesUri = queryClient.buildUriFromQuery(query, "/" + CINFO.getVersion() + "/species",	"name", paramMap);
 
-            String responseBody = queryClient.processRESTService(namesUri);
+            String responseBody = queryClient.get(namesUri);
 
             updateQueryWithResponse(query,responseBody, paramMap, checklistInfo);
         }
-    }
-
-    @Override
-    public int getMaxPageSize() {
-        return 10;
     }
 
     private void updateQueryWithResponse(Query query ,
@@ -170,7 +165,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
                     accTaxonId = key.toString();
 
                     URI taxonUri = queryClient.buildUriFromQuery(query, "/" + CINFO.getVersion() + "/species/" + accTaxonId, null);
-                    String responseBody = queryClient.processRESTService(taxonUri);
+                    String responseBody = queryClient.get(taxonUri);
 
                     JSONObject taxon = JSONUtils.parseJsonToObject(responseBody);
                     Taxon accName = generateAccName(taxon);
@@ -193,7 +188,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
                     paramMap.put("offset", Integer.toString(offset));
 
                     URI synonymsUri = queryClient.buildUriFromQuery(query, "/" + CINFO.getVersion() + "/species/" + accTaxonId + "/synonyms", paramMap);
-                    String synResponse = queryClient.processRESTService(synonymsUri);
+                    String synResponse = queryClient.get(synonymsUri);
 
                     JSONObject pagedSynonyms = JSONUtils.parseJsonToObject(synResponse);
                     generateSynonyms(pagedSynonyms, tnrResponse);
@@ -305,7 +300,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
             uriBuilder.setPath("/" + CINFO.getVersion() + "/dataset/" + datasetKey);
 
             URI uri = uriBuilder.build();
-            String responseBody = queryClient.processRESTService(uri);
+            String responseBody = queryClient.get(uri);
 
             JSONObject datasetInfo = JSONUtils.parseJsonToObject(responseBody);
 

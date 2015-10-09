@@ -70,7 +70,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
         try {
             uri = uriBuilder.build();
             System.out.println("buildChecklistMap");
-            String responseBody = queryClient.processRESTService(uri);
+            String responseBody = queryClient.get(uri);
 
             JSONObject jsonResponse = JSONUtils.parseJsonToObject(responseBody);
             JSONArray data = (JSONArray) jsonResponse.get("data");
@@ -115,16 +115,11 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
                         "q",
                         paramMap);
 
-                String responseBody = queryClient.processRESTService(namesUri);
+                String responseBody = queryClient.get(namesUri);
 
                 updateQueryWithResponse(query,responseBody, paramMap, checklistInfo);
             //}
         }
-    }
-
-    @Override
-    public int getMaxPageSize() {
-        return 10;
     }
 
     private void updateQueryWithResponse(Query query,
@@ -159,7 +154,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
             Response tnrResponse = TnrMsgUtils.tnrResponseFor(checklistInfo);
 
             URI taxonUri = queryClient.buildUriFromQuery(query, "/ws/usage/" + taxonId, null);
-            String responseBody = queryClient.processRESTService(taxonUri);
+            String responseBody = queryClient.get(taxonUri);
 
             JSONObject res = JSONUtils.parseJsonToObject(responseBody);
             JSONObject jsonAccName = (JSONObject)res.get("data");
@@ -180,7 +175,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
                     synTaxonId = String.valueOf(synIdNumber);
 
                     URI synonymsUri = queryClient.buildUriFromQuery(query, "/ws/usage/" + synTaxonId, null);
-                    String synResponse = queryClient.processRESTService(synonymsUri);
+                    String synResponse = queryClient.get(synonymsUri);
 
                     JSONObject synonym = JSONUtils.parseJsonToObject(synResponse);
                     generateSynonyms((JSONObject)synonym.get("data"), tnrResponse);

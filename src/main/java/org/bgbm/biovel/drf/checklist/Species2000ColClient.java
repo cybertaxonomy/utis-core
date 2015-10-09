@@ -91,7 +91,7 @@ public class Species2000ColClient extends BaseChecklistClient<RestClient> {
                 "name",
                 paramMap);
 
-        String responseBody = queryClient.processRESTService(taxonUri);
+        String responseBody = queryClient.get(taxonUri);
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder parser;
@@ -116,7 +116,7 @@ public class Species2000ColClient extends BaseChecklistClient<RestClient> {
                             "id",
                             paramMap);
 
-                    responseBody = queryClient.processRESTService(taxonUri);
+                    responseBody = queryClient.get(taxonUri);
                 } else {
                     responseBody = null;
                 }
@@ -141,14 +141,6 @@ public class Species2000ColClient extends BaseChecklistClient<RestClient> {
         }
 
     }
-
-
-    @Override
-    public int getMaxPageSize() {
-        return 10;
-    }
-
-
 
     private void updateQueryWithResponse(Query query, String colXMLResponse) {
 

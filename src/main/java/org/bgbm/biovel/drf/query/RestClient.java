@@ -26,7 +26,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
-import org.bgbm.biovel.drf.checklist.RESTURIBuilder;
 import org.bgbm.biovel.drf.checklist.SearchMode;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Query.Request;
@@ -63,7 +62,7 @@ public class RestClient implements IQueryClient{
      * @return the response body
      * @throws DRFChecklistException
      */
-    public String processRESTService(URI uri) throws DRFChecklistException {
+    public String get(URI uri) throws DRFChecklistException {
         HttpClient client = new DefaultHttpClient();
         HttpGet request = new HttpGet(uri);
 
@@ -86,72 +85,6 @@ public class RestClient implements IQueryClient{
             throw new DRFChecklistException(e);
         }
         return null;
-    }
-
-    public URI buildUriFromQueryStringList(List<String> queryList,
-            String endpointSuffix,
-            String queryKey,
-            Map<String, String> paramMap) {
-
-        RESTURIBuilder builder = new RESTURIBuilder(getHost().getHostName(),
-                    getHost().getPort(),
-                    endpointSuffix,
-                    queryKey,
-                    paramMap);
-
-        URI uri = null;
-        Iterator<String> itrQuery = queryList.iterator();
-        while(itrQuery.hasNext()) {
-            builder.addQuery(itrQuery.next());
-        }
-
-        try {
-            uri = builder.build();
-        } catch (URISyntaxException e) {
-            // TODO Auto-generated catch block
-            //e.printStackTrace();
-        }
-        return uri;
-    }
-
-    public URI buildUriFromQueryString(String query,
-            String endpointSuffix,
-            String queryKey,
-            Map<String, String> paramMap) {
-
-        RESTURIBuilder builder = new RESTURIBuilder(getHost().getHostName(),
-                    getHost().getPort(),
-                    endpointSuffix,
-                    queryKey,
-                    paramMap);
-
-        URI uri = null;
-
-        builder.addQuery(query);
-
-        try {
-            uri = builder.build();
-        } catch (URISyntaxException e) {
-            // TODO Auto-generated catch block
-            //e.printStackTrace();
-        }
-        return uri;
-    }
-
-    public URI buildUriFromQueryString(String endpointUrl,
-            Map<String, String> paramMap) {
-
-        RESTURIBuilder builder = new RESTURIBuilder(getHost().getHostName(), getHost().getPort(),endpointUrl, paramMap);
-
-        URI uri = null;
-
-        try {
-            uri = builder.build();
-        } catch (URISyntaxException e) {
-            // TODO Auto-generated catch block
-            //e.printStackTrace();
-        }
-        return uri;
     }
 
     /**
@@ -205,6 +138,72 @@ public class RestClient implements IQueryClient{
             Map<String, String> paramMap) {
         String url = regexpUrl.replace(QUERY_PLACEHOLDER, query.getRequest().getQueryString());
         return buildUriFromQueryString(url, paramMap);
+    }
+
+    public URI buildUriFromQueryStringList(List<String> queryList,
+            String endpointSuffix,
+            String queryKey,
+            Map<String, String> paramMap) {
+    
+        RESTURIBuilder builder = new RESTURIBuilder(getHost().getHostName(),
+                    getHost().getPort(),
+                    endpointSuffix,
+                    queryKey,
+                    paramMap);
+    
+        URI uri = null;
+        Iterator<String> itrQuery = queryList.iterator();
+        while(itrQuery.hasNext()) {
+            builder.addQuery(itrQuery.next());
+        }
+    
+        try {
+            uri = builder.build();
+        } catch (URISyntaxException e) {
+            // TODO Auto-generated catch block
+            //e.printStackTrace();
+        }
+        return uri;
+    }
+
+    public URI buildUriFromQueryString(String endpointUrl,
+            Map<String, String> paramMap) {
+    
+        RESTURIBuilder builder = new RESTURIBuilder(getHost().getHostName(), getHost().getPort(),endpointUrl, paramMap);
+    
+        URI uri = null;
+    
+        try {
+            uri = builder.build();
+        } catch (URISyntaxException e) {
+            // TODO Auto-generated catch block
+            //e.printStackTrace();
+        }
+        return uri;
+    }
+
+    public URI buildUriFromQueryString(String query,
+            String endpointSuffix,
+            String queryKey,
+            Map<String, String> paramMap) {
+    
+        RESTURIBuilder builder = new RESTURIBuilder(getHost().getHostName(),
+                    getHost().getPort(),
+                    endpointSuffix,
+                    queryKey,
+                    paramMap);
+    
+        URI uri = null;
+    
+        builder.addQuery(query);
+    
+        try {
+            uri = builder.build();
+        } catch (URISyntaxException e) {
+            // TODO Auto-generated catch block
+            //e.printStackTrace();
+        }
+        return uri;
     }
 
 

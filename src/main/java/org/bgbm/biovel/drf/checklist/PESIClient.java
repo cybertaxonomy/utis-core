@@ -106,14 +106,6 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
         return checklistInfo;
     }
 
-
-    @Override
-    public int getMaxPageSize() {
-        return 10;
-    }
-
-
-
     @Override
     public EnumSet<SearchMode> getSearchModes() {
         return SEARCH_MODES;
@@ -243,8 +235,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
 
         Query query = singleQueryFrom(tnrMsg);
         String name = query.getRequest().getQueryString();
-        PESINameServiceLocator pesins = new PESINameServiceLocator();
 
+        PESINameServiceLocator pesins = new PESINameServiceLocator();
         PESINameServicePortType pesinspt = getPESINameService(pesins);
 
         try {
@@ -257,8 +249,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             }
 
         }  catch (RemoteException e) {
-            logger.error("Error in getGUID method in PESINameService", e);
-            throw new DRFChecklistException("Error in getGUID method in PESINameService");
+            logger.error("Error in getPESIRecords method in PESINameService", e);
+            throw new DRFChecklistException("Error in getPESIRecords method in PESINameService");
         }
 
     }
@@ -267,8 +259,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
     public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
         Query query = singleQueryFrom(tnrMsg);
         String name = query.getRequest().getQueryString();
-        PESINameServiceLocator pesins = new PESINameServiceLocator();
 
+        PESINameServiceLocator pesins = new PESINameServiceLocator();
         PESINameServicePortType pesinspt = getPESINameService(pesins);
 
         try {
@@ -304,8 +296,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
                 }
             }
         }  catch (RemoteException e) {
-            logger.error("Error in getPESIRecords method in PESINameService", e);
-            throw new DRFChecklistException("Error in getPESIRecords method in PESINameService");
+            logger.error("Error in getPESIRecordsByVernacular method in PESINameService", e);
+            throw new DRFChecklistException("Error in getPESIRecordsByVernacular method in PESINameService");
         }
 
     }
@@ -328,8 +320,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
                 }
             }
         }  catch (RemoteException e) {
-            logger.error("Error in getPESIRecords method in PESINameService", e);
-            throw new DRFChecklistException("Error in getPESIRecords method in PESINameService");
+            logger.error("Error in getPESIRecordsByVernacular method in PESINameService", e);
+            throw new DRFChecklistException("Error in getPESIRecordsByVernacular method in PESINameService");
         }
 
     }
@@ -350,8 +342,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             }
 
         }  catch (RemoteException e) {
-            logger.error("Error in getGUID method in PESINameService", e);
-            throw new DRFChecklistException("Error in getGUID method in PESINameService");
+            logger.error("Error in getPESIRecordByGUID method in PESINameService", e);
+            throw new DRFChecklistException("Error in getPESIRecordByGUID method in PESINameService");
         }
 
 
@@ -369,31 +361,32 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
 
         SearchMode searchMode = SearchMode.valueOf(request.getSearchMode());
 
-        String accNameGUID = record.getValid_guid();
+        String taxonGUID = record.getValid_guid();
         if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
             tnrResponse.setMatchingNameString(record.getScientificname());
         }
 
-        if(accNameGUID != null){
+        if(taxonGUID != null){
 
             // case when accepted name
-            if(record.getGUID() != null && record.getGUID().equals(accNameGUID)) {
-                Taxon accName = generateAccName(record);
-                tnrResponse.setTaxon(accName);
+            if(record.getGUID() != null && record.getGUID().equals(taxonGUID)) {
+                Taxon taxon = generateAccName(record);
+                tnrResponse.setTaxon(taxon);
                 if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                     tnrResponse.setMatchingNameType(NameType.TAXON);
                 }
             } else {
                 // case when synonym
-                PESIRecord accNameRecord = pesinspt.getPESIRecordByGUID(accNameGUID);
-                Taxon accName = generateAccName(accNameRecord);
-                tnrResponse.setTaxon(accName);
+                PESIRecord taxonRecord = pesinspt.getPESIRecordByGUID(taxonGUID);
+                Taxon taxon = generateAccName(taxonRecord);
+                tnrResponse.setTaxon(taxon);
                 if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                     tnrResponse.setMatchingNameType(NameType.SYNONYM);
                 }
             }
 
-            PESIRecord[] records = pesinspt.getPESISynonymsByGUID(accNameGUID);
+            // FIXME check for isAddSynonymy prior doing the request
+            PESIRecord[] records = pesinspt.getPESISynonymsByGUID(taxonGUID);
             if(request.isAddSynonymy() &&  records != null && records.length > 0) {
                 generateSynonyms(records,tnrResponse);
             }

@@ -70,14 +70,6 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         return checklistInfo;
     }
 
-
-    @Override
-    public int getMaxPageSize() {
-        return 10;
-    }
-
-
-
     @Override
     public EnumSet<SearchMode> getSearchModes() {
         return SEARCH_MODES;
