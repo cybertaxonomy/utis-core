@@ -148,6 +148,8 @@ public class SparqlClient implements IQueryClient {
      * NOTE: The bulkloader is a faster way to load data into an empty dataset than just using the Jena update operations.
      * the bulkloader also requires less memory
      * It is accessed through the command line utility tdbloader.
+     *
+     * rm /tmp/drf_tnb_store/*; bin/tdbloader2 -l /tmp/drf_tnb_store /tmp/species.rdf
      * @throws IOException
      */
     private void createStore() throws IOException {
@@ -215,10 +217,10 @@ public class SparqlClient implements IQueryClient {
         QueryExecution qe = executionFor(queryString);
         Model model = null;
         try {
-            model = qe.execDescribe();
             if(dataset != null) {
                 dataset.begin(ReadWrite.READ) ;
             }
+            model = qe.execDescribe();
             if(dataset== null && logger.isDebugEnabled()) {
                 model.write(System.err);
             }
