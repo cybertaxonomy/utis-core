@@ -118,9 +118,9 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
             queryClient = new SparqlClient(SPARQL_ENDPOINT_URL, SparqlClient.Opmode.SPARCLE_ENDPOINT);
         } else {
             // use downloadable rdf
-            queryClient = new SparqlClient(RDF_FILE_URL, SparqlClient.Opmode.RDF_ARCHIVE);
+            //queryClient = new SparqlClient(RDF_FILE_URL, SparqlClient.Opmode.RDF_ARCHIVE);
             // reuse existing TDB_STORE
-            // queryClient = new SparqlClient(null, SparqlClient.Opmode.RDF_ARCHIVE);
+            queryClient = new SparqlClient(null, SparqlClient.Opmode.RDF_ARCHIVE);
         }
     }
 
@@ -315,24 +315,24 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
                     + "WHERE {\n"
                     + "     ?eunisurl es:validName true .  \n"
                     + "     ?eunisurl es:binomialName ?name . \n"
-                    + "     ?eunisurl rdf:label ?fullName . \n"
-                    + "     ?eunisurl dwc:scientificNameAuthorship ?author . \n"
-                    + "     OPTIONAL {  \n"
-                    + "       ?eunisurl es:sameSynonymCoL ?sameSpecies . \n"
-                    + "     } \n"
-                    + "     OPTIONAL {  \n"
-                    + "       ?eunisurl dwc:vernacularName ?vernacularName . \n"
-                    + "     } \n"
-
-                    + "     OPTIONAL {  \n"
-                    + "       ?eunisurl es:eunisPrimaryName ?eunisPrimaryName . \n" // accepted taxon
-                    + "     } \n"
-                    + "     OPTIONAL {  \n"
-                    + "       ?eunisurl rdf:hasLegalReference ?sourceReference . \n"
-                    + "     } \n"
-                    + "     OPTIONAL {  \n"
-                    + "       ?eunisurl rdf:taxonomy ?rank . \n"
-                    + "     } \n"
+//                    + "     ?eunisurl rdf:label ?fullName . \n"
+//                    + "     ?eunisurl dwc:scientificNameAuthorship ?author . \n"
+//                    + "     OPTIONAL {  \n"
+//                    + "       ?eunisurl es:sameSynonymCoL ?sameSpecies . \n"
+//                    + "     } \n"
+//                    + "     OPTIONAL {  \n"
+//                    + "       ?eunisurl dwc:vernacularName ?vernacularName . \n"
+//                    + "     } \n"
+//
+//                    + "     OPTIONAL {  \n"
+//                    + "       ?eunisurl es:eunisPrimaryName ?eunisPrimaryName . \n" // accepted taxon
+//                    + "     } \n"
+//                    + "     OPTIONAL {  \n"
+//                    + "       ?eunisurl rdf:hasLegalReference ?sourceReference . \n"
+//                    + "     } \n"
+//                    + "     OPTIONAL {  \n"
+//                    + "       ?eunisurl rdf:taxonomy ?rank . \n"
+//                    + "     } \n"
                     + "     FILTER " + filter  + " \n"
                     + "} \n"
                     + "LIMIT " + MAX_PAGING_LIMIT + " OFFSET 0"

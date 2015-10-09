@@ -66,8 +66,6 @@ public class SparqlClient implements IQueryClient {
 
     private File rdfFile = null;
 
-    private final Model model = null;
-
     private Dataset dataset = null;
 
     public enum Opmode{
@@ -86,7 +84,6 @@ public class SparqlClient implements IQueryClient {
             }
             try {
                 createStore();
-//                loadModel();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -154,9 +151,12 @@ public class SparqlClient implements IQueryClient {
      */
     private void createStore() throws IOException {
 
+        boolean doClearStoreLocation = rdfFile != null;
+        boolean doLoadRdfFile = rdfFile != null;
+
         File tdbStoreFolder = new File(tmpDir, "drf_tnb_store" + File.separator);
         if(tdbStoreFolder.exists()) {
-            if(rdfFile != null) {
+            if( doClearStoreLocation ) {
                 FileUtils.cleanDirectory(tdbStoreFolder);
             }
         } else {
@@ -166,19 +166,26 @@ public class SparqlClient implements IQueryClient {
 
         Dataset dataset = TDBFactory.createDataset(location);
 
+        logger.info("Using TDB store at " + location);
+
         dataset.begin(ReadWrite.READ) ;
         // Get model inside the transaction
         Model model = dataset.getDefaultModel() ;
+        logger.info("Dataset in TDB has " + dataset.asDatasetGraph().size() + " named graphs");
+        logger.info("Model-size: " + model.size());
         dataset.end();
 
-        if(rdfFile != null) {
+        if(doLoadRdfFile) {
             dataset.begin(ReadWrite.WRITE);
             model = dataset.getDefaultModel();
             // parse InputStream as RDF in Turtle format
             InputStream fin = new FileInputStream(rdfFile);
-            logger.info("loading DRF/XML into TDB store");
+            logger.info("loading RDF/XML into TDB store");
             model.read(fin, null, "RDF/XML");
-            logger.info("loading DRF/XML done");
+            logger.info("loading RDF/XML done");
+            logger.info("Dataset in TDB has " + dataset.asDatasetGraph().size() + " named graphs");
+            logger.info("Model-size: " + model.size());
+            dataset.commit();
             dataset.end();
             logger.info("rdf loaded into TDB store at " + tdbStoreFolder);
         }
@@ -215,17 +222,14 @@ public class SparqlClient implements IQueryClient {
     public Model describe(String queryString) throws DRFChecklistException {
 
         QueryExecution qe = executionFor(queryString);
-        Model model = null;
+        Model result = null;
         try {
             if(dataset != null) {
                 dataset.begin(ReadWrite.READ) ;
             }
-            model = qe.execDescribe();
-            if(dataset== null && logger.isDebugEnabled()) {
-                model.write(System.err);
-            }
-            if(dataset != null) {
-                dataset.end();
+            result = qe.execDescribe();
+            if(logger.isDebugEnabled()) {
+                result.write(System.err);
             }
 
         } catch (HttpException e) {
@@ -244,18 +248,21 @@ public class SparqlClient implements IQueryClient {
             qe.close();
         }
 
-        if(model != null && logger.isDebugEnabled()) {
+        if(result != null && logger.isDebugEnabled()) {
             StringBuilder msg = new StringBuilder();
             msg.append("subjects in response:\n");
             int i = 1;
-            for(ResIterator it = model.listSubjects(); it.hasNext(); ++i) {
+            for(ResIterator it = result.listSubjects(); it.hasNext(); ++i) {
                 Resource res = it.next();
                 msg.append("    " + i + ": " + res.toString() + "\n");
             }
             logger.debug(msg.toString());
         }
+        if(dataset != null) {
+            dataset.end();
+        }
 
-        return model;
+        return result;
     }
 
     /**
@@ -264,23 +271,13 @@ public class SparqlClient implements IQueryClient {
      */
     private QueryExecution executionFor(String queryString) {
 
-        Query query = QueryFactory.create(queryString);
-
         QueryExecution qe;
-        // Execute the query and obtain results
         if(opmode.equals(Opmode.SPARCLE_ENDPOINT)) {
+            Query query = QueryFactory.create(queryString);
             qe = QueryExecutionFactory.sparqlService(baseUri, query);
         } else {
-            // RDF_ARCHIVE
-            if(model != null) {
-                // in-memory model
-                qe = QueryExecutionFactory.create(queryString, model);
-            } else if(dataset != null) {
-                // TDB Store
-                qe = QueryExecutionFactory.create(queryString, dataset);
-            } else {
-                throw new RuntimeException("Opmode is RDF_ARCHIVE but model was null");
-            }
+            // local TDB Store
+            qe = QueryExecutionFactory.create(queryString, dataset);
         }
         return qe;
     }
@@ -374,10 +371,17 @@ public class SparqlClient implements IQueryClient {
 
     public Resource getFromUri(String uri) {
 
-        final Model model = ModelFactory.createDefaultModel();
-        model.read(uri);
-        if(logger.isDebugEnabled()) {
-            model.write(System.err);
+        Model model;
+        if(dataset != null) {
+            dataset.begin(ReadWrite.READ) ;
+            model = dataset.getDefaultModel();
+            dataset.end();
+        } else {
+            model = ModelFactory.createDefaultModel();
+            model.read(uri);
+            if(logger.isDebugEnabled()) {
+                model.write(System.err);
+            }
         }
         return model.getResource(uri);
 

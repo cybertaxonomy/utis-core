@@ -55,7 +55,6 @@ public class EEA_BDC_ClientTest {
             client.queryChecklist(tnrMsg);
             String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
             System.out.println(outputXML);
-            break;
         }
     }
 }
