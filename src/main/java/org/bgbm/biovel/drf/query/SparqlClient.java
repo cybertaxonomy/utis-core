@@ -294,13 +294,13 @@ public class SparqlClient implements IQueryClient {
         try {
             boolean hasNoPropertiesInGraph = !_subject.listProperties().hasNext();
             if(_subject.isURIResource() && hasNoPropertiesInGraph ) {
-                logger.debug("loading RDF for UriResource " + _subject.getURI());
+                logger.debug("loading UriResource " + _subject.getURI());
                 _subject = getFromUri(_subject.getURI());
             }
             Model _model = _subject.getModel();
             node = _subject.listProperties(_model.getProperty(nameSpace.schemaUri(), localName)).next().getObject();
         } catch (NoSuchElementException e) {
-            if(logger.isDebugEnabled()) {
+            if(logger.isTraceEnabled()) {
                 logger.debug(_subject.getURI() + " " +  nameSpace + ":" + localName + " not found in current graph");
                 printProperties(_subject);
             }

@@ -21,7 +21,7 @@ public class EEA_BDC_ClientTest {
     }
 
     @Test
-    public void scientificNameExactTest() throws DRFChecklistException {
+    public void scientificNameExactTest() throws DRFChecklistException, TnrMsgException {
         parser = new DRFCSVInputParser();
 
         List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/eunis-scientificNameExact.csv","UTF-8"));
@@ -34,8 +34,8 @@ public class EEA_BDC_ClientTest {
             TnrMsg tnrMsg = tnrMsgItr.next();
             TnrMsgUtils.updateWithSearchMode(tnrMsg, SearchMode.scientificNameExact);
             client.queryChecklist(tnrMsg);
-//            String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
-//            System.out.println(outputXML);
+            String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+            System.out.println(outputXML);
         }
     }
 

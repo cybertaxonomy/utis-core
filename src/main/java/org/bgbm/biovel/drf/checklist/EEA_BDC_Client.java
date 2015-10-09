@@ -313,26 +313,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
             queryString.append(
                     "DESCRIBE ?eunisurl \n"
                     + "WHERE {\n"
-                    + "     ?eunisurl es:validName true .  \n"
                     + "     ?eunisurl es:binomialName ?name . \n"
-//                    + "     ?eunisurl rdf:label ?fullName . \n"
-//                    + "     ?eunisurl dwc:scientificNameAuthorship ?author . \n"
-//                    + "     OPTIONAL {  \n"
-//                    + "       ?eunisurl es:sameSynonymCoL ?sameSpecies . \n"
-//                    + "     } \n"
-//                    + "     OPTIONAL {  \n"
-//                    + "       ?eunisurl dwc:vernacularName ?vernacularName . \n"
-//                    + "     } \n"
-//
-//                    + "     OPTIONAL {  \n"
-//                    + "       ?eunisurl es:eunisPrimaryName ?eunisPrimaryName . \n" // accepted taxon
-//                    + "     } \n"
-//                    + "     OPTIONAL {  \n"
-//                    + "       ?eunisurl rdf:hasLegalReference ?sourceReference . \n"
-//                    + "     } \n"
-//                    + "     OPTIONAL {  \n"
-//                    + "       ?eunisurl rdf:taxonomy ?rank . \n"
-//                    + "     } \n"
                     + "     FILTER " + filter  + " \n"
                     + "} \n"
                     + "LIMIT " + MAX_PAGING_LIMIT + " OFFSET 0"
@@ -408,8 +389,10 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
         SearchMode searchMode = SearchMode.valueOf(request.getSearchMode());
 
-        // A synonym has always taxonomicRank = "Synonym", validName usually is false but in two cases it is true
-        boolean isAccepted = taxonR.hasLiteral(model.getProperty(RdfSchema.EUNIS_SPECIES.schemaUri(), "taxonomicRank"), "Synonym");
+        String validName = queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "validName");
+        boolean isAccepted = validName != null && validName.equals("true^^http://www.w3.org/2001/XMLSchema#boolean");
+
+        logger.debug("processing " + (isAccepted ? "accepted taxon" : "synonym or other")  + " " + taxonR.getURI());
 
         // TODO: is this possible with this service?
         //    tnrResponse.setMatchingNameString(record.getScientificname());
