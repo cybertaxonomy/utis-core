@@ -1,11 +1,11 @@
 package org.bgbm.biovel.drf.checklist;
 
-import java.util.Iterator;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.bgbm.biovel.drf.input.DRFCSVInputParser;
+import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
-import org.bgbm.biovel.drf.utils.BiovelUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgException;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.junit.BeforeClass;
@@ -14,48 +14,57 @@ import org.junit.Test;
 public class EEA_BDC_ClientTest {
 
     private static DRFCSVInputParser parser;
+    static EEA_BDC_Client client;
 
     @BeforeClass
     public static void  setup() {
-        parser = new DRFCSVInputParser();
+        client =  new EEA_BDC_Client();
+        client.setChecklistInfo(client.buildServiceProviderInfo());
     }
 
     @Test
-    public void scientificNameExactTest() throws DRFChecklistException, TnrMsgException {
-        parser = new DRFCSVInputParser();
+    public void scientificNameExact_Synonym_Test() throws DRFChecklistException, TnrMsgException {
 
-        List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/eunis-scientificNameExact.csv","UTF-8"));
-
-        EEA_BDC_Client client =  new EEA_BDC_Client();
-        client.setChecklistInfo(client.buildServiceProviderInfo());
-
-        Iterator<TnrMsg> tnrMsgItr = tnrMsgs.iterator();
-        while(tnrMsgItr.hasNext()) {
-            TnrMsg tnrMsg = tnrMsgItr.next();
-            TnrMsgUtils.updateWithSearchMode(tnrMsg, SearchMode.scientificNameExact);
-            client.queryChecklist(tnrMsg);
-            String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
-            System.out.println(outputXML);
-        }
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Canis dalmatinus", false);
+        client.queryChecklist(tnrMsg);
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+        assertEquals(1, tnrMsg.getQuery().get(0).getResponse().size());
+        Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
+        assertEquals("Canis dalmatinus", response.getMatchingNameString());
+        assertEquals("Canis aureus", response.getTaxon().getTaxonName().getCanonicalName());
     }
 
     @Test
-    public void scientificNameLikeTest() throws DRFChecklistException, TnrMsgException {
-        parser = new DRFCSVInputParser();
+    public void scientificNameExact_Accepted_Test() throws DRFChecklistException, TnrMsgException {
 
-        List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/eunis-scientificNameLike.csv","UTF-8"));
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Canis lupus", true);
+        client.queryChecklist(tnrMsg);
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+        assertEquals(1, tnrMsg.getQuery().get(0).getResponse().size());
+        Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
+        assertEquals("Canis lupus", response.getMatchingNameString());
+        assertEquals("Canis lupus", response.getTaxon().getTaxonName().getCanonicalName());
+        assertTrue(response.getSynonym().size() > 0);
+    }
 
-        EEA_BDC_Client client =  new EEA_BDC_Client();
-        client.setChecklistInfo(client.buildServiceProviderInfo());
+    @Test
+    public void scientificNameLikeTest_1() throws DRFChecklistException, TnrMsgException {
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Cani", false);
+        client.queryChecklist(tnrMsg);
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+        assertTrue(tnrMsg.getQuery().get(0).getResponse().size() > 1);
+    }
 
-        Iterator<TnrMsg> tnrMsgItr = tnrMsgs.iterator();
-        while(tnrMsgItr.hasNext()) {
-            TnrMsg tnrMsg = tnrMsgItr.next();
-            TnrMsgUtils.updateWithSearchMode(tnrMsg, SearchMode.scientificNameLike);
-            client.queryChecklist(tnrMsg);
-            String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
-            System.out.println(outputXML);
-        }
+    @Test
+    public void scientificNameLikeTest_2() throws DRFChecklistException, TnrMsgException {
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Abies par", false);
+        client.queryChecklist(tnrMsg);
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+        assertTrue(tnrMsg.getQuery().get(0).getResponse().size() > 1);
     }
 }
 

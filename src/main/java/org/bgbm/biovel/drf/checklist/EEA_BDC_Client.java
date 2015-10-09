@@ -165,9 +165,8 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
         // TaxonName
         taxonName.setFullName(queryClient.objectAsString(taxonR, RdfSchema.RDFS, "label"));
-        NameParser ecatParser = new NameParser();
-        String nameCanonical = ecatParser.parseToCanonical(taxonName.getFullName());
-        taxonName.setCanonicalName(nameCanonical);
+        // TODO rename CanonicalName to scientificName? compare with dwc:scientificName
+        taxonName.setCanonicalName(queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "binominalName"));
         taxonName.setRank(queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "taxonomicRank"));
 
         // Taxon
@@ -394,14 +393,13 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
         logger.debug("processing " + (isAccepted ? "accepted taxon" : "synonym or other")  + " " + taxonR.getURI());
 
-        // TODO: is this possible with this service?
-        //    tnrResponse.setMatchingNameString(record.getScientificname());
 
             // case when accepted name
             if(isAccepted) {
                 Taxon taxon = generateTaxon(model, taxonR);
                 tnrResponse.setTaxon(taxon);
                 tnrResponse.setMatchingNameType(NameType.TAXON);
+                tnrResponse.setMatchingNameString(taxon.getTaxonName().getCanonicalName());
 
             } else {
                 // case when synonym
@@ -414,7 +412,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
                     logger.error("No accepted taxon found for " + synonymR.getURI());
                 }
                 tnrResponse.setMatchingNameType(NameType.SYNONYM);
-                // TODO find accepted it is linked via eunisPrimaryName and (synonymFor)
+                tnrResponse.setMatchingNameString(queryClient.objectAsString(synonymR, RdfSchema.EUNIS_SPECIES, "binomialName"));
             }
 
             if(request.isAddSynonymy()) {

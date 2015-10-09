@@ -294,6 +294,11 @@ public class SparqlClient implements IQueryClient {
         try {
             boolean hasNoPropertiesInGraph = !_subject.listProperties().hasNext();
             if(_subject.isURIResource() && hasNoPropertiesInGraph ) {
+                // FIXME the same uri resource is loaded multiple times
+                //       create an in memory model as cache for the models loaded
+                //       in the getFromUri() method
+                //       so that all resources loaded are put into that model
+                //       clean up the cache when it reaches a specific size
                 logger.debug("loading UriResource " + _subject.getURI());
                 _subject = getFromUri(_subject.getURI());
             }

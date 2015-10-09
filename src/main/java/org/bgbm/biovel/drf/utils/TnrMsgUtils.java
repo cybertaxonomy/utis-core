@@ -31,9 +31,8 @@ import org.bgbm.biovel.drf.client.ServiceProviderInfo;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Query.ClientStatus;
 import org.bgbm.biovel.drf.tnr.msg.Query.Request;
-import org.bgbm.biovel.drf.tnr.msg.TaxonName;
-import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.tnr.msg.Response;
+import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
@@ -266,6 +265,17 @@ public class TnrMsgUtils {
             return null;
         }
 
+        public static TnrMsg createRequest(SearchMode searchMode, String queryString, boolean addSynonymy) {
+            TnrMsg msg = new TnrMsg();
+            Query q = new Query();
+            Request r = new Request();
+            r.setQueryString(queryString);
+            r.setSearchMode(searchMode.name());
+            r.setAddSynonymy(addSynonymy);
+            q.setRequest(r);
+            msg.getQuery().add(q);
+            return msg;
+        }
 
 
 
