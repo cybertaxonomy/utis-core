@@ -33,6 +33,7 @@ public class EEA_BDC_ClientTest {
         Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
         assertEquals("Canis dalmatinus", response.getMatchingNameString());
         assertEquals("Canis aureus", response.getTaxon().getTaxonName().getCanonicalName());
+        assertTrue(response.getTaxon().getSources().size() > 0);
     }
 
     @Test

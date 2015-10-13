@@ -2,6 +2,7 @@ package org.bgbm.biovel.drf.checklist;
 
 import java.net.URI;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -38,7 +39,8 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
     public static final String COPYRIGHT_URL = "http://www.eea.europa.eu/legal/eea-data-policy";
     private static final String SPARQL_ENDPOINT_URL = "http://semantic.eea.europa.eu/sparql";
     private static final String RDF_FILE_URL = "http://localhost/download/species.rdf.gz"; // http://eunis.eea.europa.eu/rdf/species.rdf.gz
-    private static final boolean USE_REMOTE_SERVICE = false;
+    private static final boolean USE_REMOTE_SERVICE = true;
+    private static final boolean REFRESH_TDB = true;
 
     private static final int MAX_PAGING_LIMIT = 50;
 
@@ -68,7 +70,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
         EUNIS_TAXONOMY("et", "http://eunis.eea.europa.eu/rdf/taxonomies-schema.rdf#"),
         DWC("dwc", "http://rs.tdwg.org/dwc/terms/"),
         RDF("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
-        RDFS("rdf", "http://www.w3.org/2000/01/rdf-schema#"),
+        RDFS("rdfs", "http://www.w3.org/2000/01/rdf-schema#"),
         SKOS_CORE("scos_core", "http://www.w3.org/2004/02/skos/core#");
 
         private String schemaUri;
@@ -100,6 +102,8 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
         Kingdom, Phylum, Clazz, Order, Family, Genus;
     }
 
+    private HashMap taxonIdTnrResponseMap;
+
     public EEA_BDC_Client() {
 
         super();
@@ -117,10 +121,13 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
             // use SPARQL end point
             queryClient = new SparqlClient(SPARQL_ENDPOINT_URL, SparqlClient.Opmode.SPARCLE_ENDPOINT);
         } else {
-            // use downloadable rdf
-            //queryClient = new SparqlClient(RDF_FILE_URL, SparqlClient.Opmode.RDF_ARCHIVE);
-            // reuse existing TDB_STORE
-            queryClient = new SparqlClient(null, SparqlClient.Opmode.RDF_ARCHIVE);
+            if(REFRESH_TDB) {
+                // use downloadable rdf
+                queryClient = new SparqlClient(RDF_FILE_URL, SparqlClient.Opmode.RDF_ARCHIVE);
+            }else {
+                // reuse existing TDB_STORE
+                queryClient = new SparqlClient(null, SparqlClient.Opmode.RDF_ARCHIVE);
+            }
         }
     }
 
@@ -166,17 +173,18 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
         // TaxonName
         taxonName.setFullName(queryClient.objectAsString(taxonR, RdfSchema.RDFS, "label"));
         // TODO rename CanonicalName to scientificName? compare with dwc:scientificName
-        taxonName.setCanonicalName(queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "binominalName"));
+        taxonName.setCanonicalName(queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "binomialName"));
         taxonName.setRank(queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "taxonomicRank"));
 
         // Taxon
         taxon.setTaxonName(taxonName);
         taxon.setIdentifier(taxonR.getURI());
         taxon.setAccordingTo(queryClient.objectAsString(taxonR, RdfSchema.DWC, "nameAccordingToID"));
-        taxon.setTaxonomicStatus(queryClient.objectAsURI(taxonR, RdfSchema.RDF, "type").getFragment());
+        URI typeUri = queryClient.objectAsURI(taxonR, RdfSchema.RDF, "type");
+        taxon.setTaxonomicStatus(typeUri.getFragment());
 
         // Sources are source references, re there others like data bases?
-        for ( StmtIterator refIt = taxonR.listProperties(model.getProperty("rdf", "hasLegalReference")); refIt.hasNext();) {
+        for ( StmtIterator refIt = taxonR.listProperties(model.getProperty(RdfSchema.EUNIS_SPECIES.schemaUri, "hasLegalReference")); refIt.hasNext();) {
             try {
             Source source = new Source();
             Resource sourceR = refIt.next().getObject().asResource();
@@ -302,11 +310,11 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
             Query query = singleQueryFrom(tnrMsg);
             StringBuilder queryString = prepareQueryString();
 
-            String filter = "";
+            String filter = "( ";
             if(query.getRequest().getSearchMode().equals(SearchMode.scientificNameLike.name())) {
-                filter = "regex(?name, \"" + query.getRequest().getQueryString() + "\")";
+                filter = filter + "regex(?name, \"" + query.getRequest().getQueryString() + "\")";
             } else {
-                filter = "(?name = \"" + query.getRequest().getQueryString() + "\")";
+                filter = filter + "?name = \"" + query.getRequest().getQueryString() + "\")";
             }
 
             queryString.append(
@@ -371,8 +379,11 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
                 // the subject is already a species
                 taxonR = subject;
             }
+
             Response tnrResponse = tnrResponseFromResource(model, taxonR, query.getRequest());
-            query.getResponse().add(tnrResponse);
+            if(tnrResponse != null) {
+                query.getResponse().add(tnrResponse);
+            }
         }
     }
 
@@ -388,37 +399,52 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
         SearchMode searchMode = SearchMode.valueOf(request.getSearchMode());
 
+        // Check for type to ignore the triple pointing from synonyms to accepted taxonUris
+        // only complete descriptions of taxa and synonym are relevant.
+        boolean isCompleteResource = taxonR.hasProperty(taxonR.getModel().getProperty(RdfSchema.RDF.schemaUri, "type"));
+        if(!isCompleteResource) {
+            return null;
+        }
+
         String validName = queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "validName");
         boolean isAccepted = validName != null && validName.equals("true^^http://www.w3.org/2001/XMLSchema#boolean");
+        boolean skipThis = false;
 
         logger.debug("processing " + (isAccepted ? "accepted taxon" : "synonym or other")  + " " + taxonR.getURI());
 
+        // case when accepted name
+        if(isAccepted) {
+            Taxon taxon = generateTaxon(model, taxonR);
+            tnrResponse.setTaxon(taxon);
+            tnrResponse.setMatchingNameType(NameType.TAXON);
+            String matchingName = taxon.getTaxonName().getCanonicalName();
+            tnrResponse.setMatchingNameString(matchingName);
 
-            // case when accepted name
-            if(isAccepted) {
+        } else {
+            // case when synonym
+            Resource synonymR = taxonR;
+            URI taxonUri = queryClient.objectAsURI(taxonR, RdfSchema.EUNIS_SPECIES, "eunisPrimaryName");
+            if(taxonUri == null) {
+                logger.error("no taxon uri found");
+            }
+
+            taxonR = queryClient.getFromUri(taxonUri);
+            if(taxonR != null) {
                 Taxon taxon = generateTaxon(model, taxonR);
                 tnrResponse.setTaxon(taxon);
-                tnrResponse.setMatchingNameType(NameType.TAXON);
-                tnrResponse.setMatchingNameString(taxon.getTaxonName().getCanonicalName());
-
             } else {
-                // case when synonym
-                Resource synonymR = taxonR;
-                taxonR = queryClient.objectAsResource(taxonR, RdfSchema.EUNIS_SPECIES, "eunisPrimaryName");
-                if(taxonR != null) {
-                    Taxon taxon = generateTaxon(model, taxonR);
-                    tnrResponse.setTaxon(taxon);
-                } else {
-                    logger.error("No accepted taxon found for " + synonymR.getURI());
-                }
-                tnrResponse.setMatchingNameType(NameType.SYNONYM);
-                tnrResponse.setMatchingNameString(queryClient.objectAsString(synonymR, RdfSchema.EUNIS_SPECIES, "binomialName"));
+                logger.error("No accepted taxon found for " + synonymR.getURI());
             }
+            tnrResponse.setMatchingNameType(NameType.SYNONYM);
+            String matchingName = queryClient.objectAsString(synonymR, RdfSchema.EUNIS_SPECIES, "binomialName");
+            tnrResponse.setMatchingNameString(matchingName);
+        }
 
-            if(request.isAddSynonymy()) {
-                // add Synonyms
+        if(!skipThis && request.isAddSynonymy()) {
+            // add Synonyms
 //                generateSynonyms(records,tnrResponse);
-            }
+        }
+        logger.debug("processing " + (isAccepted ? "accepted taxon" : "synonym or other")  + " " + taxonR.getURI() + " DONE");
 
         return tnrResponse;
     }

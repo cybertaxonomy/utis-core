@@ -11,6 +11,7 @@ import org.bgbm.biovel.drf.checklist.SearchMode;
 import org.bgbm.biovel.drf.client.ServiceProviderInfo;
 import org.bgbm.biovel.drf.input.DRFCSVInputParser;
 import org.bgbm.biovel.drf.input.DRFInputException;
+import org.bgbm.biovel.drf.query.RestClient;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.utils.BiovelUtils;
@@ -63,7 +64,7 @@ public class BgbmEditChecklistTest {
         //List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/bgbm/biovel/drf/tnr/nameCompleteOnly.csv","UTF-8"));
         TnrMsg tnrMsg = TnrMsgUtils.mergeTnrMsgs(tnrMsgs);
         String json = JSONUtils.convertObjectToJson(ci);
-        BgbmEditClient bec = new BgbmEditClient(json);
+        BaseChecklistClient<RestClient> bec = new BgbmEditClient(json);
 
 
         for(Query query : tnrMsg.getQuery()) {

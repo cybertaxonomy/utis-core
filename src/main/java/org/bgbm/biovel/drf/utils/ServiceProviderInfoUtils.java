@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.bgbm.biovel.drf.checklist.BaseChecklistClient;
 import org.bgbm.biovel.drf.checklist.BgbmEditClient;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.GBIFBackboneClient;
@@ -15,6 +16,7 @@ import org.bgbm.biovel.drf.checklist.Species2000ColClient;
 import org.bgbm.biovel.drf.checklist.WoRMSClient;
 import org.bgbm.biovel.drf.client.ServiceProviderInfo;
 import org.bgbm.biovel.drf.occurrences.GBIFOccurrencesClient;
+import org.bgbm.biovel.drf.query.RestClient;
 
 public class ServiceProviderInfoUtils {
 
@@ -41,7 +43,7 @@ public class ServiceProviderInfoUtils {
         WoRMSClient worms = new WoRMSClient();
         cilist.add(worms.getServiceProviderInfo());
 
-        BgbmEditClient bec = new BgbmEditClient();
+        BaseChecklistClient<RestClient> bec = new BgbmEditClient();
         cilist.add(bec.getServiceProviderInfo());
 
         GBIFBackboneClient gbc = new GBIFBackboneClient();

@@ -103,17 +103,17 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                 while (resIterator.hasNext()) {
                     JSONObject res = resIterator.next();
                     JSONArray accTaxonUuidArray = (JSONArray) res.get("acceptedTaxonUuids");
-                    String matchName = res.get("title").toString();
+                    String matchingName = res.get("title").toString();
                     Iterator<String> atIterator = accTaxonUuidArray.iterator();
                     while (atIterator.hasNext()) {
-                        String accTaxonId = atIterator.next();
-                        boolean isAcceptedTaxonMatch = res.get("taxonConceptUuids").toString().contains(accTaxonId);
-                        if(!taxonIdQueryMap.containsKey(accTaxonId) || isAcceptedTaxonMatch){
+                        String acceptedTaxonId = atIterator.next();
+                        boolean isAcceptedTaxonMatch = res.get("taxonConceptUuids").toString().contains(acceptedTaxonId);
+                        if(!taxonIdQueryMap.containsKey(acceptedTaxonId) || isAcceptedTaxonMatch){
                             // matches for accepted taxa should be preferred here
-                            // mathches for synomymy or other typs should never overrwite
+                            // matches for synomymy or other types should never overwrite
                             // accepted taxon matches
-                            taxonIdQueryMap.put(accTaxonId, query);
-                            taxonIdMatchStringMap.put(accTaxonId, matchName);
+                            taxonIdQueryMap.put(acceptedTaxonId, query);
+                            taxonIdMatchStringMap.put(acceptedTaxonId, matchingName);
                         }
                         //System.out.println("Found accepted taxon id : " + accTaxonId);
                     }

@@ -38,6 +38,7 @@ import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
@@ -59,6 +60,8 @@ public class SparqlClient implements IQueryClient {
     protected Logger logger = LoggerFactory.getLogger(SparqlClient.class);
 
     private static final File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+    private static final File userHomeDir = new File(System.getProperty("user.home"));
+    private static final File utisHome = new File(userHomeDir, ".utis");
 
     private Opmode opmode = null;
 
@@ -154,7 +157,7 @@ public class SparqlClient implements IQueryClient {
         boolean doClearStoreLocation = rdfFile != null;
         boolean doLoadRdfFile = rdfFile != null;
 
-        File tdbStoreFolder = new File(tmpDir, "drf_tnb_store" + File.separator);
+        File tdbStoreFolder = new File(utisHome, "tdb" + File.separator);
         if(tdbStoreFolder.exists()) {
             if( doClearStoreLocation ) {
                 FileUtils.cleanDirectory(tdbStoreFolder);
@@ -290,20 +293,21 @@ public class SparqlClient implements IQueryClient {
      */
     public RDFNode asSingleObject(Resource subject, RdfSchema nameSpace, String localName) {
         RDFNode node = null;
+        StmtIterator propertyIt = null;
         Resource _subject = subject;
         try {
-            boolean hasNoPropertiesInGraph = !_subject.listProperties().hasNext();
-            if(_subject.isURIResource() && hasNoPropertiesInGraph ) {
-                // FIXME the same uri resource is loaded multiple times
-                //       create an in memory model as cache for the models loaded
-                //       in the getFromUri() method
-                //       so that all resources loaded are put into that model
-                //       clean up the cache when it reaches a specific size
-                logger.debug("loading UriResource " + _subject.getURI());
-                _subject = getFromUri(_subject.getURI());
-            }
+
             Model _model = _subject.getModel();
-            node = _subject.listProperties(_model.getProperty(nameSpace.schemaUri(), localName)).next().getObject();
+            Property property = _model.getProperty(nameSpace.schemaUri(), localName);
+            propertyIt = _subject.listProperties(property);
+
+            boolean propertyInGraph = propertyIt.hasNext();
+            if(!propertyInGraph ) {
+                _subject = getFromUri(subject.getURI());
+                propertyIt = _subject.listProperties(property);
+            }
+
+            node = propertyIt.next().getObject();
         } catch (NoSuchElementException e) {
             if(logger.isTraceEnabled()) {
                 logger.debug(_subject.getURI() + " " +  nameSpace + ":" + localName + " not found in current graph");
@@ -382,11 +386,17 @@ public class SparqlClient implements IQueryClient {
             model = dataset.getDefaultModel();
             dataset.end();
         } else {
+            // FIXME the same uri resource is loaded from remote multiple times
+            //       create an in memory model as cache for the models loaded
+            //       in the getFromUri
+            //       so that all resources loaded are put into that model
+            //       clean up the cache when it reaches a specific size
+            logger.debug("loading remote UriResource " + uri);
             model = ModelFactory.createDefaultModel();
             model.read(uri);
-            if(logger.isDebugEnabled()) {
-                model.write(System.err);
-            }
+        }
+        if(logger.isDebugEnabled()) {
+            model.write(System.err);
         }
         return model.getResource(uri);
 
