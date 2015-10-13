@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -323,6 +325,47 @@ public class SparqlClient implements IQueryClient {
      * @param localName
      * @return
      */
+    public StmtIterator listProperties(Resource subject, RdfSchema nameSpace, String localName) {
+        RDFNode node = null;
+        StmtIterator propertyIt = null;
+        Resource _subject = subject;
+        try {
+
+            Model _model = _subject.getModel();
+            Property property = _model.getProperty(nameSpace.schemaUri(), localName);
+            propertyIt = _subject.listProperties(property);
+
+            boolean propertyInGraph = propertyIt.hasNext();
+            if(!propertyInGraph ) {
+                _subject = getFromUri(subject.getURI());
+                propertyIt = _subject.listProperties(property);
+            }
+
+        } catch (NoSuchElementException e) {
+            if(logger.isTraceEnabled()) {
+                logger.debug(_subject.getURI() + " " +  nameSpace + ":" + localName + " not found in current graph");
+                printProperties(_subject);
+            }
+        }
+        return propertyIt;
+    }
+
+    public  List<RDFNode> listObjects(Resource subject, RdfSchema nameSpace, String localName) {
+
+        List<RDFNode> list = new ArrayList<RDFNode>();
+        StmtIterator it = listProperties(subject, nameSpace, localName);
+        while (it.hasNext()) {
+            list.add(it.next().getObject());
+        }
+        return list;
+    }
+
+    /**
+     * @param subject
+     * @param nameSpace
+     * @param localName
+     * @return
+     */
     public String objectAsString(Resource subject, RdfSchema nameSpace, String localName) {
         String txt = null;
         RDFNode node = asSingleObject(subject, nameSpace, localName);
@@ -367,6 +410,36 @@ public class SparqlClient implements IQueryClient {
             }
         }
         return uri;
+    }
+
+    public List<Resource> listResources(Model model, Property filterProperty, String filterValue, Resource exclude){
+
+        List<Resource> resultList = new ArrayList<Resource>();
+        ResIterator resItr = model.listSubjects();
+        while(resItr.hasNext()) {
+            Resource resource = resItr.next();
+
+            if(exclude != null && resource.getURI().equals(exclude.getURI())) {
+                continue;
+            }
+
+            boolean hasProperty = true;
+            if(filterProperty != null) {
+                if(filterValue != null) {
+                    hasProperty = resource.hasProperty(filterProperty, filterValue);
+                } else {
+                    hasProperty = resource.hasProperty(filterProperty);
+                }
+            }
+
+            if(filterProperty == null || hasProperty) {
+                resultList.add(resource);
+                logger.debug("adding " + resource.getURI());
+            } else {
+                logger.debug("skipping " + resource.getURI());
+            }
+        }
+        return resultList;
     }
 
     /**

@@ -1,13 +1,14 @@
 package org.bgbm.biovel.drf.checklist;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.StmtIterator;
@@ -21,12 +22,10 @@ import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.tnr.msg.Source;
 import org.bgbm.biovel.drf.tnr.msg.Synonym;
 import org.bgbm.biovel.drf.tnr.msg.Taxon;
+import org.bgbm.biovel.drf.tnr.msg.TaxonBase;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
-import org.gbif.nameparser.NameParser;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
@@ -165,16 +164,11 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
         return queryString;
     }
 
-    private Taxon generateTaxon(Model model, Resource taxonR) {
+    private Taxon createTaxon(Model model, Resource taxonR) {
 
         Taxon taxon = new Taxon();
-        TaxonName taxonName = new TaxonName();
 
-        // TaxonName
-        taxonName.setFullName(queryClient.objectAsString(taxonR, RdfSchema.RDFS, "label"));
-        // TODO rename CanonicalName to scientificName? compare with dwc:scientificName
-        taxonName.setCanonicalName(queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "binomialName"));
-        taxonName.setRank(queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "taxonomicRank"));
+        TaxonName taxonName = createTaxonName(taxonR);
 
         // Taxon
         taxon.setTaxonName(taxonName);
@@ -183,18 +177,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
         URI typeUri = queryClient.objectAsURI(taxonR, RdfSchema.RDF, "type");
         taxon.setTaxonomicStatus(typeUri.getFragment());
 
-        // Sources are source references, re there others like data bases?
-        for ( StmtIterator refIt = taxonR.listProperties(model.getProperty(RdfSchema.EUNIS_SPECIES.schemaUri, "hasLegalReference")); refIt.hasNext();) {
-            try {
-            Source source = new Source();
-            Resource sourceR = refIt.next().getObject().asResource();
-            String sourceName = queryClient.objectAsString(sourceR, RdfSchema.RDFS, "source");
-            source.setName(sourceName);
-            taxon.getSources().add(source);
-            } catch (NoSuchElementException e) {
-                logger.debug("No statements for rdf:hasLegalReference" , e);
-            }
-        }
+        createSources(model, taxonR, taxon);
 
         // classification
         Classification c = null;
@@ -250,50 +233,111 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
         return taxon;
     }
 
+    /**
+     * @param model
+     * @param taxonR
+     * @param taxonBase
+     */
+    private void createSources(Model model, Resource taxonR, TaxonBase taxonBase) {
+        // Sources are source references, re there others like data bases?
+        for ( StmtIterator refIt = taxonR.listProperties(model.getProperty(RdfSchema.EUNIS_SPECIES.schemaUri, "hasLegalReference")); refIt.hasNext();) {
+            try {
+            Source source = new Source();
+            Resource sourceR = refIt.next().getObject().asResource();
+            String sourceName = queryClient.objectAsString(sourceR, RdfSchema.RDFS, "source");
+            source.setName(sourceName);
+            taxonBase.getSources().add(source);
+            } catch (NoSuchElementException e) {
+                logger.debug("No statements for rdf:hasLegalReference" , e);
+            }
+        }
+    }
+
+    /**
+     * @param taxonR
+     * @return
+     */
+    private TaxonName createTaxonName(Resource taxonR) {
+        TaxonName taxonName = new TaxonName();
+        // TaxonName
+        taxonName.setFullName(queryClient.objectAsString(taxonR, RdfSchema.RDFS, "label"));
+        // TODO rename CanonicalName to scientificName? compare with dwc:scientificName
+        taxonName.setCanonicalName(queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "binomialName"));
+        taxonName.setRank(queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "taxonomicRank"));
+        return taxonName;
+    }
 
 
 
-    private void generateSynonyms(JSONArray relatedTaxa, Response tnrResponse) {
 
-        Iterator<JSONObject> itrSynonyms = relatedTaxa.iterator();
-        while (itrSynonyms.hasNext()) {
+    private void createSynonyms(Resource taxonR, Response tnrResponse) {
 
-            JSONObject synonymjs = itrSynonyms.next();
-            String status = (String) synonymjs.get("taxonStatus");
-            if (status != null && status.equals("synonym")) {
+        List<Resource> synonymRList = queryForSynonyms(taxonR);
+
+        for (Resource synonymR  : synonymRList) {
+
+            URI typeUri = queryClient.objectAsURI(synonymR, RdfSchema.RDF, "type");
+            String status = typeUri.getFragment();
+
+
+            if (status != null && status.equals("SpeciesSynonym")) {
+
                 Synonym synonym = new Synonym();
-                TaxonName taxonName = new TaxonName();
 
-                String resName = (String) synonymjs.get("name");
-                taxonName.setFullName(resName);
-                NameParser ecatParser = new NameParser();
-                String nameCanonical = ecatParser.parseToCanonical(resName);
-                taxonName.setCanonicalName(nameCanonical);
-                synonym.setTaxonomicStatus((String) synonymjs.get("taxonStatus"));
+                TaxonName taxonName = createTaxonName(synonymR);
 
-                taxonName.setRank((String) synonymjs.get("rank"));
-
+                synonym.setTaxonomicStatus(status);
                 synonym.setTaxonName(taxonName);
+                synonym.setAccordingTo(queryClient.objectAsString(synonymR, RdfSchema.DWC, "nameAccordingToID"));
 
-                JSONObject scrutinyjs = (JSONObject) synonymjs.get("taxonomicScrutiny");
-                synonym.setAccordingTo((String) scrutinyjs.get("accordingTo"));
-
-                JSONObject sourcejs = (JSONObject) synonymjs.get("source");
-                String sourceUrl = (String) sourcejs.get("url");
-                String sourceDatasetID = (String) sourcejs.get("datasetID");
-                String sourceDatasetName = (String) sourcejs.get("datasetName");
-                String sourceName = "";
-
-                Source source = new Source();
-                source.setIdentifier(sourceDatasetID);
-                source.setDatasetName(sourceDatasetName);
-                source.setName(sourceName);
-                source.setUrl(sourceUrl);
-                synonym.getSources().add(source);
+                createSources(synonymR.getModel(), synonymR, synonym);
 
                 tnrResponse.getSynonym().add(synonym);
             }
         }
+    }
+
+    /**
+     * Returns all subjects that are related to the taxonR
+     * via the es:eunisPrimaryName property.
+     *
+     * @param taxonR
+     * @return
+     */
+    private List<Resource> queryForSynonyms(Resource taxonR) {
+
+        List<Resource> synonymRList = null;
+
+        try {
+            StringBuilder queryString = prepareQueryString();
+
+            queryString.append("DESCRIBE ?synonym es:eunisPrimaryName <" + taxonR.getURI() + ">");
+            logger.debug("\n" + queryString.toString());
+
+            Model model = queryClient.describe(queryString.toString());
+            synonymRList = listSynonymResources(model, taxonR);
+
+        } catch (DRFChecklistException e) {
+            logger.error("SPARQL query error in queryForSynonyms()", e);
+        } finally {
+            if(synonymRList == null) {
+                synonymRList = new ArrayList<Resource>(0);
+            }
+        }
+
+        return synonymRList;
+
+    }
+
+    /**
+     * @param model
+     * @return
+     */
+    private List<Resource> listSynonymResources(Model model, Resource taxonR) {
+        List<Resource> synonymRList;
+        Property filterProperty = model.createProperty(RdfSchema.EUNIS_SPECIES.schemaUri, "eunisPrimaryName");
+        synonymRList = queryClient.listResources(model, filterProperty, null, taxonR);
+        return synonymRList;
     }
 
     @Override
@@ -366,15 +410,13 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
         ResIterator subjectIt = model.listSubjects();
 
-        int i = -1;
         while (subjectIt.hasNext()) {
-            i++;
             Resource subject = subjectIt.next();
             Resource taxonR;
-            URI matchedResourceURI = queryClient.objectAsURI(subject, RdfSchema.SKOS_CORE, "exactMatch");
-            if(matchedResourceURI != null) {
+            StmtIterator exactMatches = subject.listProperties(subject.getModel().getProperty(RdfSchema.SKOS_CORE.schemaUri, "exactMatch"));
+            if(exactMatches.hasNext()) {
                 // need to follow the exactMatch uri in this case
-                taxonR = queryClient.getFromUri(matchedResourceURI);
+                taxonR = queryClient.getFromUri(exactMatches.next().getResource().getURI());
             } else {
                 // the subject is already a species
                 taxonR = subject;
@@ -414,7 +456,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
         // case when accepted name
         if(isAccepted) {
-            Taxon taxon = generateTaxon(model, taxonR);
+            Taxon taxon = createTaxon(model, taxonR);
             tnrResponse.setTaxon(taxon);
             tnrResponse.setMatchingNameType(NameType.TAXON);
             String matchingName = taxon.getTaxonName().getCanonicalName();
@@ -430,7 +472,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
             taxonR = queryClient.getFromUri(taxonUri);
             if(taxonR != null) {
-                Taxon taxon = generateTaxon(model, taxonR);
+                Taxon taxon = createTaxon(model, taxonR);
                 tnrResponse.setTaxon(taxon);
             } else {
                 logger.error("No accepted taxon found for " + synonymR.getURI());
@@ -441,8 +483,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
         }
 
         if(!skipThis && request.isAddSynonymy()) {
-            // add Synonyms
-//                generateSynonyms(records,tnrResponse);
+            createSynonyms(taxonR, tnrResponse);
         }
         logger.debug("processing " + (isAccepted ? "accepted taxon" : "synonym or other")  + " " + taxonR.getURI() + " DONE");
 

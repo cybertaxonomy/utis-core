@@ -39,20 +39,20 @@ public class EEA_BDC_ClientTest {
     @Test
     public void scientificNameExact_Accepted_Test() throws DRFChecklistException, TnrMsgException {
 
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Canis lupus", true);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Canis aureus", true);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
         assertEquals(1, tnrMsg.getQuery().get(0).getResponse().size());
         Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
-        assertEquals("Canis lupus", response.getMatchingNameString());
-        assertEquals("Canis lupus", response.getTaxon().getTaxonName().getCanonicalName());
+        assertEquals("Canis aureus", response.getMatchingNameString());
+        assertEquals("Canis aureus", response.getTaxon().getTaxonName().getCanonicalName());
         assertTrue(response.getSynonym().size() > 0);
     }
 
     @Test
     public void scientificNameLikeTest_1() throws DRFChecklistException, TnrMsgException {
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Cani", false);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameLike, "Cani", false);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
@@ -61,7 +61,7 @@ public class EEA_BDC_ClientTest {
 
     @Test
     public void scientificNameLikeTest_2() throws DRFChecklistException, TnrMsgException {
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Abies par", false);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameLike, "Abies par", false);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
