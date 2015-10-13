@@ -354,11 +354,11 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
             Query query = singleQueryFrom(tnrMsg);
             StringBuilder queryString = prepareQueryString();
 
-            String filter = "( ";
+            String filter;
             if(query.getRequest().getSearchMode().equals(SearchMode.scientificNameLike.name())) {
-                filter = filter + "regex(?name, \"" + query.getRequest().getQueryString() + "\")";
+                filter = "(regex(?name, \"" + query.getRequest().getQueryString() + "\"))";
             } else {
-                filter = filter + "?name = \"" + query.getRequest().getQueryString() + "\")";
+                filter = "(?name = \"" + query.getRequest().getQueryString() + "\")";
             }
 
             queryString.append(
