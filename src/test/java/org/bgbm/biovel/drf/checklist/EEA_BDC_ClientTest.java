@@ -65,7 +65,7 @@ public class EEA_BDC_ClientTest {
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
-        assertTrue(tnrMsg.getQuery().get(0).getResponse().size() > 1);
+        assertTrue(tnrMsg.getQuery().get(0).getResponse().size() == 1);
     }
 }
 
