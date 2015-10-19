@@ -81,6 +81,8 @@ public abstract class BaseChecklistClient<QC extends IQueryClient> extends Abstr
 
         SearchMode mode = TnrMsgUtils.getSearchMode(tnrMsg);
 
+        preExcuteQuery(tnrMsg);
+
         if(!getSearchModes().contains(mode)){
             throw new DRFChecklistException("Unsupported SearchMode");
         }
@@ -112,6 +114,22 @@ public abstract class BaseChecklistClient<QC extends IQueryClient> extends Abstr
         } else {
             logger.info("Search mode " + mode + " not supported by this ChecklistClient implementation");
         }
+
+        postExcuteQuery(tnrMsg);
+    }
+
+    /**
+     * @param tnrMsg
+     */
+    private void postExcuteQuery(TnrMsg tnrMsg) {
+     // empty stub, to be implemented by subclasses if necessary
+    }
+
+    /**
+     * @param tnrMsg
+     */
+    private void preExcuteQuery(TnrMsg tnrMsg) {
+        // empty stub, to be implemented by subclasses if necessary
     }
 
     /**

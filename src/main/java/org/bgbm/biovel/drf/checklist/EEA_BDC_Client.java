@@ -1,5 +1,6 @@
 package org.bgbm.biovel.drf.checklist;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -13,6 +14,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.bgbm.biovel.drf.client.ServiceProviderInfo;
 import org.bgbm.biovel.drf.query.SparqlClient;
+import org.bgbm.biovel.drf.store.TripleStore;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Query;
@@ -118,15 +120,19 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
         if(USE_REMOTE_SERVICE) {
             // use SPARQL end point
-            queryClient = new SparqlClient(SPARQL_ENDPOINT_URL, SparqlClient.Opmode.SPARCLE_ENDPOINT);
+            queryClient = new SparqlClient(SPARQL_ENDPOINT_URL);
         } else {
+            TripleStore tripleStore = new TripleStore();
             if(REFRESH_TDB) {
                 // use downloadable rdf
-                queryClient = new SparqlClient(RDF_FILE_URL, SparqlClient.Opmode.RDF_ARCHIVE);
-            }else {
-                // reuse existing TDB_STORE
-                queryClient = new SparqlClient(null, SparqlClient.Opmode.RDF_ARCHIVE);
+                try {
+                    tripleStore.loadIntoStore(RDF_FILE_URL);
+                } catch (IOException e) {
+                    logger.error("Loading " + RDF_FILE_URL + " into TripleStore failed",  e);
+                }
             }
+            queryClient = new SparqlClient(tripleStore);
+
         }
     }
 

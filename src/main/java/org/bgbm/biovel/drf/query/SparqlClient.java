@@ -9,26 +9,12 @@
 package org.bgbm.biovel.drf.query;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipUtils;
-import org.apache.commons.compress.utils.IOUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
@@ -45,10 +31,9 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.tdb.TDBFactory;
-import org.apache.jena.tdb.base.file.Location;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.EEA_BDC_Client.RdfSchema;
+import org.bgbm.biovel.drf.store.TripleStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,138 +50,30 @@ public class SparqlClient implements IQueryClient {
     private static final File userHomeDir = new File(System.getProperty("user.home"));
     private static final File utisHome = new File(userHomeDir, ".utis");
 
-    private Opmode opmode = null;
+    private String baseUri = null;
 
-    private final String baseUri;
+    private TripleStore tripleStore = null;
 
-    private File rdfFile = null;
+    /**
+     * A model for caching
+     */
+    private final Model cache = null;
 
-    private Dataset dataset = null;
-
-    public enum Opmode{
-        SPARCLE_ENDPOINT, RDF_ARCHIVE;
-    }
 
     /**
      *
      */
-    public SparqlClient(String baseUri, Opmode opmode) {
+    public SparqlClient(String baseUri) {
         this.baseUri = baseUri;
-        this.opmode = opmode;
-        if(opmode.equals(Opmode.RDF_ARCHIVE)) {
-            if(baseUri != null) {
-                this.rdfFile = downloadAndExtract();
-            }
-            try {
-                createStore();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
     }
 
     /**
-     *
+     * @param tripleStore
      */
-    private File downloadAndExtract() {
-        File expandedFile = null;
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        CloseableHttpResponse response;
-        try {
-            // 1. download and store in local filesystem in TMP
-            logger.debug("downloading rdf file from " + baseUri);
-            HttpGet httpGet = new HttpGet(baseUri);
-            response = httpClient.execute(httpGet);
-            String archiveFileName = FilenameUtils.getName(httpGet.getURI().getRawPath());
-            File archiveFile = new File(tmpDir, archiveFileName);
-            FileOutputStream fout = new FileOutputStream(archiveFile);
-            IOUtils.copy(response.getEntity().getContent(), new FileOutputStream(archiveFile));
-            fout.close();
-            logger.debug(archiveFile.length() + " bytes downloaded to " + archiveFile.getCanonicalPath());
-
-            // 2. extract the archive
-            FileInputStream fin = new FileInputStream(archiveFile);
-            InputStream ain = null;
-
-            if(GzipUtils.isCompressedFilename(archiveFileName)) {
-                logger.debug("Extracting GZIP file " + archiveFile.getCanonicalPath());
-                ain = new GzipCompressorInputStream(fin);
-            } else {
-                // TO UNZIP
-                //ArchiveInputStream ain = new ArchiveStreamFactory().createArchiveInputStream(ArchiveStreamFactory.ZIP, fin);
-            }
-
-            expandedFile = new File(tmpDir, GzipUtils.getUncompressedFilename(archiveFileName));
-            fout = new FileOutputStream(expandedFile);
-            IOUtils.copy(ain, fout);
-            fout.close();
-            fin.close();
-            logger.debug("Extracted to " + expandedFile.getCanonicalPath());
-        } catch (ClientProtocolException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return expandedFile;
+    public SparqlClient(TripleStore tripleStore) {
+        this.tripleStore = tripleStore;
     }
 
-    /**
-     * WARNING!!! This needs at least 1.5GB of heap space!!!
-     * set -Xmx1500M
-     *
-     * NOTE: The bulkloader is a faster way to load data into an empty dataset than just using the Jena update operations.
-     * the bulkloader also requires less memory
-     * It is accessed through the command line utility tdbloader.
-     *
-     * rm /tmp/drf_tnb_store/*; bin/tdbloader2 -l /tmp/drf_tnb_store /tmp/species.rdf
-     * @throws IOException
-     */
-    private void createStore() throws IOException {
-
-        boolean doClearStoreLocation = rdfFile != null;
-        boolean doLoadRdfFile = rdfFile != null;
-
-        File tdbStoreFolder = new File(utisHome, "tdb" + File.separator);
-        if(tdbStoreFolder.exists()) {
-            if( doClearStoreLocation ) {
-                FileUtils.cleanDirectory(tdbStoreFolder);
-            }
-        } else {
-            tdbStoreFolder.mkdirs();
-        }
-        Location location = Location.create(tdbStoreFolder.toString());
-
-        Dataset dataset = TDBFactory.createDataset(location);
-
-        logger.info("Using TDB store at " + location);
-
-        dataset.begin(ReadWrite.READ) ;
-        // Get model inside the transaction
-        Model model = dataset.getDefaultModel() ;
-        logger.info("Dataset in TDB has " + dataset.asDatasetGraph().size() + " named graphs");
-        logger.info("Model-size: " + model.size());
-        dataset.end();
-
-        if(doLoadRdfFile) {
-            dataset.begin(ReadWrite.WRITE);
-            model = dataset.getDefaultModel();
-            // parse InputStream as RDF in Turtle format
-            InputStream fin = new FileInputStream(rdfFile);
-            logger.info("loading RDF/XML into TDB store");
-            model.read(fin, null, "RDF/XML");
-            logger.info("loading RDF/XML done");
-            logger.info("Dataset in TDB has " + dataset.asDatasetGraph().size() + " named graphs");
-            logger.info("Model-size: " + model.size());
-            dataset.commit();
-            dataset.end();
-            logger.info("rdf loaded into TDB store at " + tdbStoreFolder);
-        }
-
-        this.dataset = dataset;
-    }
 
     public String select(String queryString) throws DRFChecklistException {
 
@@ -229,8 +106,8 @@ public class SparqlClient implements IQueryClient {
         QueryExecution qe = executionFor(queryString);
         Model result = null;
         try {
-            if(dataset != null) {
-                dataset.begin(ReadWrite.READ) ;
+            if(tripleStore != null) {
+                tripleStore.getDataset().begin(ReadWrite.READ);
             }
             result = qe.execDescribe();
             if(logger.isDebugEnabled()) {
@@ -263,8 +140,8 @@ public class SparqlClient implements IQueryClient {
             }
             logger.debug(msg.toString());
         }
-        if(dataset != null) {
-            dataset.end();
+        if(tripleStore != null) {
+            tripleStore.getDataset().end();
         }
 
         return result;
@@ -276,15 +153,17 @@ public class SparqlClient implements IQueryClient {
      */
     private QueryExecution executionFor(String queryString) {
 
-        QueryExecution qe;
-        if(opmode.equals(Opmode.SPARCLE_ENDPOINT)) {
+
+        if(baseUri != null) {
             Query query = QueryFactory.create(queryString);
-            qe = QueryExecutionFactory.sparqlService(baseUri, query);
-        } else {
-            // local TDB Store
-            qe = QueryExecutionFactory.create(queryString, dataset);
+            return QueryExecutionFactory.sparqlService(baseUri, query);
         }
-        return qe;
+        if(tripleStore != null) {
+            // local TDB Store
+            return QueryExecutionFactory.create(queryString, tripleStore.getDataset());
+        }
+
+        return null;
     }
 
     /**
@@ -454,7 +333,8 @@ public class SparqlClient implements IQueryClient {
     public Resource getFromUri(String uri) {
 
         Model model;
-        if(dataset != null) {
+        if(tripleStore != null) {
+            Dataset dataset = tripleStore.getDataset();
             dataset.begin(ReadWrite.READ) ;
             model = dataset.getDefaultModel();
             dataset.end();
@@ -482,13 +362,6 @@ public class SparqlClient implements IQueryClient {
      */
     public Resource getFromUri(URI matchedResourceURI) {
         return getFromUri(matchedResourceURI.toString());
-    }
-
-    /**
-     * @return the rdfFile
-     */
-    public File getRdfFile() {
-        return rdfFile;
     }
 
 

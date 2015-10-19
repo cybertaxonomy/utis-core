@@ -1,9 +1,11 @@
 package org.bgbm.biovel.drf.utils;
 
+import java.net.MalformedURLException;
 import java.util.UUID;
 
 import com.ibm.lsid.MalformedLSIDException;
 import com.ibm.lsid.client.LSIDAuthority;
+import com.sun.jndi.toolkit.url.Uri;
 
 public class IdentifierUtils {
 
@@ -33,6 +35,21 @@ public class IdentifierUtils {
         try {
            new LSIDAuthority(value);
         } catch (MalformedLSIDException e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param id
+     * @param idBaseUri
+     * @return
+     */
+    @SuppressWarnings("unused")
+    public static boolean checkURI(String id) {
+        try {
+            new Uri(id);
+        } catch (MalformedURLException e) {
             return false;
         }
         return true;
