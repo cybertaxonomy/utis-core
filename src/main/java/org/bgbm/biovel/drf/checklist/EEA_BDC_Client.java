@@ -3,7 +3,6 @@ package org.bgbm.biovel.drf.checklist;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -25,6 +24,7 @@ import org.bgbm.biovel.drf.tnr.msg.Taxon;
 import org.bgbm.biovel.drf.tnr.msg.TaxonBase;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
+import org.bgbm.biovel.drf.utils.IdentifierUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 
 public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
@@ -46,6 +46,8 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
             SearchMode.scientificNameLike,
+            SearchMode.vernacularNameExact,
+            SearchMode.vernacularNameLike,
             SearchMode.findByIdentifier);
 
     public static enum RdfSchema {
@@ -91,7 +93,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
     }
 
-    public enum subCheckListIds {
+    public enum SubCheckListId {
 
         eunis, natura_2000;
     }
@@ -100,8 +102,6 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
         Kingdom, Phylum, Clazz, Order, Family, Genus;
     }
-
-    private HashMap taxonIdTnrResponseMap;
 
     public EEA_BDC_Client() {
 
@@ -134,7 +134,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
     public ServiceProviderInfo buildServiceProviderInfo() {
 
         ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID, LABEL, DOC_URL, COPYRIGHT_URL, getSearchModes());
-        checklistInfo.addSubChecklist(new ServiceProviderInfo(subCheckListIds.eunis.name(), "EUNIS",
+        checklistInfo.addSubChecklist(new ServiceProviderInfo(SubCheckListId.eunis.name(), "EUNIS",
                 "http://www.eea.europa.eu/themes/biodiversity/eunis/eunis-db#tab-metadata",
                 "http://www.eea.europa.eu/legal/copyright", SEARCH_MODES));
         return checklistInfo;
@@ -356,7 +356,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
             String filter;
             if(query.getRequest().getSearchMode().equals(SearchMode.scientificNameLike.name())) {
-                filter = "(regex(?name, \"" + query.getRequest().getQueryString() + "\"))";
+                filter = "(regex(?name, \"^" + query.getRequest().getQueryString() + "\"))";
             } else {
                 filter = "(?name = \"" + query.getRequest().getQueryString() + "\")";
             }
@@ -387,18 +387,57 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
     @Override
     public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
+        List<Query> queryList = tnrMsg.getQuery();
+
+        // selecting one request as representative, only
+        // the search mode and addSynonmy flag are important
+        // for the further usage of the request object
+
+        for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
+
+            Query query = singleQueryFrom(tnrMsg);
+            StringBuilder queryString = prepareQueryString();
+
+            String filter;
+            if(query.getRequest().getSearchMode().equals(SearchMode.vernacularNameLike.name())) {
+                filter = "(regex(?name, \"" + query.getRequest().getQueryString() + "\"))";
+            } else {
+                // STR returns the lexical form of a literal so this matches literals in any language
+                filter = "(STR(?name)='" + query.getRequest().getQueryString() + "')";
+            }
+
+            queryString.append(
+                    "DESCRIBE ?eunisurl \n"
+                    + "WHERE {\n"
+                    + "     ?eunisurl dwc:vernacularName ?name . \n"
+                    + "     FILTER " + filter  + " \n"
+                    + "} \n"
+                    + "LIMIT " + MAX_PAGING_LIMIT + " OFFSET 0"
+                    );
+
+            logger.debug("\n" + queryString.toString());
+
+            Model model = queryClient.describe(queryString.toString());
+            updateQueriesWithResponse(model, checklistInfo, query);
+        }
 
     }
 
     @Override
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
+        resolveVernacularNamesExact(tnrMsg);
     }
 
     @Override
     public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
+        for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
+
+            Query query = singleQueryFrom(tnrMsg);
+            Resource taxonR = queryClient.getFromUri(query.getRequest().getQueryString());
+
+            Response response = tnrResponseFromResource(taxonR.getModel(), taxonR, query.getRequest());
+            query.getResponse().add(response);
+        }
     }
 
     private void updateQueriesWithResponse(Model model, ServiceProviderInfo ci, Query query)
@@ -497,9 +536,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
 
     @Override
     public boolean isSupportedIdentifier(String value) {
-        // return IdentifierUtils.checkLSID(value) ||
-        // IdentifierUtils.checkUUID(value);
-        return value != null;
+        return IdentifierUtils.checkURI(value);
     }
 
 }

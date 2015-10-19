@@ -3,7 +3,6 @@ package org.bgbm.biovel.drf.checklist;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.bgbm.biovel.drf.input.DRFCSVInputParser;
 import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.utils.TnrMsgException;
@@ -13,7 +12,6 @@ import org.junit.Test;
 
 public class EEA_BDC_ClientTest {
 
-    private static DRFCSVInputParser parser;
     static EEA_BDC_Client client;
 
     @BeforeClass
@@ -34,6 +32,7 @@ public class EEA_BDC_ClientTest {
         assertEquals("Canis dalmatinus", response.getMatchingNameString());
         assertEquals("Canis aureus", response.getTaxon().getTaxonName().getCanonicalName());
         assertTrue(response.getTaxon().getSources().size() > 0);
+        assertEquals(0, response.getSynonym().size());
     }
 
     @Test
@@ -66,6 +65,45 @@ public class EEA_BDC_ClientTest {
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
         assertTrue(tnrMsg.getQuery().get(0).getResponse().size() == 1);
+    }
+
+    @Test
+    public void scientificNameLikeTest_3() throws DRFChecklistException, TnrMsgException {
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameLike, "ies par", false);
+        client.queryChecklist(tnrMsg);
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+        assertTrue("The query string should not match anything in the middle of the name.", tnrMsg.getQuery().get(0).getResponse().size() == 0);
+    }
+
+    @Test
+    public void vernacularNameExactTest_1() throws DRFChecklistException, TnrMsgException {
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.vernacularNameExact, "Farkas", false);
+        client.queryChecklist(tnrMsg);
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+        assertTrue(tnrMsg.getQuery().get(0).getResponse().size() == 1);
+        tnrMsg.getQuery().get(0).getResponse().get(0).getTaxon().getTaxonName().getCanonicalName().equals("Canis lupus");
+    }
+
+    @Test
+    public void vernacularNameLikeTest_1() throws DRFChecklistException, TnrMsgException {
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.vernacularNameLike, "egwart", false);
+        client.queryChecklist(tnrMsg);
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+        assertTrue(tnrMsg.getQuery().get(0).getResponse().size() > 0);
+        tnrMsg.getQuery().get(0).getResponse().get(0).getTaxon().getTaxonName().getCanonicalName().equals("Cichorium intybus");
+    }
+
+    @Test
+    public void findByIdentifierTest_1() throws DRFChecklistException, TnrMsgException {
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.findByIdentifier, "http://eunis.eea.europa.eu/species/1367", false);
+        client.queryChecklist(tnrMsg);
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+        assertTrue(tnrMsg.getQuery().get(0).getResponse().size() == 1);
+        tnrMsg.getQuery().get(0).getResponse().get(0).getTaxon().getTaxonName().getCanonicalName().equals("Canis lupus");
     }
 }
 

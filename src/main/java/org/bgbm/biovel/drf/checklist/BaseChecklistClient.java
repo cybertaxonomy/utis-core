@@ -17,7 +17,6 @@ public abstract class BaseChecklistClient<QC extends IQueryClient> extends Abstr
 
     protected Logger logger = LoggerFactory.getLogger(BaseChecklistClient.class);
 
-
     protected final static String CHECKLIST_KEY = "checklist";
     protected final static String CHECKLIST_URL_KEY = "checklist_url";
     protected final static String COPYRIGHT_URL_KEY = "copyright_url";
