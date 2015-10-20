@@ -31,6 +31,8 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.EEA_BDC_Client.RdfSchema;
 import org.bgbm.biovel.drf.store.TripleStore;
@@ -57,14 +59,15 @@ public class SparqlClient implements IQueryClient {
     /**
      * A model for caching
      */
-    private final Model cache = null;
+    private Model cache = null;
 
 
     /**
-     *
+     * SparqlClient will use an internal cache
      */
     public SparqlClient(String baseUri) {
         this.baseUri = baseUri;
+        this.cache = ModelFactory.createDefaultModel();
     }
 
     /**
@@ -330,6 +333,15 @@ public class SparqlClient implements IQueryClient {
         }
     }
 
+    /**
+     * @param matchedResourceURI
+     * @return
+     * @throws DRFChecklistException
+     */
+    public Resource getFromUri(URI matchedResourceURI) {
+        return getFromUri(matchedResourceURI.toString());
+    }
+
     public Resource getFromUri(String uri) {
 
         Model model;
@@ -339,30 +351,23 @@ public class SparqlClient implements IQueryClient {
             model = dataset.getDefaultModel();
             dataset.end();
         } else {
+            model = cache;
             // FIXME the same uri resource is loaded from remote multiple times
             //       create an in memory model as cache for the models loaded
             //       in the getFromUri
             //       so that all resources loaded are put into that model
             //       clean up the cache when it reaches a specific size
             logger.debug("loading remote UriResource " + uri);
-            model = ModelFactory.createDefaultModel();
             model.read(uri);
         }
         if(logger.isDebugEnabled()) {
-            model.write(System.err);
+            // see https://jena.apache.org/documentation/io/rdf-output.html#examples
+            RDFDataMgr.write(System.err, model, RDFFormat.TURTLE_PRETTY);
         }
         return model.getResource(uri);
 
     }
 
-    /**
-     * @param matchedResourceURI
-     * @return
-     * @throws DRFChecklistException
-     */
-    public Resource getFromUri(URI matchedResourceURI) {
-        return getFromUri(matchedResourceURI.toString());
-    }
 
 
 }
