@@ -1,8 +1,6 @@
 package org.bgbm.biovel.drf.checklist;
 
-import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -13,8 +11,11 @@ import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.bgbm.biovel.drf.client.ServiceProviderInfo;
+import org.bgbm.biovel.drf.query.IQueryClient;
 import org.bgbm.biovel.drf.query.SparqlClient;
-import org.bgbm.biovel.drf.store.TripleStore;
+import org.bgbm.biovel.drf.query.TinkerPopClient;
+import org.bgbm.biovel.drf.store.Neo4jStore;
+import org.bgbm.biovel.drf.store.TDBStore;
 import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Query;
@@ -29,7 +30,7 @@ import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.utils.IdentifierUtils;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 
-public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
+public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
     /**
      *
@@ -40,8 +41,9 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
     public static final String COPYRIGHT_URL = "http://www.eea.europa.eu/legal/eea-data-policy";
     private static final String SPARQL_ENDPOINT_URL = "http://semantic.eea.europa.eu/sparql";
     private static final String RDF_FILE_URL = "http://localhost/download/species.rdf.gz"; // http://eunis.eea.europa.eu/rdf/species.rdf.gz
-    private static final boolean USE_REMOTE_SERVICE = true;
-    private static final boolean REFRESH_TDB = true;
+    private static final boolean USE_REMOTE_SERVICE = false;
+    private static final boolean REFRESH_TDB = false;
+    private static final Class<? extends IQueryClient> clientClass = TinkerPopClient.class;
 
     private static final int MAX_PAGING_LIMIT = 50;
 
@@ -118,21 +120,52 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
     @Override
     public void initQueryClient() {
 
-        if(USE_REMOTE_SERVICE) {
-            // use SPARQL end point
-            queryClient = new SparqlClient(SPARQL_ENDPOINT_URL);
-        } else {
-            TripleStore tripleStore = new TripleStore();
-            if(REFRESH_TDB) {
-                // use downloadable rdf
+        if(SparqlClient.class.isAssignableFrom(clientClass)) {
+            if(USE_REMOTE_SERVICE) {
+                // use SPARQL end point
+                //FIXME queryClient = new SparqlClient(SPARQL_ENDPOINT_URL);
+            } else {
+                TDBStore tripleStore;
                 try {
-                    tripleStore.loadIntoStore(RDF_FILE_URL);
-                } catch (IOException e) {
-                    logger.error("Loading " + RDF_FILE_URL + " into TripleStore failed",  e);
+                    tripleStore = new TDBStore();
+                } catch (Exception e1) {
+                    throw new RuntimeException("Creation of TripleStore failed",  e1);
                 }
-            }
-            queryClient = new SparqlClient(tripleStore);
+                if(REFRESH_TDB) {
+                    // use downloadable rdf
+                    try {
+                        tripleStore.loadIntoStore(RDF_FILE_URL);
+                    } catch (Exception e) {
+                        logger.error("Loading " + RDF_FILE_URL + " into TripleStore failed",  e);
+                    }
+                }
+              //FIXME queryClient = new SparqlClient(tripleStore);
 
+            }
+        } else if(TinkerPopClient.class.isAssignableFrom(clientClass)) {
+            if(USE_REMOTE_SERVICE) {
+                throw new RuntimeException("USE_REMOTE_SERVICE not suported by QueryClient class "+ clientClass);
+            } else {
+                Neo4jStore neo4jStore;
+                try {
+                    neo4jStore = new Neo4jStore();
+                } catch (Exception e1) {
+                    throw new RuntimeException("Creation of Neo4jStore failed",  e1);
+                }
+                if(REFRESH_TDB) {
+                    // use downloadable rdf
+                    try {
+                        neo4jStore.loadIntoStore(RDF_FILE_URL);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Loading " + RDF_FILE_URL + " into Neo4jStore failed",  e);
+                    }
+                }
+                queryClient = new TinkerPopClient(neo4jStore);
+
+            }
+
+        } else {
+            throw new RuntimeException("Unsuported QueryClient class "+ clientClass);
         }
     }
 
@@ -311,7 +344,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
      * @return
      */
     private List<Resource> queryForSynonyms(Resource taxonR) {
-
+ /* FIXME
         List<Resource> synonymRList = null;
 
         try {
@@ -332,7 +365,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
         }
 
         return synonymRList;
-
+*/ return null;
     }
 
     /**
@@ -377,9 +410,9 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
                     );
 
             logger.debug("\n" + queryString.toString());
-
+            /* FIXME
             Model model = queryClient.describe(queryString.toString());
-            updateQueriesWithResponse(model, checklistInfo, query);
+            updateQueriesWithResponse(model, checklistInfo, query); */
         }
     }
 
@@ -422,9 +455,9 @@ public class EEA_BDC_Client extends AggregateChecklistClient<SparqlClient> {
                     );
 
             logger.debug("\n" + queryString.toString());
-
+ /* FIXME
             Model model = queryClient.describe(queryString.toString());
-            updateQueriesWithResponse(model, checklistInfo, query);
+            updateQueriesWithResponse(model, checklistInfo, query); */
         }
 
     }

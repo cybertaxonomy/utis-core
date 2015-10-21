@@ -8,24 +8,13 @@
  */
 package org.bgbm.biovel.drf.query;
 
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.apache.jena.atlas.web.HttpException;
-import org.apache.jena.query.Dataset;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QueryFactory;
-import org.apache.jena.query.ReadWrite;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResIterator;
@@ -35,133 +24,103 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.EEA_BDC_Client.RdfSchema;
-import org.bgbm.biovel.drf.store.TDBStore;
+import org.bgbm.biovel.drf.store.Neo4jStore;
+import org.openrdf.query.BindingSet;
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.query.TupleQueryResult;
+import org.openrdf.repository.RepositoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ *
+ * Developer links:
+ * <ul>
+ * <li>https://github.com/tinkerpop/blueprints/wiki/Sail-Ouplementation</li>
+ * <li>https://github.com/tinkerpop/gremlin/wiki</li>
+ * <li>http://rdf4j.org/sesame/2.7/docs/users.docbook?view#section-repository-api3</li>
+ * <li>https://github.com/tinkerpop/gremlin/wiki/SPARQL-vs.-Gremlin</li>
+ * <li>https://github.com/tinkerpop/gremlin/wiki/Using-Gremlin-through-Java</li>
+ * </ul>
  * @author a.kohlbecker
  * @date Sep 30, 2015
  *
  */
-public class SparqlClient implements IQueryClient {
+public class TinkerPopClient implements IQueryClient {
 
-    protected Logger logger = LoggerFactory.getLogger(SparqlClient.class);
+    protected Logger logger = LoggerFactory.getLogger(TinkerPopClient.class);
 
-    private static final File userHomeDir = new File(System.getProperty("user.home"));
+    private final String baseUri = null;
 
-    private String baseUri = null;
-
-    private TDBStore tripleStore = null;
+    private Neo4jStore tripleStore = null;
 
     /**
      * A model for caching
      */
-    private Model cache = null;
+    private final Model cache = null;
 
-
-    /**
-     * SparqlClient will use an internal cache
-     */
-    public SparqlClient(String baseUri) {
-        this.baseUri = baseUri;
-        this.cache = ModelFactory.createDefaultModel();
-    }
 
     /**
      * @param tripleStore
      */
-    public SparqlClient(TDBStore tripleStore) {
+    public TinkerPopClient(Neo4jStore tripleStore) {
         this.tripleStore = tripleStore;
     }
 
+    public Model describe(String queryString) throws DRFChecklistException, QueryEvaluationException {
 
-    public String select(String queryString) throws DRFChecklistException {
+        // directly execute SPARQL queries in Gremlin over Sail-based graphs
+        // using the method SailGraph.executeSparql().
 
-        QueryExecution qe = executionFor(queryString);
-
-        try {
-            ResultSet results = qe.execSelect();
-            System.err.println(ResultSetFormatter.asText(results));
-        } catch (HttpException e) {
-            switch(e.getResponseCode()) {
-                // interpretation based on
-                // http://image.slidesharecdn.com/swtss1006sparql-100614020655-phpapp02/95/semantic-web-technologies-ss-2010-06-sparql-46-728.jpg?cb=1276481316
-                case 400:
-                    throw new DRFChecklistException("Malformed Query ?", e);
-                case 500:
-                    throw new DRFChecklistException("Query Request Refused ?", e);
-                default:
-                    throw e;
-            }
-        } finally {
-            // Important - free up resources used running the query
-            qe.close();
-        }
-
-        return null;
-    }
-
-    public Model describe(String queryString) throws DRFChecklistException {
-
-        QueryExecution qe = executionFor(queryString);
-        Model result = null;
-        try {
-            if(tripleStore != null) {
-                tripleStore.getDataset().begin(ReadWrite.READ);
-            }
-            result = qe.execDescribe();
-            if(logger.isDebugEnabled()) {
-                result.write(System.err);
-            }
-
-        } catch (HttpException e) {
-            switch(e.getResponseCode()) {
-                // interpretation based on
-                // http://image.slidesharecdn.com/swtss1006sparql-100614020655-phpapp02/95/semantic-web-technologies-ss-2010-06-sparql-46-728.jpg?cb=1276481316
-                case 400:
-                    throw new DRFChecklistException("Malformed Query ?", e);
-                case 500:
-                    throw new DRFChecklistException("Query Request Refused ?", e);
-                default:
-                    throw e;
-            }
-        } finally {
-            // Important - free up resources used running the query
-            qe.close();
-        }
+        TupleQuery qe = executionFor(queryString);
+        TupleQueryResult result = qe.evaluate();
+        System.err.println(result.toString());
 
         if(result != null && logger.isDebugEnabled()) {
             StringBuilder msg = new StringBuilder();
             msg.append("subjects in response:\n");
             int i = 1;
-            for(ResIterator it = result.listSubjects(); it.hasNext(); ++i) {
-                Resource res = it.next();
-                msg.append("    " + i + ": " + res.toString() + "\n");
+            try {
+                for(; result.hasNext(); ++i) {
+                    BindingSet res = result.next();
+                    msg.append("    " + i + ": " + res.toString() + "\n");
+                }
+            } catch (QueryEvaluationException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
             logger.debug(msg.toString());
         }
-        if(tripleStore != null) {
-            tripleStore.getDataset().end();
-        }
 
-        return result;
+        return null; //FIXME result;
     }
 
     /**
      * @param queryString
      * @return
      */
-    private QueryExecution executionFor(String queryString) {
+    private TupleQuery executionFor(String queryString) {
 
 
         if(baseUri != null) {
-            Query query = QueryFactory.create(queryString);
-            return QueryExecutionFactory.sparqlService(baseUri, query);
+            // see https://github.com/tinkerpop/blueprints/wiki/Sail-Implementation
+            // FIXME
+            throw new RuntimeException("Mode unsupported");
+            // Graph graph = new SparqlRepositorySailGraph(baseUri);
+            //return QueryExecutionFactory.sparqlService(baseUri, query);
         }
         if(tripleStore != null) {
             // local TDB Store
-            return QueryExecutionFactory.create(queryString, tripleStore.getDataset());
+            try {
+                return  tripleStore.connection().prepareTupleQuery(QueryLanguage.SPARQL, queryString);
+            } catch (MalformedQueryException | RepositoryException e) {
+                // TODO Auto-generated catch block
+                logger.error("Error while perparing query", e);
+            }
+
         }
 
         return null;
@@ -342,12 +301,14 @@ public class SparqlClient implements IQueryClient {
 
     public Resource getFromUri(String uri) {
 
-        Model model;
+        Model model = null;
         if(tripleStore != null) {
+            /* FIXME
             Dataset dataset = tripleStore.getDataset();
             dataset.begin(ReadWrite.READ) ;
             model = dataset.getDefaultModel();
             dataset.end();
+            */
         } else {
             model = cache;
             // FIXME the same uri resource is loaded from remote multiple times

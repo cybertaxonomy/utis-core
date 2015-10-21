@@ -9,11 +9,9 @@
 */
 package org.bgbm.biovel.drf.client;
 
-import java.io.IOException;
-import java.util.Properties;
-
-import org.bgbm.biovel.drf.query.SparqlClient;
-import org.bgbm.biovel.drf.store.TripleStore;
+import org.bgbm.biovel.drf.store.Neo4jStore;
+import org.bgbm.biovel.drf.store.TDBStore;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -21,18 +19,23 @@ import org.junit.Test;
  * @date Oct 5, 2015
  *
  */
-public class SparqlClientTest {
+public class StoreTests {
 
     private static final String RDF_FILE_URL = "http://localhost/download/species.rdf.gz"; // http://eunis.eea.europa.eu/rdf/species.rdf.gz
 
     @Test
-    public void testRdfGzipFile() throws IOException {
+    @Ignore
+    public void tDBStore_RdfGzipFile_test() throws Exception {
 
-        Properties sysprops = System.getProperties();
-        TripleStore tripleStore = new TripleStore();
+        TDBStore tripleStore = new TDBStore();
         tripleStore.loadIntoStore(RDF_FILE_URL);
-        SparqlClient client = new SparqlClient(RDF_FILE_URL);
+    }
 
+    @Test
+    public void neo4jStore_RdfGzipFile_test() throws Exception {
+
+        Neo4jStore graphStore = new Neo4jStore();
+        graphStore.loadIntoStore(RDF_FILE_URL);
     }
 
 }
