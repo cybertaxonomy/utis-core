@@ -3,7 +3,6 @@ package org.bgbm.biovel.drf.checklist;
 import java.io.PrintStream;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
@@ -39,10 +38,8 @@ import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sail.SailRepositoryConnection;
 
-import com.tinkerpop.blueprints.CloseableIterable;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Graph;
-import com.tinkerpop.blueprints.Index;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
 import com.tinkerpop.blueprints.impls.neo4j.Neo4jVertex;
@@ -462,16 +459,18 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
             String filter;
             String queryString = query.getRequest().getQueryString();
-            logger.debug("queryString: "+ queryString);
+            logger.debug("original queryString: "+ queryString);
             PipeFunction<Vertex, Boolean> matchFilter;
             if(query.getRequest().getSearchMode().equals(SearchMode.scientificNameLike.name())) {
                 filter = "(regex(?name, \"^" + queryString + "\"))";
                 matchFilter = queryClient.createStarttWithFilter(queryString);
-                queryString = queryString + "*";
+                queryString = "\"" + queryString + "*\"";
             } else {
                 filter = "(?name = \"" + queryString + "\")";
                 matchFilter = queryClient.createEqualsFilter(queryString);
             }
+
+            logger.debug("prepared queryString: "+ queryString);
 
             if(TUPLEQUERY) {
                 StringBuilder sparql = prepareQueryString();
@@ -521,51 +520,35 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
                 Profiler profiler = Profiler.newCpuProfiler(false);
 
                 logger.debug("Neo4jINDEX");
-                Collection<Vertex> resultSet = new ArrayList<Vertex>();
 
-                // Theoretically it should be sufficient to use a Gremlin Pipe to find
-                // the species nodes but gremlin is obviously not using the Neo4j index
-                // to it is far too slow ...
-                //
-                //GremlinPipeline<Graph, Object> pipe2 = new GremlinPipeline<Graph, Object>(
-                //        graph.getVertices("http://eunis.eea.europa.eu/rdf/species-schema.rdf#binomialName", queryString)
-                //        );
+                Graph graph = queryClient.graph();
+                pipe = new GremlinPipeline<Graph, Vertex>(
+                        graph.getVertices("value", queryString)
+                );
 
-                // ... therefore the Neo4j index is used directly
-                Neo4jGraph graph = (Neo4jGraph)queryClient.graph();
-                Index<Neo4jVertex> vertexAutoIndex = graph.getIndex("node_auto_index", Neo4jVertex.class);
-                CloseableIterable<Neo4jVertex> nodes = vertexAutoIndex.query("value", "\"" + queryString + "\"");
 
-                pipe = new GremlinPipeline<Graph, Vertex>(nodes);
+                // using the Neo4j index directly
+//                Neo4jGraph graph = (Neo4jGraph)queryClient.graph();
+//                Index<Neo4jVertex> vertexAutoIndex = graph.getIndex("node_auto_index", Neo4jVertex.class);
+//                CloseableIterable<Neo4jVertex> nodes = vertexAutoIndex.query("value", "\"" + queryString + "\"");
+//                pipe = new GremlinPipeline<Graph, Vertex>(nodes);
 
                 List<Vertex> vertices = new ArrayList<Vertex>();
                 pipe.in("http://eunis.eea.europa.eu/rdf/species-schema.rdf#binomialName").fill(vertices);
-
 
                 for(Vertex v : vertices) {
                     logger.debug("  " + v.toString());
                 }
 
-//                for (Iterator<Neo4jVertex> it = nodes.iterator(); it.hasNext();) {
-//                    Vertex v = it.next();
-//                    logger.debug("  " + v.toString());
-//                    vertices.add(graph.getVertex(v.getId()));
-//                }
-
-
-                nodes.close();
-
                 profiler.end(System.err);
                 updateQueriesWithResponse(vertices, checklistInfo, query);
             }
-
         }
     }
 
     @Override
     public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
-        // delegate to resolveScientificNamesExact, since the like search mode
-        // is handled in buildUriFromQueryList
+        // delegate to resolveScientificNamesExact,
         resolveScientificNamesExact(tnrMsg);
 
     }
