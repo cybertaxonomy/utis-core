@@ -16,7 +16,7 @@ import org.openrdf.sail.Sail;
 import org.openrdf.sail.SailException;
 
 import com.tinkerpop.blueprints.Graph;
-import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
+import com.tinkerpop.blueprints.impls.neo4j2.Neo4j2Graph;
 import com.tinkerpop.blueprints.oupls.sail.GraphSail;
 import com.tinkerpop.blueprints.oupls.sail.SailLoader;
 import com.tinkerpop.gremlin.java.GremlinPipeline;
@@ -28,7 +28,7 @@ import com.tinkerpop.gremlin.java.GremlinPipeline;
  */
 public class Neo4jStore extends Store{
 
-    private Neo4jGraph graph;
+    private Neo4j2Graph graph;
     private Sail sail;
     private SailRepository sailRepo;
 
@@ -47,8 +47,8 @@ public class Neo4jStore extends Store{
     @Override
     protected void initStoreEngine() throws Exception  {
 
-        graph = new Neo4jGraph(storeLocation.toString());
-        sail = new GraphSail<Neo4jGraph>(graph);
+        graph = new Neo4j2Graph(storeLocation.toString());
+        sail = new GraphSail<Neo4j2Graph>(graph);
         sail.initialize();
         sailRepo = new SailRepository(sail);
 
@@ -84,12 +84,12 @@ public class Neo4jStore extends Store{
 
 
     private long countEdges() {
-        GremlinPipeline<Neo4jGraph, Object> pipe = new GremlinPipeline<Neo4jGraph, Object>();
+        GremlinPipeline<Neo4j2Graph, Object> pipe = new GremlinPipeline<Neo4j2Graph, Object>();
         return pipe.start(graph).E().count();
     }
 
     private long countVertexes() {
-        GremlinPipeline<Neo4jGraph, Object> pipe = new GremlinPipeline<Neo4jGraph, Object>();
+        GremlinPipeline<Neo4j2Graph, Object> pipe = new GremlinPipeline<Neo4j2Graph, Object>();
         return pipe.start(graph).V().count();
     }
 

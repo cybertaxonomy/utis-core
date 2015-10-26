@@ -41,8 +41,8 @@ import org.openrdf.repository.sail.SailRepositoryConnection;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
-import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
-import com.tinkerpop.blueprints.impls.neo4j.Neo4jVertex;
+import com.tinkerpop.blueprints.impls.neo4j2.Neo4j2Graph;
+import com.tinkerpop.blueprints.impls.neo4j2.Neo4j2Vertex;
 import com.tinkerpop.blueprints.oupls.sail.GraphSail;
 import com.tinkerpop.gremlin.java.GremlinPipeline;
 import com.tinkerpop.pipes.PipeFunction;
@@ -64,7 +64,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
     private static final String SPECIES_RDF_FILE_URL = "http://localhost/download/species.rdf.gz"; // http://eunis.eea.europa.eu/rdf/species.rdf.gz
     private static final String LEGALREFS_RDF_FILE_URL = "http://localhost/download/legalrefs.rdf.gz"; // http://eunis.eea.europa.eu/rdf/legalrefs.rdf.gz
     private static final String REFERENCES_RDF_FILE_URL = "http://localhost/download/references.rdf.gz"; // http://eunis.eea.europa.eu/rdf/references.rdf.gz
-    private static final boolean REFRESH_TDB = false;
+    private static final boolean REFRESH_TDB = true;
 
     private static final Class<? extends IQueryClient> clientClass = TinkerPopClient.class;
 
@@ -194,7 +194,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
     private void updateStore(Store neo4jStore) {
         try {
             neo4jStore.loadIntoStore(
-                    //SPECIES_RDF_FILE_URL,
+                    SPECIES_RDF_FILE_URL,
                     LEGALREFS_RDF_FILE_URL,
                     REFERENCES_RDF_FILE_URL
                     );
@@ -482,7 +482,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
                         + "}"
                         );
 
-                Neo4jGraph neo4jGraph = (Neo4jGraph)queryClient.graph();
+                Neo4j2Graph neo4jGraph = (Neo4j2Graph)queryClient.graph();
                 Vertex v = neo4jGraph.getVertex(2);
 
                 SailRepositoryConnection connection = null;
@@ -693,7 +693,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
     /**
      * @param vertex
      */
-    private void printEdges(Neo4jVertex vertex) {
+    private void printEdges(Neo4j2Vertex vertex) {
         Iterable<Relationship> rels = vertex.getRawVertex().getRelationships();
         Iterator<Relationship> iterator = rels.iterator();
         if(iterator.hasNext()) {
