@@ -51,11 +51,15 @@ public class EEA_BDC_ClientTest {
 
     @Test
     public void scientificNameLikeTest_1() throws DRFChecklistException, TnrMsgException {
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameLike, "Cani", false);
+        String queryString = "Cani";
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameLike, queryString, false);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
         assertTrue(tnrMsg.getQuery().get(0).getResponse().size() > 1);
+        for(Response r : tnrMsg.getQuery().get(0).getResponse()) {
+            assertTrue(r.getMatchingNameString().startsWith(queryString));
+        }
     }
 
     @Test
