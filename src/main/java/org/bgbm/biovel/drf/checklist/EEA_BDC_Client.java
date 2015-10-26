@@ -1,22 +1,22 @@
 package org.bgbm.biovel.drf.checklist;
 
+import java.io.PrintStream;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.StmtIterator;
 import org.bgbm.biovel.drf.client.ServiceProviderInfo;
 import org.bgbm.biovel.drf.query.IQueryClient;
 import org.bgbm.biovel.drf.query.SparqlClient;
 import org.bgbm.biovel.drf.query.TinkerPopClient;
 import org.bgbm.biovel.drf.store.Neo4jStore;
+import org.bgbm.biovel.drf.store.Store;
 import org.bgbm.biovel.drf.store.TDBStore;
-import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Query.Request;
@@ -28,7 +28,28 @@ import org.bgbm.biovel.drf.tnr.msg.TaxonBase;
 import org.bgbm.biovel.drf.tnr.msg.TaxonName;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.utils.IdentifierUtils;
+import org.bgbm.biovel.drf.utils.Profiler;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
+import org.neo4j.graphdb.Relationship;
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.query.TupleQueryResult;
+import org.openrdf.repository.RepositoryException;
+import org.openrdf.repository.sail.SailRepositoryConnection;
+
+import com.tinkerpop.blueprints.CloseableIterable;
+import com.tinkerpop.blueprints.Direction;
+import com.tinkerpop.blueprints.Graph;
+import com.tinkerpop.blueprints.Index;
+import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
+import com.tinkerpop.blueprints.impls.neo4j.Neo4jVertex;
+import com.tinkerpop.blueprints.oupls.sail.GraphSail;
+import com.tinkerpop.gremlin.java.GremlinPipeline;
+import com.tinkerpop.pipes.PipeFunction;
+import com.tinkerpop.pipes.util.FastNoSuchElementException;
 
 public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
@@ -39,10 +60,15 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
     public static final String LABEL = "European Environment Agency (EEA) Biodiversity data centre (BDC)";
     public static final String DOC_URL = "http://semantic.eea.europa.eu/documentation";
     public static final String COPYRIGHT_URL = "http://www.eea.europa.eu/legal/eea-data-policy";
+
     private static final String SPARQL_ENDPOINT_URL = "http://semantic.eea.europa.eu/sparql";
-    private static final String RDF_FILE_URL = "http://localhost/download/species.rdf.gz"; // http://eunis.eea.europa.eu/rdf/species.rdf.gz
     private static final boolean USE_REMOTE_SERVICE = false;
+
+    private static final String SPECIES_RDF_FILE_URL = "http://localhost/download/species.rdf.gz"; // http://eunis.eea.europa.eu/rdf/species.rdf.gz
+    private static final String LEGALREFS_RDF_FILE_URL = "http://localhost/download/legalrefs.rdf.gz"; // http://eunis.eea.europa.eu/rdf/legalrefs.rdf.gz
+    private static final String REFERENCES_RDF_FILE_URL = "http://localhost/download/references.rdf.gz"; // http://eunis.eea.europa.eu/rdf/references.rdf.gz
     private static final boolean REFRESH_TDB = false;
+
     private static final Class<? extends IQueryClient> clientClass = TinkerPopClient.class;
 
     private static final int MAX_PAGING_LIMIT = 50;
@@ -76,7 +102,9 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         DWC("dwc", "http://rs.tdwg.org/dwc/terms/"),
         RDF("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
         RDFS("rdfs", "http://www.w3.org/2000/01/rdf-schema#"),
-        SKOS_CORE("scos_core", "http://www.w3.org/2004/02/skos/core#");
+        SKOS_CORE("scos_core", "http://www.w3.org/2004/02/skos/core#"),
+        DC("dc", "http://purl.org/dc/terms/source"),
+        DCTERMS("dcterms", "http://purl.org/dc/terms/");
 
         private String schemaUri;
         private String abbreviation;
@@ -93,6 +121,10 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         public String abbreviation() {
 
             return abbreviation;
+        }
+
+        public String propertyURI(String name) {
+            return schemaUri + name;
         }
 
     }
@@ -132,12 +164,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
                     throw new RuntimeException("Creation of TripleStore failed",  e1);
                 }
                 if(REFRESH_TDB) {
-                    // use downloadable rdf
-                    try {
-                        tripleStore.loadIntoStore(RDF_FILE_URL);
-                    } catch (Exception e) {
-                        logger.error("Loading " + RDF_FILE_URL + " into TripleStore failed",  e);
-                    }
+                    updateStore(tripleStore);
                 }
               //FIXME queryClient = new SparqlClient(tripleStore);
 
@@ -153,12 +180,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
                     throw new RuntimeException("Creation of Neo4jStore failed",  e1);
                 }
                 if(REFRESH_TDB) {
-                    // use downloadable rdf
-                    try {
-                        neo4jStore.loadIntoStore(RDF_FILE_URL);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Loading " + RDF_FILE_URL + " into Neo4jStore failed",  e);
-                    }
+                    updateStore(neo4jStore);
                 }
                 queryClient = new TinkerPopClient(neo4jStore);
 
@@ -166,6 +188,25 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
         } else {
             throw new RuntimeException("Unsuported QueryClient class "+ clientClass);
+        }
+    }
+
+    /**
+     * @param neo4jStore
+     */
+    private void updateStore(Store neo4jStore) {
+        try {
+            neo4jStore.loadIntoStore(
+                    //SPECIES_RDF_FILE_URL,
+                    LEGALREFS_RDF_FILE_URL,
+                    REFERENCES_RDF_FILE_URL
+                    );
+        } catch (Exception e) {
+            throw new RuntimeException("Loading "
+                    + SPECIES_RDF_FILE_URL + ", "
+                    + LEGALREFS_RDF_FILE_URL + ", "
+                    + REFERENCES_RDF_FILE_URL +
+                    " into Neo4jStore failed",  e);
         }
     }
 
@@ -203,20 +244,22 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         return queryString;
     }
 
-    private Taxon createTaxon(Model model, Resource taxonR) {
+    private Taxon createTaxon(Vertex v) {
 
         Taxon taxon = new Taxon();
 
-        TaxonName taxonName = createTaxonName(taxonR);
+        TaxonName taxonName = createTaxonName(v);
 
         // Taxon
         taxon.setTaxonName(taxonName);
-        taxon.setIdentifier(taxonR.getURI());
-        taxon.setAccordingTo(queryClient.objectAsString(taxonR, RdfSchema.DWC, "nameAccordingToID"));
-        URI typeUri = queryClient.objectAsURI(taxonR, RdfSchema.RDF, "type");
+        taxon.setIdentifier(v.getId().toString());
+        taxon.setAccordingTo(queryClient.relatedVertexValue(v, RdfSchema.DWC, "nameAccordingToID"));
+        URI typeUri = queryClient.relatedVertexURI(v, RdfSchema.RDF, "type");
         taxon.setTaxonomicStatus(typeUri.getFragment());
 
-        createSources(model, taxonR, taxon);
+        createSources(v, taxon);
+
+        /*
 
         // classification
         Classification c = null;
@@ -269,6 +312,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         if(c != null) {
             taxon.setClassification(c);
         }
+        */
         return taxon;
     }
 
@@ -277,18 +321,26 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
      * @param taxonR
      * @param taxonBase
      */
-    private void createSources(Model model, Resource taxonR, TaxonBase taxonBase) {
+    private void createSources(Vertex v, TaxonBase taxonBase) {
+
         // Sources are source references, re there others like data bases?
-        for ( StmtIterator refIt = taxonR.listProperties(model.getProperty(RdfSchema.EUNIS_SPECIES.schemaUri, "hasLegalReference")); refIt.hasNext();) {
-            try {
-            Source source = new Source();
-            Resource sourceR = refIt.next().getObject().asResource();
-            String sourceName = queryClient.objectAsString(sourceR, RdfSchema.RDFS, "source");
-            source.setName(sourceName);
-            taxonBase.getSources().add(source);
-            } catch (NoSuchElementException e) {
-                logger.debug("No statements for rdf:hasLegalReference" , e);
+
+        GremlinPipeline<Graph, Vertex> taxonPipe = new GremlinPipeline<Graph, Vertex>(v);
+
+        try {
+            List<Vertex> titleVs = taxonPipe
+                    .outE(RdfSchema.EUNIS_SPECIES.propertyURI("hasLegalReference")).inV()
+                    .outE(RdfSchema.DCTERMS.propertyURI("source")).inV().dedup()
+                    .outE(RdfSchema.DCTERMS.propertyURI("title")).inV()
+                    .toList();
+            for(Vertex tv : titleVs) {
+                Source source = new Source();
+                logger.error(tv.toString());
+                source.setName(tv.getProperty(GraphSail.VALUE).toString());
+                taxonBase.getSources().add(source);
             }
+        } catch (FastNoSuchElementException e) {
+            logger.debug("No sources found");
         }
     }
 
@@ -296,44 +348,54 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
      * @param taxonR
      * @return
      */
-    private TaxonName createTaxonName(Resource taxonR) {
+    private TaxonName createTaxonName(Vertex v) {
+
         TaxonName taxonName = new TaxonName();
         // TaxonName
-        taxonName.setFullName(queryClient.objectAsString(taxonR, RdfSchema.RDFS, "label"));
+        taxonName.setFullName(queryClient.relatedVertexValue(v, RdfSchema.RDFS, "label"));
         // TODO rename CanonicalName to scientificName? compare with dwc:scientificName
-        taxonName.setCanonicalName(queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "binomialName"));
-        taxonName.setRank(queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "taxonomicRank"));
+        taxonName.setCanonicalName(queryClient.relatedVertexValue(v, RdfSchema.EUNIS_SPECIES, "binomialName"));
+        taxonName.setRank(queryClient.relatedVertexValue(v, RdfSchema.EUNIS_SPECIES, "taxonomicRank"));
         return taxonName;
     }
 
 
+    private void createSynonyms(Vertex taxonV, Response tnrResponse) {
 
 
-    private void createSynonyms(Resource taxonR, Response tnrResponse) {
+        GremlinPipeline<Graph, Vertex> taxonPipe = new GremlinPipeline<Graph, Vertex>(taxonV);
 
-        List<Resource> synonymRList = queryForSynonyms(taxonR);
+        try {
+            List<Vertex> synonymVs = taxonPipe
+                    .inE(RdfSchema.EUNIS_SPECIES.propertyURI("eunisPrimaryName")).outV().dedup()
+                    .toList();
+            for(Vertex synonymV : synonymVs) {
+                String typeUri = queryClient.relatedVertexValue(synonymV, RdfSchema.RDF, "type");
+                String status = null;
+                try {
+                    status = URI.create(typeUri).getFragment();
+                } catch (Exception e) {
 
-        for (Resource synonymR  : synonymRList) {
+                }
 
-            URI typeUri = queryClient.objectAsURI(synonymR, RdfSchema.RDF, "type");
-            String status = typeUri.getFragment();
+                if (status != null && status.equals("SpeciesSynonym")) {
 
+                    Synonym synonym = new Synonym();
 
-            if (status != null && status.equals("SpeciesSynonym")) {
+                    TaxonName taxonName = createTaxonName(synonymV);
+                    synonym.setTaxonomicStatus(status);
+                    synonym.setTaxonName(taxonName);
+                    synonym.setAccordingTo(queryClient.relatedVertexValue(synonymV, RdfSchema.DWC, "nameAccordingToID"));
 
-                Synonym synonym = new Synonym();
+                    createSources(synonymV, synonym);
 
-                TaxonName taxonName = createTaxonName(synonymR);
-
-                synonym.setTaxonomicStatus(status);
-                synonym.setTaxonName(taxonName);
-                synonym.setAccordingTo(queryClient.objectAsString(synonymR, RdfSchema.DWC, "nameAccordingToID"));
-
-                createSources(synonymR.getModel(), synonymR, synonym);
-
-                tnrResponse.getSynonym().add(synonym);
+                    tnrResponse.getSynonym().add(synonym);
+                }
             }
+        } catch (FastNoSuchElementException e) {
+            logger.debug("No sources found");
         }
+
     }
 
     /**
@@ -374,9 +436,12 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
      */
     private List<Resource> listSynonymResources(Model model, Resource taxonR) {
         List<Resource> synonymRList;
+        /*
         Property filterProperty = model.createProperty(RdfSchema.EUNIS_SPECIES.schemaUri, "eunisPrimaryName");
         synonymRList = queryClient.listResources(model, filterProperty, null, taxonR);
         return synonymRList;
+         */
+        return null;
     }
 
     @Override
@@ -391,28 +456,109 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
 
             Query query = singleQueryFrom(tnrMsg);
-            StringBuilder queryString = prepareQueryString();
+
+            boolean  TUPLEQUERY = false;
+            boolean Neo4jINDEX = true;
 
             String filter;
+            String queryString = query.getRequest().getQueryString();
+            logger.debug("queryString: "+ queryString);
+            PipeFunction<Vertex, Boolean> matchFilter;
             if(query.getRequest().getSearchMode().equals(SearchMode.scientificNameLike.name())) {
-                filter = "(regex(?name, \"^" + query.getRequest().getQueryString() + "\"))";
+                filter = "(regex(?name, \"^" + queryString + "\"))";
+                matchFilter = queryClient.createStarttWithFilter(queryString);
+                queryString = queryString + "*";
             } else {
-                filter = "(?name = \"" + query.getRequest().getQueryString() + "\")";
+                filter = "(?name = \"" + queryString + "\")";
+                matchFilter = queryClient.createEqualsFilter(queryString);
             }
 
-            queryString.append(
-                    "DESCRIBE ?eunisurl \n"
-                    + "WHERE {\n"
-                    + "     ?eunisurl es:binomialName ?name . \n"
-                    + "     FILTER " + filter  + " \n"
-                    + "} \n"
-                    + "LIMIT " + MAX_PAGING_LIMIT + " OFFSET 0"
-                    );
+            if(TUPLEQUERY) {
+                StringBuilder sparql = prepareQueryString();
+                sparql.append(
+                        "SELECT ?eunisurl \n"
+                        + "WHERE {\n"
+                        + "     ?eunisurl es:binomialName ?name . \n"
+                        + "     FILTER " + filter  + " \n"
+                        + "}"
+                        );
 
-            logger.debug("\n" + queryString.toString());
-            /* FIXME
-            Model model = queryClient.describe(queryString.toString());
-            updateQueriesWithResponse(model, checklistInfo, query); */
+                Neo4jGraph neo4jGraph = (Neo4jGraph)queryClient.graph();
+                Vertex v = neo4jGraph.getVertex(2);
+
+                SailRepositoryConnection connection = null;
+                try {
+
+                    Profiler profiler = Profiler.newCpuProfiler(true);
+
+                    connection = queryClient.connection();
+                    TupleQuery tquery = connection.prepareTupleQuery(QueryLanguage.SPARQL, sparql.toString());
+                    TupleQueryResult tqresult = tquery.evaluate();
+                    queryClient.showResults(tqresult);
+
+                    profiler.end(System.err);
+
+                } catch (MalformedQueryException | RepositoryException | QueryEvaluationException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                } catch (Exception e1) {
+                    // yourkit
+                    e1.printStackTrace();
+                } finally {
+                    try {
+                        connection.close();
+                    } catch (RepositoryException e1) {
+                        // IGNORE //
+                    }
+                    connection = null;
+                }
+
+            }
+            GremlinPipeline<Graph, Vertex> pipe = null;
+
+            if(Neo4jINDEX) {
+
+                Profiler profiler = Profiler.newCpuProfiler(false);
+
+                logger.debug("Neo4jINDEX");
+                Collection<Vertex> resultSet = new ArrayList<Vertex>();
+
+                // Theoretically it should be sufficient to use a Gremlin Pipe to find
+                // the species nodes but gremlin is obviously not using the Neo4j index
+                // to it is far too slow ...
+                //
+                //GremlinPipeline<Graph, Object> pipe2 = new GremlinPipeline<Graph, Object>(
+                //        graph.getVertices("http://eunis.eea.europa.eu/rdf/species-schema.rdf#binomialName", queryString)
+                //        );
+
+                // ... therefore the Neo4j index is used directly
+                Neo4jGraph graph = (Neo4jGraph)queryClient.graph();
+                Index<Neo4jVertex> vertexAutoIndex = graph.getIndex("node_auto_index", Neo4jVertex.class);
+                CloseableIterable<Neo4jVertex> nodes = vertexAutoIndex.query("value", "\"" + queryString + "\"");
+
+                pipe = new GremlinPipeline<Graph, Vertex>(nodes);
+
+                List<Vertex> vertices = new ArrayList<Vertex>();
+                pipe.in("http://eunis.eea.europa.eu/rdf/species-schema.rdf#binomialName").fill(vertices);
+
+
+                for(Vertex v : vertices) {
+                    logger.debug("  " + v.toString());
+                }
+
+//                for (Iterator<Neo4jVertex> it = nodes.iterator(); it.hasNext();) {
+//                    Vertex v = it.next();
+//                    logger.debug("  " + v.toString());
+//                    vertices.add(graph.getVertex(v.getId()));
+//                }
+
+
+                nodes.close();
+
+                profiler.end(System.err);
+                updateQueriesWithResponse(vertices, checklistInfo, query);
+            }
+
         }
     }
 
@@ -426,6 +572,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
     @Override
     public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
+        /*
         List<Query> queryList = tnrMsg.getQuery();
 
         // selecting one request as representative, only
@@ -455,11 +602,11 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
                     );
 
             logger.debug("\n" + queryString.toString());
+         */
  /* FIXME
             Model model = queryClient.describe(queryString.toString());
             updateQueriesWithResponse(model, checklistInfo, query); */
-        }
-
+//        }
     }
 
     @Override
@@ -469,7 +616,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
     @Override
     public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
-        for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
+        /*for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
 
             Query query = singleQueryFrom(tnrMsg);
             Resource taxonR = queryClient.getFromUri(query.getRequest().getQueryString());
@@ -477,30 +624,24 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
             Response response = tnrResponseFromResource(taxonR.getModel(), taxonR, query.getRequest());
             query.getResponse().add(response);
         }
+        */
     }
 
-    private void updateQueriesWithResponse(Model model, ServiceProviderInfo ci, Query query)
-            throws DRFChecklistException {
+    private void updateQueriesWithResponse(List<Vertex> nodes, ServiceProviderInfo ci, Query query){
 
-        if (model == null) {
+        if (nodes == null) {
             return;
         }
 
-        ResIterator subjectIt = model.listSubjects();
-
-        while (subjectIt.hasNext()) {
-            Resource subject = subjectIt.next();
-            Resource taxonR;
-            StmtIterator exactMatches = subject.listProperties(subject.getModel().getProperty(RdfSchema.SKOS_CORE.schemaUri, "exactMatch"));
-            if(exactMatches.hasNext()) {
-                // need to follow the exactMatch uri in this case
-                taxonR = queryClient.getFromUri(exactMatches.next().getResource().getURI());
-            } else {
-                // the subject is already a species
-                taxonR = subject;
+        logger.debug("matching nodes:");
+        for (Vertex v : nodes) {
+            logger.debug("  " + v.toString());
+            printPropertyKeys(v, System.err);
+            if(v.getProperty("kind").equals("url")) {
+                logger.error("vertex of type 'url' expected, but was " + v.getProperty("type").equals("url"));
+                continue;
             }
-
-            Response tnrResponse = tnrResponseFromResource(model, taxonR, query.getRequest());
+            Response tnrResponse = tnrResponseFromResource(v, query.getRequest());
             if(tnrResponse != null) {
                 query.getResponse().add(tnrResponse);
             }
@@ -513,59 +654,78 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
      * @param request
      * @return
      */
-    private Response tnrResponseFromResource(Model model, Resource taxonR, Request request) {
+    @SuppressWarnings("unused")
+    private Response tnrResponseFromResource(Vertex taxonV, Request request) {
 
         Response tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
 
         SearchMode searchMode = SearchMode.valueOf(request.getSearchMode());
 
-        // Check for type to ignore the triple pointing from synonyms to accepted taxonUris
-        // only complete descriptions of taxa and synonym are relevant.
-        boolean isCompleteResource = taxonR.hasProperty(taxonR.getModel().getProperty(RdfSchema.RDF.schemaUri, "type"));
-        if(!isCompleteResource) {
-            return null;
-        }
+        GremlinPipeline<Graph, Vertex> pipe = new GremlinPipeline<Graph, Vertex>(taxonV);
 
-        String validName = queryClient.objectAsString(taxonR, RdfSchema.EUNIS_SPECIES, "validName");
-        boolean isAccepted = validName != null && validName.equals("true^^http://www.w3.org/2001/XMLSchema#boolean");
+        String validName = queryClient.relatedVertexValue(taxonV, RdfSchema.EUNIS_SPECIES, "validName");
+
+        boolean isAccepted = validName != null && validName.equals("true");
         boolean skipThis = false;
 
-        logger.debug("processing " + (isAccepted ? "accepted taxon" : "synonym or other")  + " " + taxonR.getURI());
+        logger.debug("processing " + (isAccepted ? "accepted taxon" : "synonym or other")  + " " + taxonV.getId());
 
         // case when accepted name
         if(isAccepted) {
-            Taxon taxon = createTaxon(model, taxonR);
+            Taxon taxon = createTaxon(taxonV);
             tnrResponse.setTaxon(taxon);
             tnrResponse.setMatchingNameType(NameType.TAXON);
             String matchingName = taxon.getTaxonName().getCanonicalName();
             tnrResponse.setMatchingNameString(matchingName);
 
-        } else {
+        }
+        else {
             // case when synonym
-            Resource synonymR = taxonR;
-            URI taxonUri = queryClient.objectAsURI(taxonR, RdfSchema.EUNIS_SPECIES, "eunisPrimaryName");
-            if(taxonUri == null) {
-                logger.error("no taxon uri found");
+            Vertex synonymV = taxonV;
+            taxonV = null;
+            try {
+                taxonV = synonymV.getEdges(Direction.OUT, RdfSchema.EUNIS_SPECIES.propertyURI("eunisPrimaryName")).iterator().next().getVertex(Direction.IN);
+            } catch(Exception e) {
+                logger.error("No accepted taxon found for " + synonymV.toString() + " (" + synonymV.getProperty(GraphSail.VALUE) + ")");
             }
 
-            taxonR = queryClient.getFromUri(taxonUri);
-            if(taxonR != null) {
-                Taxon taxon = createTaxon(model, taxonR);
+            if(taxonV != null) {
+                Taxon taxon = createTaxon(taxonV);
                 tnrResponse.setTaxon(taxon);
             } else {
-                logger.error("No accepted taxon found for " + synonymR.getURI());
             }
             tnrResponse.setMatchingNameType(NameType.SYNONYM);
-            String matchingName = queryClient.objectAsString(synonymR, RdfSchema.EUNIS_SPECIES, "binomialName");
+            String matchingName = queryClient.relatedVertexValue(synonymV, RdfSchema.EUNIS_SPECIES, "binomialName");
             tnrResponse.setMatchingNameString(matchingName);
         }
 
         if(!skipThis && request.isAddSynonymy()) {
-            createSynonyms(taxonR, tnrResponse);
+            createSynonyms(taxonV, tnrResponse);
         }
-        logger.debug("processing " + (isAccepted ? "accepted taxon" : "synonym or other")  + " " + taxonR.getURI() + " DONE");
 
+        logger.debug("processing " + (isAccepted ? "accepted taxon" : "synonym or other")  + " " + taxonV.getId() + " DONE");
         return tnrResponse;
+    }
+
+    /**
+     * @param vertex
+     */
+    private void printEdges(Neo4jVertex vertex) {
+        Iterable<Relationship> rels = vertex.getRawVertex().getRelationships();
+        Iterator<Relationship> iterator = rels.iterator();
+        if(iterator.hasNext()) {
+            Relationship rel = iterator.next();
+            System.err.println(rel.toString() + ": " + rel.getStartNode().toString() + "-[" +  rel.getType() + "]-" + rel.getEndNode().toString());
+        }
+    }
+
+    private void printPropertyKeys(Vertex v, PrintStream ps) {
+        StringBuilder out = new StringBuilder();
+        out.append(v.toString());
+        for(String key : v.getPropertyKeys()) {
+            out.append(key).append(": ").append(v.getProperty(key)).append(" ");
+        }
+        ps.println(out.toString());
     }
 
     @Override

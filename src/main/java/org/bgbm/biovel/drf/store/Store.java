@@ -45,6 +45,7 @@ public abstract class Store {
         storeLocation = new File(utisHome, storeName() + File.separator);
         if( !storeLocation.exists()) {
             storeLocation.mkdirs();
+            logger.debug("new store location created");
         }
         initStoreEngine();
     }
@@ -108,14 +109,19 @@ public abstract class Store {
      *  the location of the file to load the rdf triples from
      * @throws Exception
      */
-    public void loadIntoStore(String rdfFileUri) throws Exception {
-        File rdfFile = downloadAndExtract(rdfFileUri);
-        clear();
+    public void loadIntoStore(String ... rdfFileUri) throws Exception {
+        stopStoreEngine();
+//        clear();
         initStoreEngine();
-        load(rdfFile);
+        for (String uri : rdfFileUri) {
+            File localF = downloadAndExtract(uri);
+            load(localF);
+        }
     }
 
     protected abstract void initStoreEngine() throws Exception;
+
+    protected abstract void stopStoreEngine() throws Exception;
 
     protected abstract void load(File rdfFile) throws Exception;
 

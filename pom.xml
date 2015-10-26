@@ -16,6 +16,15 @@
       <id>onejar-maven-plugin.googlecode.com</id>
       <url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
     </repository>
+    <repository>
+      <id>EditRepository</id>
+      <url>http://dev.e-taxonomy.eu/mavenrepo/</url>
+    </repository>
+    <!-- codehaus mule repository needed for yourkit -->
+    <repository>
+      <id>CodehausMuleRepository</id>
+      <url>http://dist.codehaus.org/mule/dependencies/maven2/</url>
+    </repository>
   </repositories>
 
   <properties>
@@ -24,6 +33,7 @@
     <apache.jena.version>3.0.0</apache.jena.version>
     <tinkerpop.version>2.6.0</tinkerpop.version>
     <sesame.version>2.7.10</sesame.version><!-- should match the version as used in tinkerpop.blueprints -->
+    <neo4j.version>1.9.9</neo4j.version>
   </properties>
 
   <dependencies>
@@ -165,6 +175,26 @@
       <artifactId>sesame-repository-sail</artifactId>
       <version>${sesame.version}</version>
     </dependency>
+    <dependency>
+        <groupId>org.neo4j</groupId>
+        <artifactId>neo4j</artifactId>
+        <version>${neo4j.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.neo4j</groupId>
+        <artifactId>neo4j-ha</artifactId>
+        <version>${neo4j.version}</version>
+    </dependency>
+    <!-- yourkit profiler api controller -->
+    <!-- the 2015 version is not available via maven 
+      <dependency>
+        <groupId>com.yourkit</groupId>
+        <artifactId>yjp-controller-api-redist</artifactId>
+        <version>9.0.8</version>
+        <!- - <version>10.0.6</version> TODO find repo or put into our own - ->
+        <scope>test</scope>
+      </dependency>
+    -->
   </dependencies>
 
   <!-- === THIS IS ONLY NEEDED FOR DEPLOYMENT TO TAVERNA === <pluginRepositories>

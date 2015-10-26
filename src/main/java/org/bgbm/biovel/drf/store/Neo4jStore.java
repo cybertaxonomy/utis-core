@@ -11,7 +11,6 @@ package org.bgbm.biovel.drf.store;
 
 import java.io.File;
 
-import org.openrdf.repository.base.RepositoryConnectionBase;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.sail.Sail;
 import org.openrdf.sail.SailException;
@@ -29,6 +28,9 @@ import com.tinkerpop.gremlin.java.GremlinPipeline;
  */
 public class Neo4jStore extends Store{
 
+    private Neo4jGraph graph;
+    private Sail sail;
+    private SailRepository sailRepo;
 
     /**
      * @throws Exception
@@ -36,10 +38,6 @@ public class Neo4jStore extends Store{
     public Neo4jStore() throws Exception {
         super();
     }
-
-    private RepositoryConnectionBase connection;
-    private Neo4jGraph graph;
-    private Sail sail = null;
 
 
     /**
@@ -50,12 +48,22 @@ public class Neo4jStore extends Store{
     protected void initStoreEngine() throws Exception  {
 
         graph = new Neo4jGraph(storeLocation.toString());
-        sail = new GraphSail(graph);
+        sail = new GraphSail<Neo4jGraph>(graph);
         sail.initialize();
-        logger.info("Using Neo4jGraph store at " + storeLocation.toString());
-        logger.info("Neo4jGraph has " + sizeInfo());
+        sailRepo = new SailRepository(sail);
+
+//        logger.info("Using Neo4jGraph store at " + storeLocation.toString());
+//        logger.info("Neo4jGraph has " + sizeInfo());
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void stopStoreEngine() throws Exception {
+        sailRepo.shutDown();
+        sail.shutDown(); // should be none by the above command already
+    }
 
     /**
      * @throws Exception
@@ -65,14 +73,13 @@ public class Neo4jStore extends Store{
     protected void load(File rdfFile) throws Exception {
 
         SailLoader loader = new SailLoader(sail);
-//            loader.setBufferSize(100000);
+//            loader.setBufferSize(100000); // TODO optimize?
         logger.info("loading RDF/XML into Neo4jGraph store");
         loader.load(rdfFile);
         logger.info("loading RDF/XML done");
         logger.info("Neo4jGraph has " +  sizeInfo());
 
         logger.info("rdf loaded into Neo4jGraph store at " + storeLocation);
-        connection = new SailRepository(sail).getConnection();
     }
 
 
@@ -92,14 +99,6 @@ public class Neo4jStore extends Store{
 
 
     /**
-     * @return the connection
-     */
-    public RepositoryConnectionBase connection() {
-        return connection;
-    }
-
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -111,6 +110,12 @@ public class Neo4jStore extends Store{
         return graph;
     }
 
+    /**
+     * @return the sailRepo
+     */
+    public SailRepository getSailRepo() {
+        return sailRepo;
+    }
 
 
 }

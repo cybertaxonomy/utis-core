@@ -110,4 +110,13 @@ public class TDBStore extends Store {
         this.dataset = dataset;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void stopStoreEngine() throws Exception {
+        // TODO Auto-generated method stub
+
+    }
+
 }
