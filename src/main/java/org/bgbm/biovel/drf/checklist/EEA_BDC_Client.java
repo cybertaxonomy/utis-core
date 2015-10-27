@@ -12,6 +12,7 @@ import org.bgbm.biovel.drf.client.ServiceProviderInfo;
 import org.bgbm.biovel.drf.query.TinkerPopClient;
 import org.bgbm.biovel.drf.store.Neo4jStore;
 import org.bgbm.biovel.drf.store.Store;
+import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Query.Request;
@@ -27,7 +28,6 @@ import org.bgbm.biovel.drf.utils.Profiler;
 import org.bgbm.biovel.drf.utils.TnrMsgUtils;
 import org.neo4j.graphdb.Relationship;
 
-import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.neo4j2.Neo4j2Vertex;
@@ -47,8 +47,10 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
     public static final String COPYRIGHT_URL = "http://www.eea.europa.eu/legal/eea-data-policy";
 
     private static final String SPECIES_RDF_FILE_URL = "http://localhost/download/species.rdf.gz"; // http://eunis.eea.europa.eu/rdf/species.rdf.gz
+    private static final String TAXONOMY_RDF_FILE_URL = "http://localhost/download/taxonomy.rdf.gz"; // http://eunis.eea.europa.eu/rdf/taxonomy.rdf.gz
     private static final String LEGALREFS_RDF_FILE_URL = "http://localhost/download/legalrefs.rdf.gz"; // http://eunis.eea.europa.eu/rdf/legalrefs.rdf.gz
     private static final String REFERENCES_RDF_FILE_URL = "http://localhost/download/references.rdf.gz"; // http://eunis.eea.europa.eu/rdf/references.rdf.gz
+
     private static final boolean REFRESH_TDB = false;
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
@@ -101,7 +103,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
             return abbreviation;
         }
 
-        public String propertyURI(String name) {
+        public String property(String name) {
             return schemaUri + name;
         }
 
@@ -148,13 +150,15 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
     private void updateStore(Store neo4jStore) {
         try {
             neo4jStore.loadIntoStore(
-                    SPECIES_RDF_FILE_URL,
-                    LEGALREFS_RDF_FILE_URL,
-                    REFERENCES_RDF_FILE_URL
+//                    SPECIES_RDF_FILE_URL,
+                    TAXONOMY_RDF_FILE_URL
+//                    LEGALREFS_RDF_FILE_URL,
+//                    REFERENCES_RDF_FILE_URL
                     );
         } catch (Exception e) {
             throw new RuntimeException("Loading "
                     + SPECIES_RDF_FILE_URL + ", "
+                    + TAXONOMY_RDF_FILE_URL + ", "
                     + LEGALREFS_RDF_FILE_URL + ", "
                     + REFERENCES_RDF_FILE_URL +
                     " into Neo4jStore failed",  e);
@@ -205,20 +209,24 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         taxon.setTaxonName(taxonName);
         taxon.setIdentifier(v.getId().toString());
         taxon.setAccordingTo(queryClient.relatedVertexValue(v, RdfSchema.DWC, "nameAccordingToID"));
-        URI typeUri = queryClient.relatedVertexURI(v, RdfSchema.RDF, "type");
+        URI typeUri = queryClient.vertexURI(v, RdfSchema.RDF, "type");
         taxon.setTaxonomicStatus(typeUri.getFragment());
 
         createSources(v, taxon);
 
-        /*
-
         // classification
         Classification c = null;
-        Resource parentR = queryClient.objectAsResource(taxonR, RdfSchema.EUNIS_SPECIES, "taxonomy");
-        while (parentR != null) {
+        Vertex parentV= null;
+        try {
+            parentV = queryClient.relatedVertex(v, RdfSchema.EUNIS_SPECIES, "taxonomy");
+        } catch (Exception e) {
+            logger.error("No taxonomy information for " + v.toString());
+        }
 
-            String level = queryClient.objectAsString(parentR, RdfSchema.EUNIS_TAXONOMY, "level");
-            String parentTaxonName = queryClient.objectAsString(parentR, RdfSchema.EUNIS_TAXONOMY, "name");
+        while (parentV != null) {
+            logger.debug("parent taxon: " + parentV.toString());
+            String level = queryClient.relatedVertexValue(parentV, RdfSchema.EUNIS_TAXONOMY, "level");
+            String parentTaxonName = queryClient.relatedVertexValue(parentV, RdfSchema.EUNIS_TAXONOMY, "name");
 
             RankLevel rankLevel = null;
             try {
@@ -253,9 +261,9 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
                     break;
                 }
             }
-            Resource lastParentR = parentR;
-            parentR = queryClient.objectAsResource(parentR, RdfSchema.EUNIS_TAXONOMY, "parent");
-            if(lastParentR.equals(parentR)) {
+            Vertex lastParentV = parentV;
+            parentV = queryClient.relatedVertex(parentV, RdfSchema.EUNIS_TAXONOMY, "parent");
+            if(lastParentV.equals(parentV)) {
                 // avoid endless looping when data is not correct
                 break;
             }
@@ -263,7 +271,6 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         if(c != null) {
             taxon.setClassification(c);
         }
-        */
         return taxon;
     }
 
@@ -280,9 +287,9 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
         try {
             List<Vertex> titleVs = taxonPipe
-                    .outE(RdfSchema.EUNIS_SPECIES.propertyURI("hasLegalReference")).inV()
-                    .outE(RdfSchema.DCTERMS.propertyURI("source")).inV().dedup()
-                    .outE(RdfSchema.DCTERMS.propertyURI("title")).inV()
+                    .outE(RdfSchema.EUNIS_SPECIES.property("hasLegalReference")).inV()
+                    .outE(RdfSchema.DCTERMS.property("source")).inV().dedup()
+                    .outE(RdfSchema.DCTERMS.property("title")).inV()
                     .toList();
             for(Vertex tv : titleVs) {
                 Source source = new Source();
@@ -317,7 +324,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
         try {
             List<Vertex> synonymVs = taxonPipe
-                    .inE(RdfSchema.EUNIS_SPECIES.propertyURI("eunisPrimaryName")).outV().dedup()
+                    .inE(RdfSchema.EUNIS_SPECIES.property("eunisPrimaryName")).outV().dedup()
                     .toList();
             for(Vertex synonymV : synonymVs) {
                 String typeUri = queryClient.relatedVertexValue(synonymV, RdfSchema.RDF, "type");
@@ -379,7 +386,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
             pipe = new GremlinPipeline<Graph, Vertex>(hitVs);
 
             List<Vertex> vertices = new ArrayList<Vertex>();
-            pipe.in(RdfSchema.EUNIS_SPECIES.propertyURI("binomialName")).fill(vertices);
+            pipe.in(RdfSchema.EUNIS_SPECIES.property("binomialName")).fill(vertices);
 
             updateQueriesWithResponse(vertices, null, null, checklistInfo, query);
             profiler.end(System.err);
@@ -434,7 +441,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
             List<Vertex> vertices = new ArrayList<Vertex>();
             pipe = new GremlinPipeline<Graph, Vertex>(hitVs);
             Table table = new Table();
-            pipe.as("match").in(RdfSchema.DWC.propertyURI("vernacularName")).as("taxon").table(table).iterate();
+            pipe.as("match").in(RdfSchema.DWC.property("vernacularName")).as("taxon").table(table).iterate();
 
             updateQueriesWithResponse(
                     table.getColumn("taxon"), table.getColumn("match"),
@@ -540,7 +547,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
             Vertex synonymV = taxonV;
             taxonV = null;
             try {
-                taxonV = synonymV.getEdges(Direction.OUT, RdfSchema.EUNIS_SPECIES.propertyURI("eunisPrimaryName")).iterator().next().getVertex(Direction.IN);
+                taxonV = queryClient.relatedVertex(synonymV, RdfSchema.EUNIS_SPECIES, "eunisPrimaryName");
             } catch(Exception e) {
                 logger.error("No accepted taxon found for " + synonymV.toString() + " (" + synonymV.getProperty(GraphSail.VALUE) + ")");
             }

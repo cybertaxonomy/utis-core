@@ -3,6 +3,7 @@ package org.bgbm.biovel.drf.checklist;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.bgbm.biovel.drf.tnr.msg.Classification;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
@@ -48,6 +49,11 @@ public class EEA_BDC_ClientTest {
         assertEquals("Canis aureus", response.getMatchingNameString());
         assertEquals("Canis aureus", response.getTaxon().getTaxonName().getCanonicalName());
         assertTrue(response.getSynonym().size() > 0);
+        Classification c = response.getTaxon().getClassification();
+        assertEquals("Canidae", c.getFamily());
+        assertEquals("Carnivora", c.getOrder());
+        assertEquals("Chordata", c.getPhylum());
+        assertEquals("Animalia", c.getKingdom());
     }
 
     @Test

@@ -86,14 +86,42 @@ public class TinkerPopClient implements IQueryClient {
     }
 
     /**
-     * @param subject
+     * Returns the first Vertex of the edge with the property specified by
+     * <code>nameSpace</code> and <code>localName</code>. Both, directions
+     * of edges are taken into account whereas the OUT edge is tested first.
+     *
+     * @param v
+     * @param nameSpace
+     * @param localName
+     * @return
+     */
+    public Vertex relatedVertex(Vertex v, RdfSchema nameSpace, String localName) {
+        Vertex relatedV = null;
+        try {
+            relatedV = v.getEdges(Direction.OUT, nameSpace.property(localName)).iterator().next().getVertex(Direction.IN);
+        } catch (NoSuchElementException e) {
+            try {
+                relatedV = v.getEdges(Direction.IN, nameSpace.property(localName)).iterator().next().getVertex(Direction.OUT);
+            } catch (NoSuchElementException e2) {
+                logger.error("No taxonomy information for " + v.toString());
+            }
+        }
+        return relatedV;
+    }
+
+    /**
+     * Returns the <code>value</code> property of the first Vertex of the edge with the property specified by
+     * <code>nameSpace</code> and <code>localName</code>. Both, directions
+     * of edges are taken into account whereas the OUT edge is tested first.
+     *
+     * @param pipe
      * @param nameSpace
      * @param localName
      * @return
      */
     public String relatedVertexValue(GremlinPipeline<Graph, Vertex> pipe, RdfSchema nameSpace, String localName) {
         String txt = null;
-        String edgeLabel = nameSpace.propertyURI(localName);
+        String edgeLabel = nameSpace.property(localName);
         try {
             txt = pipe.outE(1, edgeLabel).inV().next().getProperty("value");
         } catch (FastNoSuchElementException e) {
@@ -114,9 +142,19 @@ public class TinkerPopClient implements IQueryClient {
         return txt;
     }
 
+    /**
+     * Returns the <code>value</code> property of the first Vertex of the edge with the property specified by
+     * <code>nameSpace</code> and <code>localName</code>. Both, directions
+     * of edges are taken into account whereas the OUT edge is tested first.
+     *
+     * @param v
+     * @param nameSpace
+     * @param localName
+     * @return
+     */
     public String relatedVertexValue(Vertex v, RdfSchema nameSpace, String localName) {
         String txt = null;
-        String edgeLabel = nameSpace.propertyURI(localName);
+        String edgeLabel = nameSpace.property(localName);
         try {
             txt = v.getEdges(Direction.OUT, edgeLabel).iterator().next().getVertex(Direction.IN)
                     .getProperty(GraphSail.VALUE);
@@ -139,7 +177,7 @@ public class TinkerPopClient implements IQueryClient {
      * @param localName
      * @return
      */
-    public URI relatedVertexURI(Vertex v, RdfSchema nameSpace, String localName) {
+    public URI vertexURI(Vertex v, RdfSchema nameSpace, String localName) {
         URI uri = null;
         try {
             if (v.getProperty(GraphSail.KIND).equals(GraphSail.URI)) {
