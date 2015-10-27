@@ -11,12 +11,9 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.lucene.queryParser.QueryParser;
 import org.bgbm.biovel.drf.client.ServiceProviderInfo;
-import org.bgbm.biovel.drf.query.IQueryClient;
-import org.bgbm.biovel.drf.query.SparqlClient;
 import org.bgbm.biovel.drf.query.TinkerPopClient;
 import org.bgbm.biovel.drf.store.Neo4jStore;
 import org.bgbm.biovel.drf.store.Store;
-import org.bgbm.biovel.drf.store.TDBStore;
 import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Query;
 import org.bgbm.biovel.drf.tnr.msg.Query.Request;
@@ -51,17 +48,10 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
     public static final String DOC_URL = "http://semantic.eea.europa.eu/documentation";
     public static final String COPYRIGHT_URL = "http://www.eea.europa.eu/legal/eea-data-policy";
 
-    private static final String SPARQL_ENDPOINT_URL = "http://semantic.eea.europa.eu/sparql";
-    private static final boolean USE_REMOTE_SERVICE = false;
-
     private static final String SPECIES_RDF_FILE_URL = "http://localhost/download/species.rdf.gz"; // http://eunis.eea.europa.eu/rdf/species.rdf.gz
     private static final String LEGALREFS_RDF_FILE_URL = "http://localhost/download/legalrefs.rdf.gz"; // http://eunis.eea.europa.eu/rdf/legalrefs.rdf.gz
     private static final String REFERENCES_RDF_FILE_URL = "http://localhost/download/references.rdf.gz"; // http://eunis.eea.europa.eu/rdf/references.rdf.gz
     private static final boolean REFRESH_TDB = false;
-
-    private static final Class<? extends IQueryClient> clientClass = TinkerPopClient.class;
-
-    private static final int MAX_PAGING_LIMIT = 50;
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
@@ -142,43 +132,16 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
     @Override
     public void initQueryClient() {
 
-        if(SparqlClient.class.isAssignableFrom(clientClass)) {
-            if(USE_REMOTE_SERVICE) {
-                // use SPARQL end point
-                //FIXME queryClient = new SparqlClient(SPARQL_ENDPOINT_URL);
-            } else {
-                TDBStore tripleStore;
-                try {
-                    tripleStore = new TDBStore();
-                } catch (Exception e1) {
-                    throw new RuntimeException("Creation of TripleStore failed",  e1);
-                }
-                if(REFRESH_TDB) {
-                    updateStore(tripleStore);
-                }
-              //FIXME queryClient = new SparqlClient(tripleStore);
-
+            Neo4jStore neo4jStore;
+            try {
+                neo4jStore = new Neo4jStore();
+            } catch (Exception e1) {
+                throw new RuntimeException("Creation of Neo4jStore failed",  e1);
             }
-        } else if(TinkerPopClient.class.isAssignableFrom(clientClass)) {
-            if(USE_REMOTE_SERVICE) {
-                throw new RuntimeException("USE_REMOTE_SERVICE not suported by QueryClient class "+ clientClass);
-            } else {
-                Neo4jStore neo4jStore;
-                try {
-                    neo4jStore = new Neo4jStore();
-                } catch (Exception e1) {
-                    throw new RuntimeException("Creation of Neo4jStore failed",  e1);
-                }
-                if(REFRESH_TDB) {
-                    updateStore(neo4jStore);
-                }
-                queryClient = new TinkerPopClient(neo4jStore);
-
+            if(REFRESH_TDB) {
+                updateStore(neo4jStore);
             }
-
-        } else {
-            throw new RuntimeException("Unsuported QueryClient class "+ clientClass);
-        }
+            queryClient = new TinkerPopClient(neo4jStore);
     }
 
     /**
