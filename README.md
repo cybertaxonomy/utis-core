@@ -1,25 +1,28 @@
 
 Synopsis
 ========
-This project contains all the components required to run the [BioVeL Data Refinement Workflow](https://wiki.biovel.eu/display/doc/Data+Refinement+Workflow)
+This project contains all the core libraries for the **Unified Taxonomic Information Service (UTIS)**. UTIS has been developed as  taxonomic backbone for the EU BON project (http://eubon.eu/).
 
-For more details regarding BioVeL, please visit [www.biovel.eu](www.biovel.eu)
+The main objective of EU BON is to build a substantial part of the Group on Earth Observation’s Biodiversity Observation Network (GEO BON). 
 
-BioVeL is funded by the European Commission 7th Framework Programme (FP7), through the grant agreement number 283359.
+This project has received funding from the European Union’s Seventh Programme for research, technological development and demonstration under grant agreement No 308454. 
+
 
 Installation
 ============
 
 
 
-Third-Party Dependencies
-========================
+Acknowledgement
+===============
 
-Libraries
----------
+This work is based on a development for the  BioVeL project, the [BioVeL Data Refinement Workflow](https://wiki.biovel.eu/display/doc/Data+Refinement+Workflow)
 
-Services
--------
+The original sources of the drf-workflow library are hosted at [https://github.com/BioVeL/drf-workflow.git](https://github.com/BioVeL/drf-workflow.git)
+
+For more details regarding BioVeL, please visit [www.biovel.eu](www.biovel.eu)
+
+BioVeL is funded by the European Commission 7th Framework Programme (FP7), through the grant agreement number 283359.
 
 License
 =======

@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="http://cybertaxonomy.org/utis/tnr/msg" xmlns:tns="http://cybertaxonomy.org/utis/tnr/msg"
+  xmlns:jxb="http://java.sun.com/xml/ns/jaxb" jxb:version="2.0"
+  xmlns:annox="http://annox.dev.java.net" jxb:extensionBindingPrefixes="annox"
+  elementFormDefault="qualified">
+  <xsd:element name="tnrMsg">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element maxOccurs="unbounded" minOccurs="1"
+          ref="tns:query">
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:complexType name="atomisedName">
+    <xsd:sequence>
+      <xsd:element name="genusOrUninomial">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="infragenericEpithet"
+        minOccurs="0">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="specificEpithet" minOccurs="0">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="infraspecificEpithet"
+        minOccurs="0">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="taxonName">
+    <xsd:sequence>
+      <xsd:element name="fullName">
+        <xsd:annotation>
+          <xsd:appinfo>
+            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty("The full scientific name, with authorship, publication date information and potentially further taxonomic information.")
+            </annox:annotate>
+          </xsd:appinfo>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="canonicalName" minOccurs="1">
+        <xsd:annotation>
+          <xsd:appinfo>
+            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty("Canonical name string consisting of only nomenclatural information, i.e. no authorship or taxonomic hierarchy information with the exception of the necessary placements within Genus or Species.")
+            </annox:annotate>
+          </xsd:appinfo>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="atomisedName" type="tns:atomisedName"
+        minOccurs="0">
+      </xsd:element>
+      <xsd:element name="authorship" maxOccurs="1" minOccurs="0">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="rank" minOccurs="0">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="nomenclaturalReference" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo>
+            <annox:annotate target="getter">
+                @com.wordnik.swagger.annotations.ApiModelProperty("A reference for the publication in which the scientificName was originally established under the rules of the associated nomenclaturalCode.")
+            </annox:annotate>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="source">
+    <xsd:sequence>
+      <xsd:element name="url">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:anyURI" />
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="identifier">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="datasetName">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="name">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="title" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo>
+            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty("The full not atomized source string.")
+            </annox:annotate>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:element name="Response">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element minOccurs="0" maxOccurs="1" ref="tns:taxon">
+          <xsd:annotation>
+            <xsd:appinfo>
+              <annox:annotate target="getter">
+                @com.wordnik.swagger.annotations.ApiModelProperty("The accepted taxon")
+              </annox:annotate>
+            </xsd:appinfo>
+          </xsd:annotation>
+        </xsd:element>
+        <xsd:element minOccurs="0" maxOccurs="unbounded"
+          name="otherNames">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element minOccurs="1" name="taxonName"
+                type="tns:taxonName">
+              </xsd:element>
+              <xsd:element name="url" type="xsd:anyURI">
+              <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The URL pointing to the original name record of the checklist provider.")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+            </xsd:element>
+              <xsd:element name="sources" minOccurs="0" maxOccurs="unbounded" type="tns:source">
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element minOccurs="0" maxOccurs="unbounded"
+          ref="tns:synonym">
+          <xsd:annotation>
+            <xsd:appinfo>
+              <annox:annotate target="getter">
+                @com.fasterxml.jackson.annotation.JsonProperty("synonyms")
+              </annox:annotate>
+              <annox:annotate target="getter">
+                @com.wordnik.swagger.annotations.ApiModelProperty( "The list synonyms related to the accepted taxon")
+              </annox:annotate>
+            </xsd:appinfo>
+          </xsd:annotation>
+        </xsd:element>
+        <xsd:element name="vernacularNames" type="xsd:string" maxOccurs="unbounded" minOccurs="0">
+        <xsd:annotation>
+            <xsd:appinfo>
+              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "A common or vernacular name.")
+              </annox:annotate>
+            </xsd:appinfo>
+          </xsd:annotation>
+        </xsd:element>
+      </xsd:sequence>
+      <xsd:attribute use="required" name="checklist" type="xsd:string">
+      </xsd:attribute>
+      <xsd:attribute use="required" name="checklist_id" type="xsd:string">
+      </xsd:attribute>
+      <xsd:attribute use="required" name="checklist_url"
+        type="xsd:string">
+      </xsd:attribute>
+      <xsd:attribute use="required" name="checklist_version"
+        type="xsd:string">
+      </xsd:attribute>
+      <xsd:attribute use="required" name="checklist_citation"
+        type="xsd:string">
+      </xsd:attribute>
+      <xsd:attribute name="matchingNameString" type="xsd:string">
+        <xsd:annotation>
+            <xsd:appinfo>
+              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "Refers to the name string of the accepted taxon, synonym or otherName which was matching the query string")
+              </annox:annotate>
+            </xsd:appinfo>
+          </xsd:annotation>
+      </xsd:attribute>
+      <xsd:attribute name="matchingNameType" type="tns:nameType">
+                <xsd:annotation>
+            <xsd:appinfo>
+              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "Reports which of the names was matching the query string:  'taxon', 'synonym', 'vernacularName', or 'otherName'")
+              </annox:annotate>
+            </xsd:appinfo>
+          </xsd:annotation>
+      </xsd:attribute>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="taxon">
+    <xsd:complexType>
+      <xsd:complexContent>
+        <xsd:extension base="tns:taxonBase">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" ref="tns:classification">
+            </xsd:element>
+            <xsd:element name="identifier" type="xsd:string"></xsd:element>
+          </xsd:sequence>
+        </xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="synonym">
+  <xsd:complexType>
+    <xsd:complexContent>
+      <xsd:extension base="tns:taxonBase">
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="classification">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element minOccurs="0" name="kingdom">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+          </xsd:simpleType>
+        </xsd:element>
+        <xsd:element minOccurs="0" name="phylum">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+          </xsd:simpleType>
+        </xsd:element>
+        <xsd:element minOccurs="0" name="class">
+          <xsd:annotation>
+            <xsd:appinfo>
+              <annox:annotate target="getter">@com.fasterxml.jackson.annotation.JsonProperty("class")
+              </annox:annotate>
+              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The full scientific name of the class in which the taxon is classified." )
+              </annox:annotate>
+            </xsd:appinfo>
+          </xsd:annotation>
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+          </xsd:simpleType>
+        </xsd:element>
+        <xsd:element minOccurs="0" name="order">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+          </xsd:simpleType>
+        </xsd:element>
+        <xsd:element minOccurs="0" name="family">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+          </xsd:simpleType>
+        </xsd:element>
+        <xsd:element minOccurs="0" name="genus">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+          </xsd:simpleType>
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="query">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="request">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="queryString" type="xsd:string">
+              <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">
+                      @com.wordnik.swagger.annotations.ApiModelProperty("The query string to match a scientific name, vernacular name or identifier depending on the searchMode")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+              <xsd:element name="searchMode" type="xsd:string">
+              <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">
+                      @com.wordnik.swagger.annotations.ApiModelProperty("Specified the search mode to be usedPossible search modes are: scientificNameExact, scientificNameLike (begins with), vernacularNameExact, vernacularNameLike (contains).")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+              <xsd:element name="addSynonymy" type="xsd:boolean">
+              <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">
+                      @com.wordnik.swagger.annotations.ApiModelProperty("Indicates whether the synonymy of the accepted taxon should be included into the response. Turning this option on may lead to an increased response time.")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element minOccurs="1" maxOccurs="unbounded"
+          ref="tns:Response">
+        </xsd:element>
+        <xsd:element name="clientStatus" maxOccurs="unbounded"
+          minOccurs="0">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="checklistId" type="xsd:string">
+              </xsd:element>
+              <xsd:element name="duration" type="xsd:decimal">
+                <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">
+                      @com.wordnik.swagger.annotations.ApiModelProperty("Duration of the request processing in the specific checklist client in milliseconds.")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+              <xsd:element name="statusMessage" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">
+                      @com.wordnik.swagger.annotations.ApiModelProperty( "Status of the request, possible values are 'ok', 'timeout', 'interrupted', 'unsupported search mode'.")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:simpleType name="nameType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="taxon"></xsd:enumeration>
+      <xsd:enumeration value="synonym"></xsd:enumeration>
+      <xsd:enumeration value="vernacularName"></xsd:enumeration>
+      <xsd:enumeration value="otherName"></xsd:enumeration>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="taxonBase">
+    <xsd:sequence>
+      <xsd:element minOccurs="1" name="taxonName"
+        type="tns:taxonName">
+      </xsd:element>
+      <xsd:element name="accordingTo" minOccurs="0">
+        <xsd:annotation>
+          <xsd:appinfo>
+            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The reference to the source in which the specific taxon concept circumscription is defined or implied - traditionally signified by the Latin 'sensu' or 'sec.' (from secundum, meaning 'according to').")
+            </annox:annotate>
+          </xsd:appinfo>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="url" type="xsd:anyURI">
+        <xsd:annotation>
+              <xsd:appinfo>
+                <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The URL pointing to the original record of the checklist provider.")
+                </annox:annotate>
+              </xsd:appinfo>
+            </xsd:annotation>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="taxonomicStatus">
+          <xsd:annotation>
+              <xsd:appinfo>
+                <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The taxonomic status string like 'invalid', 'misapplied', 'homotypic synonym', 'accepted', 'synonym'. Corresponds to http://rs.tdwg.org/dwc/terms/taxonomicStatus")
+                </annox:annotate>
+              </xsd:appinfo>
+          </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string"></xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="sources" type="tns:source" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>
