@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.lucene.queryParser.QueryParser;
 import org.bgbm.biovel.drf.client.ServiceProviderInfo;
 import org.bgbm.biovel.drf.query.IQueryClient;
 import org.bgbm.biovel.drf.query.SparqlClient;
@@ -64,7 +65,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
     private static final String SPECIES_RDF_FILE_URL = "http://localhost/download/species.rdf.gz"; // http://eunis.eea.europa.eu/rdf/species.rdf.gz
     private static final String LEGALREFS_RDF_FILE_URL = "http://localhost/download/legalrefs.rdf.gz"; // http://eunis.eea.europa.eu/rdf/legalrefs.rdf.gz
     private static final String REFERENCES_RDF_FILE_URL = "http://localhost/download/references.rdf.gz"; // http://eunis.eea.europa.eu/rdf/references.rdf.gz
-    private static final boolean REFRESH_TDB = true;
+    private static final boolean REFRESH_TDB = false;
 
     private static final Class<? extends IQueryClient> clientClass = TinkerPopClient.class;
 
@@ -459,12 +460,16 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
             String filter;
             String queryString = query.getRequest().getQueryString();
+            queryString = QueryParser.escape(queryString);
+            queryString = queryString.replace(" ", "\\ ");
             logger.debug("original queryString: "+ queryString);
+
             PipeFunction<Vertex, Boolean> matchFilter;
             if(query.getRequest().getSearchMode().equals(SearchMode.scientificNameLike.name())) {
                 filter = "(regex(?name, \"^" + queryString + "\"))";
                 matchFilter = queryClient.createStarttWithFilter(queryString);
-                queryString = "\"" + queryString + "*\"";
+                // need to escape white space and add wildcard to the end
+                queryString += "*";
             } else {
                 filter = "(?name = \"" + queryString + "\")";
                 matchFilter = queryClient.createEqualsFilter(queryString);
@@ -521,27 +526,14 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
                 logger.debug("Neo4jINDEX");
 
-                Graph graph = queryClient.graph();
-                pipe = new GremlinPipeline<Graph, Vertex>(
-                        graph.getVertices("value", queryString)
-                );
-
-
-                // using the Neo4j index directly
-//                Neo4jGraph graph = (Neo4jGraph)queryClient.graph();
-//                Index<Neo4jVertex> vertexAutoIndex = graph.getIndex("node_auto_index", Neo4jVertex.class);
-//                CloseableIterable<Neo4jVertex> nodes = vertexAutoIndex.query("value", "\"" + queryString + "\"");
-//                pipe = new GremlinPipeline<Graph, Vertex>(nodes);
+                ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
+                pipe = new GremlinPipeline<Graph, Vertex>(hitVs);
 
                 List<Vertex> vertices = new ArrayList<Vertex>();
-                pipe.in("http://eunis.eea.europa.eu/rdf/species-schema.rdf#binomialName").fill(vertices);
+                pipe.in(RdfSchema.EUNIS_SPECIES.propertyURI("binomialName")).fill(vertices);
 
-                for(Vertex v : vertices) {
-                    logger.debug("  " + v.toString());
-                }
-
-                profiler.end(System.err);
                 updateQueriesWithResponse(vertices, checklistInfo, query);
+                profiler.end(System.err);
             }
         }
     }
@@ -555,41 +547,47 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
     @Override
     public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
-        /*
         List<Query> queryList = tnrMsg.getQuery();
-
-        // selecting one request as representative, only
-        // the search mode and addSynonmy flag are important
-        // for the further usage of the request object
 
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
 
+            // selecting one request as representative, only
+            // the search mode and addSynonmy flag are important
+            // for the further usage of the request object
             Query query = singleQueryFrom(tnrMsg);
-            StringBuilder queryString = prepareQueryString();
 
-            String filter;
+            String queryString = query.getRequest().getQueryString();
+            queryString = QueryParser.escape(queryString);
+            queryString = queryString.replace(" ", "\\ ");
+            logger.debug("original queryString: "+ queryString);
             if(query.getRequest().getSearchMode().equals(SearchMode.vernacularNameLike.name())) {
-                filter = "(regex(?name, \"" + query.getRequest().getQueryString() + "\"))";
-            } else {
-                // STR returns the lexical form of a literal so this matches literals in any language
-                filter = "(STR(?name)='" + query.getRequest().getQueryString() + "')";
+                queryString = "*" + queryString + "*";
             }
 
-            queryString.append(
-                    "DESCRIBE ?eunisurl \n"
-                    + "WHERE {\n"
-                    + "     ?eunisurl dwc:vernacularName ?name . \n"
-                    + "     FILTER " + filter  + " \n"
-                    + "} \n"
-                    + "LIMIT " + MAX_PAGING_LIMIT + " OFFSET 0"
-                    );
+            logger.debug("prepared queryString: "+ queryString);
 
-            logger.debug("\n" + queryString.toString());
-         */
- /* FIXME
-            Model model = queryClient.describe(queryString.toString());
-            updateQueriesWithResponse(model, checklistInfo, query); */
-//        }
+            GremlinPipeline<Graph, Vertex> pipe = null;
+
+            Profiler profiler = Profiler.newCpuProfiler(false);
+
+            // by using the Neo4j index directly it is possible to
+            // take full advantage of the underlying Lucene search engine
+            ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
+
+//            List<String> matchingNames = new ArrayList<String>(hitVs.size());
+//            for(Vertex v : hitVs) {
+//                String matchValue = v.getProperty(GraphSail.VALUE).toString();
+//                matchingNames.add(matchValue);
+//                logger.debug("matchingName  " + matchValue);
+//            }
+
+            List<Vertex> vertices = new ArrayList<Vertex>();
+            pipe = new GremlinPipeline<Graph, Vertex>(hitVs);
+            pipe.in(RdfSchema.DWC.propertyURI("vernacularName")).fill(vertices);
+
+            updateQueriesWithResponse(vertices, checklistInfo, query);
+            profiler.end(System.err);
+        }
     }
 
     @Override
@@ -599,15 +597,24 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
     @Override
     public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
-        /*for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
 
+        for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
+
+            // FIXME query specific subchecklist
             Query query = singleQueryFrom(tnrMsg);
-            Resource taxonR = queryClient.getFromUri(query.getRequest().getQueryString());
+            String queryString = query.getRequest().getQueryString();
 
-            Response response = tnrResponseFromResource(taxonR.getModel(), taxonR, query.getRequest());
-            query.getResponse().add(response);
+            // by using the Neo4j index directly it is possible to
+            // take full advantage of the underlying Lucene search engine
+            queryString = QueryParser.escape(queryString);
+            ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
+            if(hitVs.size() > 0) {
+                Response response = tnrResponseFromResource(hitVs.get(0), query.getRequest());
+                query.getResponse().add(response);
+            } else if(hitVs.size() > 1) {
+                throw new DRFChecklistException("More than one node with the id '" + queryString + "' found");
+            }
         }
-        */
     }
 
     private void updateQueriesWithResponse(List<Vertex> nodes, ServiceProviderInfo ci, Query query){
@@ -616,7 +623,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
             return;
         }
 
-        logger.debug("matching nodes:");
+        logger.debug("matching taxon nodes:");
         for (Vertex v : nodes) {
             logger.debug("  " + v.toString());
             printPropertyKeys(v, System.err);

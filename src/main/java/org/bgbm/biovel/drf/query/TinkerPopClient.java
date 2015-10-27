@@ -22,6 +22,9 @@ import org.apache.jena.rdf.model.StmtIterator;
 import org.bgbm.biovel.drf.checklist.DRFChecklistException;
 import org.bgbm.biovel.drf.checklist.EEA_BDC_Client.RdfSchema;
 import org.bgbm.biovel.drf.store.Neo4jStore;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.index.AutoIndexer;
+import org.neo4j.graphdb.index.IndexHits;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
@@ -36,6 +39,8 @@ import org.slf4j.LoggerFactory;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.impls.neo4j2.Neo4j2Graph;
+import com.tinkerpop.blueprints.impls.neo4j2.Neo4j2Vertex;
 import com.tinkerpop.blueprints.oupls.sail.GraphSail;
 import com.tinkerpop.gremlin.java.GremlinPipeline;
 import com.tinkerpop.pipes.PipeFunction;
@@ -396,6 +401,24 @@ public class TinkerPopClient implements IQueryClient {
         }
 
         return uri;
+    }
+
+    /**
+     * by using the Neo4j index directly it is possible to
+     * take full advantage of the underlying Lucene search engine
+     *
+     * @param luceneQuery
+     * @return
+     */
+    public ArrayList<Vertex> vertexIndexQuery(String luceneQuery) {
+        Neo4j2Graph graph = (Neo4j2Graph)graph();
+        AutoIndexer<Node> nodeAutoIndex = graph.getRawGraph().index().getNodeAutoIndexer();
+        IndexHits<Node> nodes = nodeAutoIndex.getAutoIndex().query(luceneQuery);
+        ArrayList<Vertex> hitVs = new ArrayList<Vertex>();
+        while(nodes.hasNext()) {
+            hitVs.add(new Neo4j2Vertex(nodes.next(), graph));
+        }
+        return hitVs;
     }
 
     /**
