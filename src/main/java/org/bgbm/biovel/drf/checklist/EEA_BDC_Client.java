@@ -7,8 +7,6 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.lucene.queryParser.QueryParser;
 import org.bgbm.biovel.drf.client.ServiceProviderInfo;
 import org.bgbm.biovel.drf.query.TinkerPopClient;
@@ -306,7 +304,6 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         TaxonName taxonName = new TaxonName();
         // TaxonName
         taxonName.setFullName(queryClient.relatedVertexValue(v, RdfSchema.RDFS, "label"));
-        // TODO rename CanonicalName to scientificName? compare with dwc:scientificName
         taxonName.setCanonicalName(queryClient.relatedVertexValue(v, RdfSchema.EUNIS_SPECIES, "binomialName"));
         taxonName.setRank(queryClient.relatedVertexValue(v, RdfSchema.EUNIS_SPECIES, "taxonomicRank"));
         return taxonName;
@@ -351,63 +348,16 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
     }
 
-    /**
-     * Returns all subjects that are related to the taxonR
-     * via the es:eunisPrimaryName property.
-     *
-     * @param taxonR
-     * @return
-     */
-    private List<Resource> queryForSynonyms(Resource taxonR) {
- /* FIXME
-        List<Resource> synonymRList = null;
-
-        try {
-            StringBuilder queryString = prepareQueryString();
-
-            queryString.append("DESCRIBE ?synonym es:eunisPrimaryName <" + taxonR.getURI() + ">");
-            logger.debug("\n" + queryString.toString());
-
-            Model model = queryClient.describe(queryString.toString());
-            synonymRList = listSynonymResources(model, taxonR);
-
-        } catch (DRFChecklistException e) {
-            logger.error("SPARQL query error in queryForSynonyms()", e);
-        } finally {
-            if(synonymRList == null) {
-                synonymRList = new ArrayList<Resource>(0);
-            }
-        }
-
-        return synonymRList;
-*/ return null;
-    }
-
-    /**
-     * @param model
-     * @return
-     */
-    private List<Resource> listSynonymResources(Model model, Resource taxonR) {
-        List<Resource> synonymRList;
-        /*
-        Property filterProperty = model.createProperty(RdfSchema.EUNIS_SPECIES.schemaUri, "eunisPrimaryName");
-        synonymRList = queryClient.listResources(model, filterProperty, null, taxonR);
-        return synonymRList;
-         */
-        return null;
-    }
-
     @Override
     public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
-        List<Query> queryList = tnrMsg.getQuery();
-
-        // selecting one request as representative, only
-        // the search mode and addSynonmy flag are important
-        // for the further usage of the request object
-
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
 
+            // FIXME query specific subchecklist
+
+            // selecting one request as representative, only
+            // the search mode and addSynonmy flag are important
+            // for the further usage of the request object
             Query query = singleQueryFrom(tnrMsg);
 
             String queryString = query.getRequest().getQueryString();
@@ -448,6 +398,8 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         List<Query> queryList = tnrMsg.getQuery();
 
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
+
+            // FIXME query specific subchecklist
 
             // selecting one request as representative, only
             // the search mode and addSynonmy flag are important
@@ -553,12 +505,9 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
      * @param matchNode
      * @return
      */
-    @SuppressWarnings("unused")
     private Response tnrResponseFromResource(Vertex taxonV, Request request, Vertex matchNode, NameType matchType) {
 
         Response tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
-
-        SearchMode searchMode = SearchMode.valueOf(request.getSearchMode());
 
         GremlinPipeline<Graph, Vertex> pipe = new GremlinPipeline<Graph, Vertex>(taxonV);
 
