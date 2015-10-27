@@ -3,6 +3,7 @@ package org.bgbm.biovel.drf.checklist;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.bgbm.biovel.drf.tnr.msg.NameType;
 import org.bgbm.biovel.drf.tnr.msg.Response;
 import org.bgbm.biovel.drf.tnr.msg.TnrMsg;
 import org.bgbm.biovel.drf.utils.TnrMsgException;
@@ -97,7 +98,10 @@ public class EEA_BDC_ClientTest {
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
         assertTrue(tnrMsg.getQuery().get(0).getResponse().size() > 0);
-        tnrMsg.getQuery().get(0).getResponse().get(0).getTaxon().getTaxonName().getCanonicalName().equals("Cichorium intybus");
+        Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
+        assertEquals("Cichorium intybus", response.getTaxon().getTaxonName().getCanonicalName());
+        assertEquals("Wegwarte", response.getMatchingNameString());
+        assertEquals(NameType.VERNACULAR_NAME, response.getMatchingNameType());
     }
 
     @Test
