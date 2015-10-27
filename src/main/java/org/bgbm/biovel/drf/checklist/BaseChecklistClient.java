@@ -71,12 +71,9 @@ public abstract class BaseChecklistClient<QC extends IQueryClient> extends Abstr
      *
      * @param tnrMsg
      * @throws DRFChecklistException
-     *
-     * TODO remove parameter SearchMode, since it in now included in the TnrMsg.query.request
      */
     public void queryChecklist(TnrMsg tnrMsg) throws DRFChecklistException {
 
-//        TnrMsgUtils.updateWithSearchMode(tnrMsg, mode); // ...... remove
         TnrMsgUtils.assertSearchModeSet(tnrMsg, true);
 
         SearchMode mode = TnrMsgUtils.getSearchMode(tnrMsg);
