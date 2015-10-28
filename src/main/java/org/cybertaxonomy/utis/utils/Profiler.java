@@ -9,10 +9,7 @@
 */
 package org.cybertaxonomy.utis.utils;
 
-import java.io.IOException;
 import java.io.PrintStream;
-
-import com.yourkit.api.Controller;
 
 /**
  * @author a.kohlbecker
@@ -21,7 +18,7 @@ import com.yourkit.api.Controller;
  */
 public class Profiler {
 
-    private Controller yourkit;
+//    private Controller yourkit;
     private boolean yjp = false;
     private boolean cpu = false;
     private long start;
@@ -37,9 +34,9 @@ public class Profiler {
         if(yjp) {
             // https://www.yourkit.com/docs/java/api/com/yourkit/api/Controller.html
             try {
-                p.yourkit = new Controller();
-                p.yourkit.enableStackTelemetry();
-                p.yourkit.startCPUTracing(null);
+//                p.yourkit = new Controller();
+//                p.yourkit.enableStackTelemetry();
+//                p.yourkit.startCPUTracing(null);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -58,13 +55,13 @@ public class Profiler {
             err.append(time.toString()).append(" ms\n");
             if(yjp) {
                 if(cpu) {
-                    yourkit.stopCPUProfiling();
-                    String fileLocation = yourkit.captureSnapshot(com.yourkit.api.Controller.SNAPSHOT_WITHOUT_HEAP);
-                    err.append("Snapshot stored at: ").append(fileLocation).append("\n");
+//                    yourkit.stopCPUProfiling();
+//                    String fileLocation = yourkit.captureSnapshot(com.yourkit.api.Controller.SNAPSHOT_WITHOUT_HEAP);
+//                    err.append("Snapshot stored at: ").append(fileLocation).append("\n");
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         }
