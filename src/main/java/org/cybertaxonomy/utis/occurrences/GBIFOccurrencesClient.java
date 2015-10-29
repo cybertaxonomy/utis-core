@@ -55,6 +55,16 @@ public class GBIFOccurrencesClient extends BaseOccurrencesClient<RestClient> {
         return ocbankInfo;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isStatelessClient() {
+        // TODO move datasetCacheMap and orgCacheMap into
+        //      session state object to make this a stateless client
+        return false;
+    }
+
     @Override
     public String getOccurrences(String nameid) throws DRFChecklistException {
 

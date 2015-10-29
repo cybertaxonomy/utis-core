@@ -60,6 +60,14 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
      * {@inheritDoc}
      */
     @Override
+    public boolean isStatelessClient() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void initQueryClient() {
         queryClient = new SoapClient();
     }

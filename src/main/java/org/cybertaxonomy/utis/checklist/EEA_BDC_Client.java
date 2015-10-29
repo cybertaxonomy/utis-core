@@ -132,6 +132,14 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         super(checklistInfoJson);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isStatelessClient() {
+        return true;
+    }
+
     @Override
     public void initQueryClient() {
 
@@ -584,5 +592,6 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
     public boolean isSupportedIdentifier(String value) {
         return IdentifierUtils.checkURI(value);
     }
+
 
 }

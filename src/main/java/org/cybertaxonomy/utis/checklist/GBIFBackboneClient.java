@@ -58,6 +58,13 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
         queryClient = new RestClient(HTTP_HOST);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isStatelessClient() {
+        return true;
+    }
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {

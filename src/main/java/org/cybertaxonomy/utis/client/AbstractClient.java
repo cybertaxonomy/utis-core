@@ -51,4 +51,14 @@ public abstract class AbstractClient<QC extends IQueryClient> {
         this.spInfo = checklistInfo;
     }
 
+    /**
+     * Client implementations which retain any state information during
+     * request processing in the client bean instance itself should return false.
+     * Client bean which are not stateless must not be reused between multiple
+     * requests. For each request a new bean must be instantiated.
+     *
+     * @return
+     */
+    public abstract boolean isStatelessClient();
+
 }

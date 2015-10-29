@@ -47,6 +47,14 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
         super(checklistInfoJson);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isStatelessClient() {
+        return true;
+    }
+
 
     /**
      * {@inheritDoc}

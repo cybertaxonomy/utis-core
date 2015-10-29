@@ -61,6 +61,16 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         super(checklistInfoJson);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isStatelessClient() {
+        // TODO move taxonIdQueryMap and taxonIdMatchStringMap into
+        //      session state object to make this a stateless client
+        return false;
+    }
+
     @Override
     public void initQueryClient() {
         queryClient = new RestClient(HTTP_HOST);
