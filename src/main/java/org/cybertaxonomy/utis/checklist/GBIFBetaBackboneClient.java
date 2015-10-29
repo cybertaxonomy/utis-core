@@ -24,6 +24,7 @@ import org.cybertaxonomy.utis.utils.JSONUtils;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.slf4j.LoggerFactory;
 
 public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient> {
 
@@ -45,6 +46,14 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
 
     public GBIFBetaBackboneClient(String checklistInfoJson) throws DRFChecklistException {
         super(checklistInfoJson);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isStatelessClient() {
+        return true;
     }
 
 
@@ -69,7 +78,8 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
 
         try {
             uri = uriBuilder.build();
-            System.out.println("buildChecklistMap");
+            logger = LoggerFactory.getLogger(GBIFBetaBackboneClient.class);
+            logger.debug("building Checklist Map");
             String responseBody = queryClient.get(uri);
 
             JSONObject jsonResponse = JSONUtils.parseJsonToObject(responseBody);

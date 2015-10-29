@@ -11,10 +11,11 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.TinkerPopClient;
 import org.cybertaxonomy.utis.store.Neo4jStore;
-import org.cybertaxonomy.utis.store.Store;
+import org.cybertaxonomy.utis.store.Neo4jStoreManager;
 import org.cybertaxonomy.utis.tnr.msg.Classification;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Query;
+import org.cybertaxonomy.utis.tnr.msg.Query.Request;
 import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Source;
 import org.cybertaxonomy.utis.tnr.msg.Synonym;
@@ -22,7 +23,6 @@ import org.cybertaxonomy.utis.tnr.msg.Taxon;
 import org.cybertaxonomy.utis.tnr.msg.TaxonBase;
 import org.cybertaxonomy.utis.tnr.msg.TaxonName;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
-import org.cybertaxonomy.utis.tnr.msg.Query.Request;
 import org.cybertaxonomy.utis.utils.IdentifierUtils;
 import org.cybertaxonomy.utis.utils.Profiler;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
@@ -36,7 +36,7 @@ import com.tinkerpop.gremlin.java.GremlinPipeline;
 import com.tinkerpop.pipes.util.FastNoSuchElementException;
 import com.tinkerpop.pipes.util.structures.Table;
 
-public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
+public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> implements UpdatableStoreInfo {
 
     /**
      *
@@ -46,12 +46,18 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
     public static final String DOC_URL = "http://semantic.eea.europa.eu/documentation";
     public static final String COPYRIGHT_URL = "http://www.eea.europa.eu/legal/eea-data-policy";
 
-    private static final String SPECIES_RDF_FILE_URL = "http://localhost/download/species.rdf.gz"; // http://eunis.eea.europa.eu/rdf/species.rdf.gz
-    private static final String TAXONOMY_RDF_FILE_URL = "http://localhost/download/taxonomy.rdf.gz"; // http://eunis.eea.europa.eu/rdf/taxonomy.rdf.gz
-    private static final String LEGALREFS_RDF_FILE_URL = "http://localhost/download/legalrefs.rdf.gz"; // http://eunis.eea.europa.eu/rdf/legalrefs.rdf.gz
-    private static final String REFERENCES_RDF_FILE_URL = "http://localhost/download/references.rdf.gz"; // http://eunis.eea.europa.eu/rdf/references.rdf.gz
+//    private static final String DOWNLOAD_BASE_URL = "http://localhost/download/";
+    private static final String DOWNLOAD_BASE_URL = "http://eunis.eea.europa.eu/rdf/";
 
-    private static final boolean REFRESH_TDB = false;
+    private static final String SPECIES_RDF_FILE_URL = DOWNLOAD_BASE_URL + "species.rdf.gz";
+    private static final String TAXONOMY_RDF_FILE_URL = DOWNLOAD_BASE_URL + "taxonomy.rdf.gz";
+    private static final String LEGALREFS_RDF_FILE_URL = DOWNLOAD_BASE_URL + "legalrefs.rdf.gz";
+    private static final String REFERENCES_RDF_FILE_URL = DOWNLOAD_BASE_URL + "references.rdf.gz";
+
+    /**
+     * check for updates once a day
+     */
+    private static final int CHECK_UPDATE_MINUTES = 60 * 24;
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
@@ -129,40 +135,43 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         super(checklistInfoJson);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void initQueryClient() {
-
-            Neo4jStore neo4jStore;
-            try {
-                neo4jStore = new Neo4jStore();
-            } catch (Exception e1) {
-                throw new RuntimeException("Creation of Neo4jStore failed",  e1);
-            }
-            if(REFRESH_TDB) {
-                updateStore(neo4jStore);
-            }
-            queryClient = new TinkerPopClient(neo4jStore);
+    public boolean isStatelessClient() {
+        return true;
     }
 
     /**
-     * @param neo4jStore
+     * {@inheritDoc}
      */
-    private void updateStore(Store neo4jStore) {
-        try {
-            neo4jStore.loadIntoStore(
-//                    SPECIES_RDF_FILE_URL,
-                    TAXONOMY_RDF_FILE_URL
-//                    LEGALREFS_RDF_FILE_URL,
-//                    REFERENCES_RDF_FILE_URL
-                    );
-        } catch (Exception e) {
-            throw new RuntimeException("Loading "
-                    + SPECIES_RDF_FILE_URL + ", "
-                    + TAXONOMY_RDF_FILE_URL + ", "
-                    + LEGALREFS_RDF_FILE_URL + ", "
-                    + REFERENCES_RDF_FILE_URL +
-                    " into Neo4jStore failed",  e);
-        }
+    @Override
+    public String getTestUrl() {
+        return SPECIES_RDF_FILE_URL;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int pollIntervalMinutes() {
+        return CHECK_UPDATE_MINUTES;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String[] updatableResources() {
+        return new String[] {SPECIES_RDF_FILE_URL, TAXONOMY_RDF_FILE_URL, LEGALREFS_RDF_FILE_URL, REFERENCES_RDF_FILE_URL};
+    }
+
+    @Override
+    public void initQueryClient() {
+
+        Neo4jStore neo4jStore = Neo4jStoreManager.provideStoreFor(this);
+        queryClient = new TinkerPopClient(neo4jStore);
     }
 
     @Override
@@ -208,6 +217,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         // Taxon
         taxon.setTaxonName(taxonName);
         taxon.setIdentifier(v.getId().toString());
+        taxon.setUrl(v.getProperty(GraphSail.VALUE).toString());
         taxon.setAccordingTo(queryClient.relatedVertexValue(v, RdfSchema.DWC, "nameAccordingToID"));
         URI typeUri = queryClient.vertexURI(v, RdfSchema.RDF, "type");
         taxon.setTaxonomicStatus(typeUri.getFragment());
@@ -378,7 +388,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
 
             GremlinPipeline<Graph, Vertex> pipe = null;
 
-            Profiler profiler = Profiler.newCpuProfiler(false);
+//            Profiler profiler = Profiler.newCpuProfiler(false);
 
             logger.debug("Neo4jINDEX");
 
@@ -386,10 +396,14 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
             pipe = new GremlinPipeline<Graph, Vertex>(hitVs);
 
             List<Vertex> vertices = new ArrayList<Vertex>();
-            pipe.in(RdfSchema.EUNIS_SPECIES.property("binomialName")).fill(vertices);
+            pipe.in(RdfSchema.EUNIS_SPECIES.property("binomialName"),
+                    RdfSchema.DWC.property("subgenus"), // EUNIS has no subgenera but this is added for future compatibility
+                    RdfSchema.DWC.property("genus")
+                    // no taxa for higher ranks in EUNIS
+                    ).fill(vertices);
 
             updateQueriesWithResponse(vertices, null, null, checklistInfo, query);
-            profiler.end(System.err);
+//            profiler.end(System.err);
         }
     }
 
@@ -469,7 +483,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
             queryString = QueryParser.escape(queryString);
             ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
             if(hitVs.size() > 0) {
-                Response response = tnrResponseFromResource(hitVs.get(0), query.getRequest(), null, null);
+                Response response = tnrResponseFromResource(hitVs.get(0), query.getRequest(), null, null, checklistInfo);
                 query.getResponse().add(response);
             } else if(hitVs.size() > 1) {
                 throw new DRFChecklistException("More than one node with the id '" + queryString + "' found");
@@ -488,7 +502,10 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         for (Vertex v : taxonNodes) {
             i++;
             logger.debug("  " + v.toString());
-            printPropertyKeys(v, System.err);
+            if(logger.isTraceEnabled()) {
+                logger.trace("updateQueriesWithResponse() : printing propertyKeys to System.err");
+                printPropertyKeys(v, System.err);
+            }
             if(v.getProperty("kind").equals("url")) {
                 logger.error("vertex of type 'url' expected, but was " + v.getProperty("type").equals("url"));
                 continue;
@@ -497,7 +514,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
             if(matchNodes != null) {
                 matchNode = matchNodes.get(i);
             }
-            Response tnrResponse = tnrResponseFromResource(v, query.getRequest(), matchNode, matchType);
+            Response tnrResponse = tnrResponseFromResource(v, query.getRequest(), matchNode, matchType, ci);
             if(tnrResponse != null) {
                 query.getResponse().add(tnrResponse);
             }
@@ -510,11 +527,12 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
      * @param request
      * @param matchType
      * @param matchNode
+     * @param ci
      * @return
      */
-    private Response tnrResponseFromResource(Vertex taxonV, Request request, Vertex matchNode, NameType matchType) {
+    private Response tnrResponseFromResource(Vertex taxonV, Request request, Vertex matchNode, NameType matchType, ServiceProviderInfo ci) {
 
-        Response tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
+        Response tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
 
         GremlinPipeline<Graph, Vertex> pipe = new GremlinPipeline<Graph, Vertex>(taxonV);
 
@@ -602,5 +620,6 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
     public boolean isSupportedIdentifier(String value) {
         return IdentifierUtils.checkURI(value);
     }
+
 
 }

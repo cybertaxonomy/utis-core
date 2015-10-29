@@ -62,6 +62,14 @@ public class Species2000ColClient extends BaseChecklistClient<RestClient> {
      * {@inheritDoc}
      */
     @Override
+    public boolean isStatelessClient() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void initQueryClient() {
         queryClient = new RestClient(HTTP_HOST);
 

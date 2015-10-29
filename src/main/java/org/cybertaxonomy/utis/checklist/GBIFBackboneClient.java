@@ -24,6 +24,7 @@ import org.cybertaxonomy.utis.utils.JSONUtils;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.slf4j.LoggerFactory;
 
 public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
 
@@ -58,6 +59,13 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
         queryClient = new RestClient(HTTP_HOST);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isStatelessClient() {
+        return true;
+    }
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {
@@ -77,7 +85,8 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
             do {
                 uriBuilder.setParameter("offset", Integer.toString(offset));
                 uri = uriBuilder.build();
-                System.out.println("buildChecklistMap");
+                logger = LoggerFactory.getLogger(GBIFBackboneClient.class);
+                logger.debug("building Checklist Map");
                 String responseBody = queryClient.get(uri);
 
                 JSONObject jsonResponse = JSONUtils.parseJsonToObject(responseBody);

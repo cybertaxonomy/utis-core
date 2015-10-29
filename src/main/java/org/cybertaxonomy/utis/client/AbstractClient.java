@@ -4,11 +4,10 @@ import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 import org.cybertaxonomy.utis.query.IQueryClient;
 import org.cybertaxonomy.utis.utils.JSONUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class AbstractClient<QC extends IQueryClient> {
 
-    protected Logger logger = LoggerFactory.getLogger(AbstractClient.class);
+    protected Logger logger;
 
     private ServiceProviderInfo spInfo;
 
@@ -51,5 +50,15 @@ public abstract class AbstractClient<QC extends IQueryClient> {
     public void setChecklistInfo(ServiceProviderInfo checklistInfo) {
         this.spInfo = checklistInfo;
     }
+
+    /**
+     * Client implementations which retain any state information during
+     * request processing in the client bean instance itself should return false.
+     * Client bean which are not stateless must not be reused between multiple
+     * requests. For each request a new bean must be instantiated.
+     *
+     * @return
+     */
+    public abstract boolean isStatelessClient();
 
 }
