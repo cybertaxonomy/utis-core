@@ -217,6 +217,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
         // Taxon
         taxon.setTaxonName(taxonName);
         taxon.setIdentifier(v.getId().toString());
+        taxon.setUrl(v.getProperty(GraphSail.VALUE).toString());
         taxon.setAccordingTo(queryClient.relatedVertexValue(v, RdfSchema.DWC, "nameAccordingToID"));
         URI typeUri = queryClient.vertexURI(v, RdfSchema.RDF, "type");
         taxon.setTaxonomicStatus(typeUri.getFragment());
