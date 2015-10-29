@@ -84,7 +84,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
             do {
                 uriBuilder.setParameter("offset", Integer.toString(offset));
                 uri = uriBuilder.build();
-                System.out.println("buildChecklistMap");
+                logger.debug("building Checklist Map");
                 String responseBody = queryClient.get(uri);
 
                 JSONObject jsonResponse = JSONUtils.parseJsonToObject(responseBody);

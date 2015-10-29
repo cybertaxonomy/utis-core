@@ -77,7 +77,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
 
         try {
             uri = uriBuilder.build();
-            System.out.println("buildChecklistMap");
+            logger.debug("building Checklist Map");
             String responseBody = queryClient.get(uri);
 
             JSONObject jsonResponse = JSONUtils.parseJsonToObject(responseBody);

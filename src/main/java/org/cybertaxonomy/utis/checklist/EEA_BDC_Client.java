@@ -57,7 +57,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
     /**
      * check for updates once a day
      */
-    private static final int CHECK_UPDATE_MINUTES = 1; //60 * 24;
+    private static final int CHECK_UPDATE_MINUTES = 60 * 24;
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
@@ -482,7 +482,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
             queryString = QueryParser.escape(queryString);
             ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
             if(hitVs.size() > 0) {
-                Response response = tnrResponseFromResource(hitVs.get(0), query.getRequest(), null, null);
+                Response response = tnrResponseFromResource(hitVs.get(0), query.getRequest(), null, null, checklistInfo);
                 query.getResponse().add(response);
             } else if(hitVs.size() > 1) {
                 throw new DRFChecklistException("More than one node with the id '" + queryString + "' found");
@@ -501,7 +501,10 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
         for (Vertex v : taxonNodes) {
             i++;
             logger.debug("  " + v.toString());
-            printPropertyKeys(v, System.err);
+            if(logger.isTraceEnabled()) {
+                logger.trace("updateQueriesWithResponse() : printing propertyKeys to System.err");
+                printPropertyKeys(v, System.err);
+            }
             if(v.getProperty("kind").equals("url")) {
                 logger.error("vertex of type 'url' expected, but was " + v.getProperty("type").equals("url"));
                 continue;
@@ -510,7 +513,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
             if(matchNodes != null) {
                 matchNode = matchNodes.get(i);
             }
-            Response tnrResponse = tnrResponseFromResource(v, query.getRequest(), matchNode, matchType);
+            Response tnrResponse = tnrResponseFromResource(v, query.getRequest(), matchNode, matchType, ci);
             if(tnrResponse != null) {
                 query.getResponse().add(tnrResponse);
             }
@@ -523,11 +526,12 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
      * @param request
      * @param matchType
      * @param matchNode
+     * @param ci
      * @return
      */
-    private Response tnrResponseFromResource(Vertex taxonV, Request request, Vertex matchNode, NameType matchType) {
+    private Response tnrResponseFromResource(Vertex taxonV, Request request, Vertex matchNode, NameType matchType, ServiceProviderInfo ci) {
 
-        Response tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
+        Response tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
 
         GremlinPipeline<Graph, Vertex> pipe = new GremlinPipeline<Graph, Vertex>(taxonV);
 
