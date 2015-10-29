@@ -74,23 +74,6 @@ public class EEA_BDC_ClientTest {
         assertEquals("Animalia", c.getKingdom());
     }
 
-
-    @Test
-    public void family_Test() throws DRFChecklistException, TnrMsgException {
-
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Cerambycidae", true);
-        client.queryChecklist(tnrMsg);
-        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
-        System.out.println(outputXML);
-        assertTrue(tnrMsg.getQuery().get(0).getResponse().size() > 20);
-        Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
-        Classification c = response.getTaxon().getClassification();
-        assertEquals("Cerambycidae", c.getFamily());
-        assertEquals("Coleoptera", c.getOrder());
-        assertEquals("Arthropoda", c.getPhylum());
-        assertEquals("Animalia", c.getKingdom());
-    }
-
     @Test
     public void scientificNameLikeTest_1() throws DRFChecklistException, TnrMsgException {
         String queryString = "Cani";
