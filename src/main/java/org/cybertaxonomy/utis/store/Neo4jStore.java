@@ -10,7 +10,16 @@
 package org.cybertaxonomy.utis.store;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Date;
 
+import org.apache.commons.httpclient.util.DateParseException;
+import org.apache.commons.httpclient.util.DateUtil;
+import org.apache.commons.io.FileUtils;
+import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.store.FSDirectory;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.sail.Sail;
 import org.openrdf.sail.SailException;
@@ -19,7 +28,6 @@ import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.impls.neo4j2.Neo4j2Graph;
 import com.tinkerpop.blueprints.oupls.sail.GraphSail;
 import com.tinkerpop.blueprints.oupls.sail.SailLoader;
-import com.tinkerpop.gremlin.java.GremlinPipeline;
 
 /**
  * @author a.kohlbecker
@@ -31,7 +39,10 @@ public class Neo4jStore extends Store{
     private Neo4j2Graph graph;
     private Sail sail;
     private SailRepository sailRepo;
-    private String storeName = "neo4j";
+    private final static String DEFAULT_STORE_NAME = "neo4j";
+    private String storeName = DEFAULT_STORE_NAME;
+
+    private Date lastModified = null;
 
 
     /**
@@ -39,6 +50,7 @@ public class Neo4jStore extends Store{
      */
     public Neo4jStore() throws Exception {
         super();
+        this.storeName = "neo4j";
     }
 
     public Neo4jStore(String storeName) throws Exception {
@@ -59,8 +71,8 @@ public class Neo4jStore extends Store{
         sail.initialize();
         sailRepo = new SailRepository(sail);
 
-//        logger.info("Using Neo4jGraph store at " + storeLocation.toString());
-//        logger.info("Neo4jGraph has " + sizeInfo());
+        logger.info("Using Neo4jGraph store at " + storeLocation.toString());
+        logger.info("Neo4jGraph has " + sizeInfo());
     }
 
     /**
@@ -90,14 +102,35 @@ public class Neo4jStore extends Store{
     }
 
 
-    private long countEdges() {
-        GremlinPipeline<Neo4j2Graph, Object> pipe = new GremlinPipeline<Neo4j2Graph, Object>();
-        return pipe.start(graph).E().count();
+    public long countEdges() {
+
+        String indexName = graph.getRawGraph().index().getRelationshipAutoIndexer().getAutoIndex().getName();
+        return countIndexDocuments("relationship" + File.separator +  indexName);
     }
 
-    private long countVertexes() {
-        GremlinPipeline<Neo4j2Graph, Object> pipe = new GremlinPipeline<Neo4j2Graph, Object>();
-        return pipe.start(graph).V().count();
+    public long countVertexes() {
+
+        String indexName = graph.getRawGraph().index().getNodeAutoIndexer().getAutoIndex().getName();
+        return countIndexDocuments("node" + File.separator + indexName);
+    }
+
+    /**
+     * @param nodeAutoIndexName
+     * @return
+     */
+    private long countIndexDocuments(String nodeAutoIndexName) {
+        File luceneFolder = new File(storeLocation, "index" + File.separator + "lucene");
+        File indexFolder = new File(luceneFolder, nodeAutoIndexName);
+        int cnt = 0;
+        try {
+            IndexReader reader = IndexReader.open(FSDirectory.open(indexFolder));
+            cnt = reader.numDocs();
+        } catch (CorruptIndexException e) {
+            logger.warn("CorruptIndexException", e);
+        } catch (IOException e) {
+            logger.warn("Lucene index can not be read, this is ok as long there store location is empty. Original error: " + e.getMessage());
+        }
+        return cnt;
     }
 
     public String sizeInfo() {
@@ -109,7 +142,7 @@ public class Neo4jStore extends Store{
      */
     @Override
     protected String storeName() {
-        return storeName;
+        return storeName != null ? storeName : DEFAULT_STORE_NAME;
     }
 
     public Graph graph() {
@@ -121,6 +154,46 @@ public class Neo4jStore extends Store{
      */
     public SailRepository getSailRepo() {
         return sailRepo;
+    }
+
+    /**
+     * @return the lastModified
+     */
+    public Date getLastModified() {
+
+        try {
+            String lastModifiedString = FileUtils.readFileToString(lastModifiedFile());
+            lastModified = DateUtil.parseDate(lastModifiedString);
+        } catch (IOException e) {
+            logger.info("Could not read " + lastModifiedFile().getAbsolutePath());
+        } catch (DateParseException e) {
+            throw new RuntimeException("Error while parsing date in " + lastModifiedFile().getAbsolutePath(), e);
+        }
+
+        return lastModified;
+    }
+
+    /**
+     * @param lastModified the lastModified to set
+     * @throws IOException
+     */
+    public void setLastModified(Date lastModified) throws IOException {
+        File lastModifiedFile = lastModifiedFile();
+        FileWriter fw = new FileWriter(lastModifiedFile);
+        fw.append(DateUtil.formatDate(lastModified));
+        fw.close();
+        // getLastModified() reads the date from the file
+        this.lastModified = getLastModified();
+        // test if file has been written correctly
+        assert this.lastModified.equals(lastModified);
+        logger.info(DateUtil.formatDate(lastModified) + " written to " + lastModifiedFile.getAbsolutePath());
+    }
+
+    /**
+     * @return
+     */
+    private File lastModifiedFile() {
+        return new File(storeLocation, "LAST_IMPORT_DATE");
     }
 
 

@@ -4,11 +4,10 @@ import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 import org.cybertaxonomy.utis.query.IQueryClient;
 import org.cybertaxonomy.utis.utils.JSONUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class AbstractClient<QC extends IQueryClient> {
 
-    protected Logger logger = LoggerFactory.getLogger(AbstractClient.class);
+    protected Logger logger;
 
     private ServiceProviderInfo spInfo;
 

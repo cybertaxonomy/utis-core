@@ -11,10 +11,11 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.TinkerPopClient;
 import org.cybertaxonomy.utis.store.Neo4jStore;
-import org.cybertaxonomy.utis.store.Store;
+import org.cybertaxonomy.utis.store.Neo4jStoreUpdater;
 import org.cybertaxonomy.utis.tnr.msg.Classification;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Query;
+import org.cybertaxonomy.utis.tnr.msg.Query.Request;
 import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Source;
 import org.cybertaxonomy.utis.tnr.msg.Synonym;
@@ -22,7 +23,6 @@ import org.cybertaxonomy.utis.tnr.msg.Taxon;
 import org.cybertaxonomy.utis.tnr.msg.TaxonBase;
 import org.cybertaxonomy.utis.tnr.msg.TaxonName;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
-import org.cybertaxonomy.utis.tnr.msg.Query.Request;
 import org.cybertaxonomy.utis.utils.IdentifierUtils;
 import org.cybertaxonomy.utis.utils.Profiler;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
@@ -51,7 +51,10 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
     private static final String LEGALREFS_RDF_FILE_URL = "http://localhost/download/legalrefs.rdf.gz"; // http://eunis.eea.europa.eu/rdf/legalrefs.rdf.gz
     private static final String REFERENCES_RDF_FILE_URL = "http://localhost/download/references.rdf.gz"; // http://eunis.eea.europa.eu/rdf/references.rdf.gz
 
-    private static final boolean REFRESH_TDB = false;
+    /**
+     * check for updates once a day
+     */
+    private static final int CHECK_UPDATE_MINUTES = 1; //60 * 24;
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
@@ -135,34 +138,13 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
             Neo4jStore neo4jStore;
             try {
                 neo4jStore = new Neo4jStore();
+                Neo4jStoreUpdater updater = new Neo4jStoreUpdater(neo4jStore, SPECIES_RDF_FILE_URL);
+                updater.addResources(SPECIES_RDF_FILE_URL, TAXONOMY_RDF_FILE_URL, LEGALREFS_RDF_FILE_URL, REFERENCES_RDF_FILE_URL);
+                updater.watch(CHECK_UPDATE_MINUTES);
             } catch (Exception e1) {
                 throw new RuntimeException("Creation of Neo4jStore failed",  e1);
             }
-            if(REFRESH_TDB) {
-                updateStore(neo4jStore);
-            }
             queryClient = new TinkerPopClient(neo4jStore);
-    }
-
-    /**
-     * @param neo4jStore
-     */
-    private void updateStore(Store neo4jStore) {
-        try {
-            neo4jStore.loadIntoStore(
-//                    SPECIES_RDF_FILE_URL,
-                    TAXONOMY_RDF_FILE_URL
-//                    LEGALREFS_RDF_FILE_URL,
-//                    REFERENCES_RDF_FILE_URL
-                    );
-        } catch (Exception e) {
-            throw new RuntimeException("Loading "
-                    + SPECIES_RDF_FILE_URL + ", "
-                    + TAXONOMY_RDF_FILE_URL + ", "
-                    + LEGALREFS_RDF_FILE_URL + ", "
-                    + REFERENCES_RDF_FILE_URL +
-                    " into Neo4jStore failed",  e);
-        }
     }
 
     @Override

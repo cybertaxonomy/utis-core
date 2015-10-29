@@ -111,7 +111,7 @@ public abstract class Store {
      */
     public void loadIntoStore(String ... rdfFileUri) throws Exception {
         stopStoreEngine();
-//        clear();
+        clear();
         initStoreEngine();
         for (String uri : rdfFileUri) {
             File localF = downloadAndExtract(uri);
