@@ -24,6 +24,7 @@ import org.cybertaxonomy.utis.utils.JSONUtils;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.slf4j.LoggerFactory;
 
 public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
 
@@ -84,6 +85,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
             do {
                 uriBuilder.setParameter("offset", Integer.toString(offset));
                 uri = uriBuilder.build();
+                logger = LoggerFactory.getLogger(GBIFBackboneClient.class);
                 logger.debug("building Checklist Map");
                 String responseBody = queryClient.get(uri);
 
