@@ -282,6 +282,13 @@
           <execution>
             <!-- Generates Java sources from XML Schema(s) and binding file(s)
               using the JAXB Binding Compiler (XJC) -->
+            <!-- 
+                 setting the phase to pre-clean we effectively disable this 
+                 execution since a site is not generated for this project. 
+                 Thus the jaxb2 plugin must be executed explicitely by:
+                 mvn jaxb2:generate
+            -->  
+            <phase>post-site</phase>
             <goals>
               <goal>generate</goal>
             </goals>
