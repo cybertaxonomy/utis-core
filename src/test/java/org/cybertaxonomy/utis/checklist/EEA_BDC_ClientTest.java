@@ -65,8 +65,12 @@ public class EEA_BDC_ClientTest {
         System.out.println(outputXML);
         assertEquals(8, tnrMsg.getQuery().get(0).getResponse().size());
         Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
-        assertEquals("Prionus", response.getMatchingNameString());
-        assertEquals("Prionus", response.getTaxon().getTaxonName().getCanonicalName());
+        assertTrue(response.getMatchingNameString().startsWith("Prionus"));
+        assertTrue(
+                (response.getTaxon().getTaxonName().getCanonicalName().startsWith("Prionus") && response.getMatchingNameType().equals(NameType.TAXON))
+                ||
+                (response.getTaxon().getTaxonName().getCanonicalName().startsWith("Prinobius") && response.getMatchingNameType().equals(NameType.SYNONYM))
+                );
         Classification c = response.getTaxon().getClassification();
         assertEquals("Cerambycidae", c.getFamily());
         assertEquals("Coleoptera", c.getOrder());
