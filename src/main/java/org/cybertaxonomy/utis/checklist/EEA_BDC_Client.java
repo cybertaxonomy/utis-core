@@ -11,7 +11,7 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.TinkerPopClient;
 import org.cybertaxonomy.utis.store.Neo4jStore;
-import org.cybertaxonomy.utis.store.Neo4jStoreUpdater;
+import org.cybertaxonomy.utis.store.Neo4jStoreManager;
 import org.cybertaxonomy.utis.tnr.msg.Classification;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Query;
@@ -36,7 +36,7 @@ import com.tinkerpop.gremlin.java.GremlinPipeline;
 import com.tinkerpop.pipes.util.FastNoSuchElementException;
 import com.tinkerpop.pipes.util.structures.Table;
 
-public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
+public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> implements UpdatableStoreInfo {
 
     /**
      *
@@ -140,19 +140,35 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getTestUrl() {
+        return SPECIES_RDF_FILE_URL;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int pollIntervalMinutes() {
+        return CHECK_UPDATE_MINUTES;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String[] updatableResources() {
+        return new String[] {SPECIES_RDF_FILE_URL, TAXONOMY_RDF_FILE_URL, LEGALREFS_RDF_FILE_URL, REFERENCES_RDF_FILE_URL};
+    }
+
     @Override
     public void initQueryClient() {
 
-            Neo4jStore neo4jStore;
-            try {
-                neo4jStore = new Neo4jStore();
-                Neo4jStoreUpdater updater = new Neo4jStoreUpdater(neo4jStore, SPECIES_RDF_FILE_URL);
-                updater.addResources(SPECIES_RDF_FILE_URL, TAXONOMY_RDF_FILE_URL, LEGALREFS_RDF_FILE_URL, REFERENCES_RDF_FILE_URL);
-                updater.watch(CHECK_UPDATE_MINUTES);
-            } catch (Exception e1) {
-                throw new RuntimeException("Creation of Neo4jStore failed",  e1);
-            }
-            queryClient = new TinkerPopClient(neo4jStore);
+        Neo4jStore neo4jStore = Neo4jStoreManager.provideStoreFor(this);
+        queryClient = new TinkerPopClient(neo4jStore);
     }
 
     @Override

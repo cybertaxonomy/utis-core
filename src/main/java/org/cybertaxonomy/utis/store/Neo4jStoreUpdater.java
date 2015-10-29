@@ -102,14 +102,19 @@ public class Neo4jStoreUpdater {
 
                 @Override
                 public void run() {
-                    updateIfNeeded();
-                    try {
-                        sleep(interval_ms);
-                    } catch (InterruptedException e) {
-                        logger.info("Neo4jStoreUpdater has been interrupted");
+                    boolean interrupted = false;
+                    while(!interrupted) {
+                        updateIfNeeded();
+                        try {
+                            sleep(interval_ms);
+                        } catch (InterruptedException e) {
+                            logger.info("Neo4jStoreUpdater has been interrupted");
+                            interrupted = true;
+                        }
                     }
                 }
             };
+            updateThread.setName(Neo4jStoreUpdater.class.getSimpleName());
             updateThread.start();
         }
 
