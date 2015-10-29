@@ -6,13 +6,18 @@ import static org.junit.Assert.assertTrue;
 import org.cybertaxonomy.utis.tnr.msg.Classification;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Response;
+import org.cybertaxonomy.utis.tnr.msg.Synonym;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.TnrMsgException;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EEA_BDC_ClientTest {
+
+    protected static final Logger logger = LoggerFactory.getLogger(EEA_BDC_ClientTest.class);
 
     static EEA_BDC_Client client;
 
@@ -48,12 +53,39 @@ public class EEA_BDC_ClientTest {
         Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
         assertEquals("Canis aureus", response.getMatchingNameString());
         assertEquals("Canis aureus", response.getTaxon().getTaxonName().getCanonicalName());
+        logger.info("Accepted: " + response.getTaxon().getTaxonName().getFullName() + " (" + response.getTaxon().getUrl() + ")");
         assertTrue(response.getSynonym().size() > 0);
+        for(Synonym syn : response.getSynonym()) {
+            logger.info("Synonym: " + syn.getTaxonName().getFullName() + " (" + syn.getUrl() + ")");
+        }
         Classification c = response.getTaxon().getClassification();
         assertEquals("Canidae", c.getFamily());
         assertEquals("Carnivora", c.getOrder());
         assertEquals("Chordata", c.getPhylum());
         assertEquals("Animalia", c.getKingdom());
+    }
+
+    @Test
+    public void scientificNameExact_withSynonym_Test() throws DRFChecklistException, TnrMsgException {
+
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Prinobius myardi", true);
+        client.queryChecklist(tnrMsg);
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+        assertEquals(1, tnrMsg.getQuery().get(0).getResponse().size());
+        Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
+        assertEquals("Prinobius myardi", response.getMatchingNameString());
+        assertEquals("Prinobius myardi", response.getTaxon().getTaxonName().getCanonicalName());
+        assertTrue(response.getSynonym().size() > 0);
+        boolean prionus_germari_found = false;
+        for(Synonym syn : response.getSynonym()) {
+            logger.info(syn.getTaxonName().getFullName());
+            if(syn.getTaxonName().getCanonicalName().equals("Prionus germari")) {
+                prionus_germari_found = true;
+            }
+        }
+        assertTrue(prionus_germari_found);
+        Classification c = response.getTaxon().getClassification();
     }
 
     @Test

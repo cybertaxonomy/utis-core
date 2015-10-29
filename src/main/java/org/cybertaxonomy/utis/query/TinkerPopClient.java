@@ -59,7 +59,7 @@ import com.tinkerpop.pipes.util.FastNoSuchElementException;
  */
 public class TinkerPopClient implements IQueryClient {
 
-    protected Logger logger = LoggerFactory.getLogger(TinkerPopClient.class);
+    protected static final Logger logger = LoggerFactory.getLogger(TinkerPopClient.class);
 
     private Neo4jStore graphStore = null;
 

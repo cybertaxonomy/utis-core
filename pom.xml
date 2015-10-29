@@ -4,7 +4,7 @@
   <groupId>org.cybertaxonomy</groupId>
   <artifactId>utis-core</artifactId>
   <packaging>jar</packaging>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
   <name>UTIS-Core</name>
   <description>Unified Taxonomic Information Service core libraries</description>
   <url>http://maven.apache.org</url>
@@ -282,6 +282,13 @@
           <execution>
             <!-- Generates Java sources from XML Schema(s) and binding file(s)
               using the JAXB Binding Compiler (XJC) -->
+            <!-- 
+                 setting the phase to pre-clean we effectively disable this 
+                 execution since a site is not generated for this project. 
+                 Thus the jaxb2 plugin must be executed explicitely by:
+                 mvn jaxb2:generate
+            -->  
+            <phase>post-site</phase>
             <goals>
               <goal>generate</goal>
             </goals>
