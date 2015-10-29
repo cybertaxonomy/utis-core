@@ -303,7 +303,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
                     .toList();
             for(Vertex tv : titleVs) {
                 Source source = new Source();
-                logger.error(tv.toString());
+                logger.debug(tv.toString());
                 source.setName(tv.getProperty(GraphSail.VALUE).toString());
                 taxonBase.getSources().add(source);
             }
@@ -337,20 +337,20 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
                     .inE(RdfSchema.EUNIS_SPECIES.property("eunisPrimaryName")).outV().dedup()
                     .toList();
             for(Vertex synonymV : synonymVs) {
-                String typeUri = queryClient.relatedVertexValue(synonymV, RdfSchema.RDF, "type");
-                String status = null;
-                try {
-                    status = URI.create(typeUri).getFragment();
-                } catch (Exception e) {
+                // http://www.w3.org/1999/02/22-rdf-syntax-ns#type is used inconsistently, accepted taxa can have type SpeciesSynonym
+                // and are their own synonym in this case !
+                // using http://eunis.eea.europa.eu/rdf/species-schema.rdf#taxonomicRank is the recommended way to detect synonyms and to avoid
+                // adding the accepted taxon as its own synonym
+                String taxonomicRank = queryClient.relatedVertexValue(synonymV, RdfSchema.EUNIS_SPECIES, "taxonomicRank");
 
-                }
 
-                if (status != null && status.equals("SpeciesSynonym")) {
+                if (taxonomicRank != null && taxonomicRank.equals("Synonym")) {
 
                     Synonym synonym = new Synonym();
 
                     TaxonName taxonName = createTaxonName(synonymV);
-                    synonym.setTaxonomicStatus(status);
+                    synonym.setTaxonomicStatus(taxonomicRank);
+                    synonym.setUrl(synonymV.getProperty(GraphSail.VALUE).toString());
                     synonym.setTaxonName(taxonName);
                     synonym.setAccordingTo(queryClient.relatedVertexValue(synonymV, RdfSchema.DWC, "nameAccordingToID"));
 
