@@ -46,10 +46,13 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
     public static final String DOC_URL = "http://semantic.eea.europa.eu/documentation";
     public static final String COPYRIGHT_URL = "http://www.eea.europa.eu/legal/eea-data-policy";
 
-    private static final String SPECIES_RDF_FILE_URL = "http://localhost/download/species.rdf.gz"; // http://eunis.eea.europa.eu/rdf/species.rdf.gz
-    private static final String TAXONOMY_RDF_FILE_URL = "http://localhost/download/taxonomy.rdf.gz"; // http://eunis.eea.europa.eu/rdf/taxonomy.rdf.gz
-    private static final String LEGALREFS_RDF_FILE_URL = "http://localhost/download/legalrefs.rdf.gz"; // http://eunis.eea.europa.eu/rdf/legalrefs.rdf.gz
-    private static final String REFERENCES_RDF_FILE_URL = "http://localhost/download/references.rdf.gz"; // http://eunis.eea.europa.eu/rdf/references.rdf.gz
+//    private static final String DOWNLOAD_BASE_URL = "http://localhost/download/";
+    private static final String DOWNLOAD_BASE_URL = "http://eunis.eea.europa.eu/rdf/";
+
+    private static final String SPECIES_RDF_FILE_URL = DOWNLOAD_BASE_URL + "species.rdf.gz";
+    private static final String TAXONOMY_RDF_FILE_URL = DOWNLOAD_BASE_URL + "taxonomy.rdf.gz";
+    private static final String LEGALREFS_RDF_FILE_URL = DOWNLOAD_BASE_URL + "legalrefs.rdf.gz";
+    private static final String REFERENCES_RDF_FILE_URL = DOWNLOAD_BASE_URL + "references.rdf.gz";
 
     /**
      * check for updates once a day
@@ -384,7 +387,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
 
             GremlinPipeline<Graph, Vertex> pipe = null;
 
-            Profiler profiler = Profiler.newCpuProfiler(false);
+//            Profiler profiler = Profiler.newCpuProfiler(false);
 
             logger.debug("Neo4jINDEX");
 
@@ -392,10 +395,14 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
             pipe = new GremlinPipeline<Graph, Vertex>(hitVs);
 
             List<Vertex> vertices = new ArrayList<Vertex>();
-            pipe.in(RdfSchema.EUNIS_SPECIES.property("binomialName")).fill(vertices);
+            pipe.in(RdfSchema.EUNIS_SPECIES.property("binomialName"),
+                    RdfSchema.DWC.property("subgenus"), // EUNIS has no subgenera but this is added for future compatibility
+                    RdfSchema.DWC.property("genus")
+                    // no taxa for higher ranks in EUNIS
+                    ).fill(vertices);
 
             updateQueriesWithResponse(vertices, null, null, checklistInfo, query);
-            profiler.end(System.err);
+//            profiler.end(System.err);
         }
     }
 

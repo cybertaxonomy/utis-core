@@ -202,11 +202,13 @@ public class TinkerPopClient implements IQueryClient {
     public ArrayList<Vertex> vertexIndexQuery(String luceneQuery) {
         Neo4j2Graph graph = (Neo4j2Graph)graph();
         AutoIndexer<Node> nodeAutoIndex = graph.getRawGraph().index().getNodeAutoIndexer();
+        graph.autoStartTransaction(false);
         IndexHits<Node> nodes = nodeAutoIndex.getAutoIndex().query(luceneQuery);
         ArrayList<Vertex> hitVs = new ArrayList<Vertex>();
         while(nodes.hasNext()) {
             hitVs.add(new Neo4j2Vertex(nodes.next(), graph));
         }
+        graph.commit();
         return hitVs;
     }
 

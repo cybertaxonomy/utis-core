@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class Store {
 
-    protected Logger logger = LoggerFactory.getLogger(Neo4jStore.class);
+    protected Logger logger = LoggerFactory.getLogger(Store.class);
     private static final File tmpDir = new File(System.getProperty("java.io.tmpdir"));
     private static final File userHomeDir = new File(System.getProperty("user.home"));
     private static final File utisHome = new File(userHomeDir, ".utis");

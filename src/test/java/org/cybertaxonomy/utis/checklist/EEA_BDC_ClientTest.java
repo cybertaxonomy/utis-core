@@ -3,9 +3,6 @@ package org.cybertaxonomy.utis.checklist;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.cybertaxonomy.utis.checklist.DRFChecklistException;
-import org.cybertaxonomy.utis.checklist.EEA_BDC_Client;
-import org.cybertaxonomy.utis.checklist.SearchMode;
 import org.cybertaxonomy.utis.tnr.msg.Classification;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Response;
@@ -56,6 +53,41 @@ public class EEA_BDC_ClientTest {
         assertEquals("Canidae", c.getFamily());
         assertEquals("Carnivora", c.getOrder());
         assertEquals("Chordata", c.getPhylum());
+        assertEquals("Animalia", c.getKingdom());
+    }
+
+    @Test
+    public void genus_Test() throws DRFChecklistException, TnrMsgException {
+
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Prionus", true);
+        client.queryChecklist(tnrMsg);
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+        assertEquals(8, tnrMsg.getQuery().get(0).getResponse().size());
+        Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
+        assertEquals("Prionus", response.getMatchingNameString());
+        assertEquals("Prionus", response.getTaxon().getTaxonName().getCanonicalName());
+        Classification c = response.getTaxon().getClassification();
+        assertEquals("Cerambycidae", c.getFamily());
+        assertEquals("Coleoptera", c.getOrder());
+        assertEquals("Arthropoda", c.getPhylum());
+        assertEquals("Animalia", c.getKingdom());
+    }
+
+
+    @Test
+    public void family_Test() throws DRFChecklistException, TnrMsgException {
+
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Cerambycidae", true);
+        client.queryChecklist(tnrMsg);
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+        assertTrue(tnrMsg.getQuery().get(0).getResponse().size() > 20);
+        Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
+        Classification c = response.getTaxon().getClassification();
+        assertEquals("Cerambycidae", c.getFamily());
+        assertEquals("Coleoptera", c.getOrder());
+        assertEquals("Arthropoda", c.getPhylum());
         assertEquals("Animalia", c.getKingdom());
     }
 
