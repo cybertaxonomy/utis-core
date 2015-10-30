@@ -38,19 +38,25 @@ public abstract class Store {
     protected static final Logger logger = LoggerFactory.getLogger(Store.class);
     private static final File tmpDir = new File(System.getProperty("java.io.tmpdir"));
     private static final File userHomeDir = new File(System.getProperty("user.home"));
-    private static File utisHome = null;
+    protected static File utisHome = null;
+
     static {
         if(System.getProperty("utis.home") != null){
             utisHome = new File(System.getProperty("utis.home"));
             logger.info("utis.home defined by system property: " + utisHome.getAbsolutePath());
         } else {
-            File varLib = new File("/var/lib");
-            if(varLib.canWrite()) {
-                utisHome = new File(varLib, "utis");
-            } else {
+            // this is the folder for production mode
+            // /var/lib/utis must be created prior starting the application
+            utisHome = new File("/var/lib/utis");
+            logger.info("utis.home " + utisHome.getAbsolutePath());
+            if(!utisHome.canWrite()) {
+                logger.info("utis.home " + utisHome.getAbsolutePath() +  " is not writable, trying other location ...");
+                // this is the folder for development mode
+                // if the application is started inside a service as jetty
+                // this folder will most probably not be writable.
                 utisHome = new File(userHomeDir, ".utis");
             }
-            logger.info("utis.home is " + utisHome.getAbsolutePath());
+            logger.info("utis.home finally is " + utisHome.getAbsolutePath());
         }
     }
     protected File storeLocation = null;
@@ -59,7 +65,7 @@ public abstract class Store {
         storeLocation = new File(utisHome, storeName() + File.separator);
         if( !storeLocation.exists()) {
             storeLocation.mkdirs();
-            logger.debug("new store location created");
+            logger.debug("new store location created at " + storeLocation.getAbsolutePath());
         }
         initStoreEngine();
     }
