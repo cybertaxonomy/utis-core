@@ -13,8 +13,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.StmtIterator;
 import org.cybertaxonomy.utis.checklist.EEA_BDC_Client.RdfSchema;
 import org.cybertaxonomy.utis.store.Neo4jStore;
 import org.neo4j.graphdb.Node;
@@ -210,15 +208,6 @@ public class TinkerPopClient implements IQueryClient {
         }
         graph.commit();
         return hitVs;
-    }
-
-    /**
-     * @param subject
-     */
-    private void printProperties(Resource subject) {
-        for (StmtIterator it = subject.listProperties(); it.hasNext();) {
-            System.err.println(it.next().toString());
-        }
     }
 
     public void showResults(TupleQueryResult result) throws QueryEvaluationException {

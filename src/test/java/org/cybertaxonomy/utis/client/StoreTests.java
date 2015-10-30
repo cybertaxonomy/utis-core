@@ -10,8 +10,6 @@
 package org.cybertaxonomy.utis.client;
 
 import org.cybertaxonomy.utis.store.Neo4jStore;
-import org.cybertaxonomy.utis.store.TDBStore;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -23,13 +21,13 @@ public class StoreTests {
 
     private static final String RDF_FILE_URL = "http://localhost/download/taxonomy.rdf.gz"; // http://eunis.eea.europa.eu/rdf/species.rdf.gz
 
-    @Test
-    @Ignore
-    public void tDBStore_RdfGzipFile_test() throws Exception {
-
-        TDBStore tripleStore = new TDBStore();
-        tripleStore.loadIntoStore(RDF_FILE_URL);
-    }
+//    @Test
+//    @Ignore
+//    public void tDBStore_RdfGzipFile_test() throws Exception {
+//
+//        TDBStore tripleStore = new TDBStore();
+//        tripleStore.loadIntoStore(RDF_FILE_URL);
+//    }
 
     @Test
     public void neo4jStore_RdfGzipFile_test() throws Exception {
