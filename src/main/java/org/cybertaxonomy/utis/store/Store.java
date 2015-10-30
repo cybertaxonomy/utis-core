@@ -35,10 +35,24 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class Store {
 
-    protected Logger logger = LoggerFactory.getLogger(Store.class);
+    protected static final Logger logger = LoggerFactory.getLogger(Store.class);
     private static final File tmpDir = new File(System.getProperty("java.io.tmpdir"));
     private static final File userHomeDir = new File(System.getProperty("user.home"));
-    private static final File utisHome = new File(userHomeDir, ".utis");
+    private static File utisHome = null;
+    static {
+        if(System.getProperty("utis.home") != null){
+            utisHome = new File(System.getProperty("utis.home"));
+            logger.info("utis.home defined by system property: " + utisHome.getAbsolutePath());
+        } else {
+            File varLib = new File("/var/lib");
+            if(varLib.canWrite()) {
+                utisHome = new File(varLib, "utis");
+            } else {
+                utisHome = new File(userHomeDir, ".utis");
+            }
+            logger.info("utis.home is " + utisHome.getAbsolutePath());
+        }
+    }
     protected File storeLocation = null;
 
     public Store() throws Exception {
