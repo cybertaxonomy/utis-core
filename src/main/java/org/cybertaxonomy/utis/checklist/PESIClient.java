@@ -1,6 +1,8 @@
 package org.cybertaxonomy.utis.checklist;
 
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.rmi.RemoteException;
 import java.util.EnumSet;
 import java.util.regex.Matcher;
@@ -14,7 +16,7 @@ import org.cybertaxonomy.utis.checklist.pesi.PESINameServicePortType;
 import org.cybertaxonomy.utis.checklist.pesi.PESIRecord;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.SoapClient;
-import org.cybertaxonomy.utis.tnr.msg.Classification;
+import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Query;
 import org.cybertaxonomy.utis.tnr.msg.Response;
@@ -155,30 +157,30 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
         return parsed;
     }
 
-    private Taxon generateAccName(PESIRecord taxon) {
+    private Taxon generateTaxon(PESIRecord taxonRecord) {
 
 
-        Taxon accName = new Taxon();
+        Taxon taxon = new Taxon();
         TaxonName taxonName = new TaxonName();
 
-        String resName = taxon.getScientificname();
-        taxonName.setFullName(resName + " " + taxon.getAuthority());
+        String resName = taxonRecord.getScientificname();
+        taxonName.setScientificName(resName + " " + taxonRecord.getAuthority());
 
         taxonName.setCanonicalName(resName);
 
-        taxonName.setRank(taxon.getRank());
-        taxonName.setAuthorship(taxon.getAuthority());
+        taxonName.setRank(taxonRecord.getRank());
+        taxonName.setAuthorship(taxonRecord.getAuthority());
 
-        accName.setTaxonName(taxonName);
-        accName.setTaxonomicStatus(taxon.getStatus());
-        accName.setUrl(taxon.getUrl());
+        taxon.setTaxonName(taxonName);
+        taxon.setTaxonomicStatus(taxonRecord.getStatus());
+        taxon.setUrl(taxonRecord.getUrl());
 
-        String lsid = taxon.getValid_guid();
-        accName.setIdentifier(lsid);
+        String lsid = taxonRecord.getValid_guid();
+        taxon.setIdentifier(lsid);
 
-        String sourceString = taxon.getCitation(); // concatenation of sec. reference and url
+        String sourceString = taxonRecord.getCitation(); // concatenation of sec. reference and url
         ParsedCitation parsed = parsePesiCitation(sourceString);
-        accName.setAccordingTo(parsed.accordingTo);
+        taxon.setAccordingTo(parsed.accordingTo);
 
 
         // TODO ask VLIZ for adding all the the sourceFKs to the service and fill additional the data in here
@@ -187,19 +189,31 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             source.setUrl(parsed.sourceTaxonUrl);
             source.setTitle(parsed.accordingTo);
             source.setIdentifier(lsid);
-            accName.getSources().add(source);
+            taxon.getSources().add(source);
         }
 
-        Classification c = new Classification();
-        c.setKingdom(taxon.getKingdom());
-        c.setPhylum(taxon.getPhylum());
-        c.setClazz("");
-        c.setOrder(taxon.getOrder());
-        c.setFamily(taxon.getFamily());
-        c.setGenus(taxon.getGenus());
-        accName.setClassification(c);
+        String[] rankNames = new String[] {"Genus", "Family", "Order", "_class", "Phylum", "Kingdom"};
+        Method getRankLevelMethod = null;
+        for(String rankName : rankNames) {
+            try {
+            getRankLevelMethod = taxonRecord.getClass().getDeclaredMethod("get" + rankName, (Class<?>[])null);
+            String higherTaxonName = getRankLevelMethod.invoke(taxonRecord).toString();
+            HigherClassificationElement hce = new HigherClassificationElement();
+            hce.setScientificName(higherTaxonName);
+            if(rankName.equals("_class")) {
+                rankName  = "Class";
+            }
+            hce.setRank(rankName);
+            taxon.getHigherClassification().add(hce);
+            } catch(NullPointerException e) {
+                // IGNORE, just try the next rank
 
-        return accName;
+            } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return taxon;
     }
 
     private void generateSynonyms(PESIRecord[] synonyms, Response tnrResponse) {
@@ -211,7 +225,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             TaxonName taxonName = new TaxonName();
 
             String resName = synRecord.getScientificname();
-            taxonName.setFullName(resName + " " + synRecord.getAuthority());
+            taxonName.setScientificName(resName + " " + synRecord.getAuthority());
 
             taxonName.setCanonicalName(resName);
 
@@ -378,7 +392,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
 
             // case when accepted name
             if(record.getGUID() != null && record.getGUID().equals(taxonGUID)) {
-                Taxon taxon = generateAccName(record);
+                Taxon taxon = generateTaxon(record);
                 tnrResponse.setTaxon(taxon);
                 if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                     tnrResponse.setMatchingNameType(NameType.TAXON);
@@ -386,7 +400,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             } else {
                 // case when synonym
                 PESIRecord taxonRecord = pesinspt.getPESIRecordByGUID(taxonGUID);
-                Taxon taxon = generateAccName(taxonRecord);
+                Taxon taxon = generateTaxon(taxonRecord);
                 tnrResponse.setTaxon(taxon);
                 if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                     tnrResponse.setMatchingNameType(NameType.SYNONYM);

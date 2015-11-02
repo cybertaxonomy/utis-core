@@ -3,7 +3,9 @@ package org.cybertaxonomy.utis.checklist;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.cybertaxonomy.utis.tnr.msg.Classification;
+import java.util.List;
+
+import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Synonym;
@@ -25,6 +27,20 @@ public class EEA_BDC_ClientTest {
     public static void  setup() {
         client =  new EEA_BDC_Client();
         client.setChecklistInfo(client.buildServiceProviderInfo());
+    }
+
+    /**
+     * @param string
+     * @param hc
+     * @return
+     */
+    private HigherClassificationElement getHigherClassification(String string, List<HigherClassificationElement> hc) {
+        for(HigherClassificationElement hce : hc) {
+            if(hce.getRank().equals(string)) {
+                return hce;
+            }
+        }
+        return null;
     }
 
     @Test
@@ -53,16 +69,16 @@ public class EEA_BDC_ClientTest {
         Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
         assertEquals("Canis aureus", response.getMatchingNameString());
         assertEquals("Canis aureus", response.getTaxon().getTaxonName().getCanonicalName());
-        logger.info("Accepted: " + response.getTaxon().getTaxonName().getFullName() + " (" + response.getTaxon().getUrl() + ")");
+        logger.info("Accepted: " + response.getTaxon().getTaxonName().getScientificName() + " (" + response.getTaxon().getUrl() + ")");
         assertTrue(response.getSynonym().size() > 0);
         for(Synonym syn : response.getSynonym()) {
-            logger.info("Synonym: " + syn.getTaxonName().getFullName() + " (" + syn.getUrl() + ")");
+            logger.info("Synonym: " + syn.getTaxonName().getScientificName() + " (" + syn.getUrl() + ")");
         }
-        Classification c = response.getTaxon().getClassification();
-        assertEquals("Canidae", c.getFamily());
-        assertEquals("Carnivora", c.getOrder());
-        assertEquals("Chordata", c.getPhylum());
-        assertEquals("Animalia", c.getKingdom());
+        List<HigherClassificationElement> hc = response.getTaxon().getHigherClassification();
+        assertEquals("Canidae", getHigherClassification("Family", hc).getScientificName());
+        assertEquals("Carnivora", getHigherClassification("Order", hc).getScientificName());
+        assertEquals("Chordata", getHigherClassification("Phylum", hc).getScientificName());
+        assertEquals("Animalia", getHigherClassification("Kingdom", hc).getScientificName());
     }
 
     @Test
@@ -79,13 +95,12 @@ public class EEA_BDC_ClientTest {
         assertTrue(response.getSynonym().size() > 0);
         boolean prionus_germari_found = false;
         for(Synonym syn : response.getSynonym()) {
-            logger.info(syn.getTaxonName().getFullName());
+            logger.info(syn.getTaxonName().getScientificName());
             if(syn.getTaxonName().getCanonicalName().equals("Prionus germari")) {
                 prionus_germari_found = true;
             }
         }
         assertTrue(prionus_germari_found);
-        Classification c = response.getTaxon().getClassification();
     }
 
     @Test
@@ -103,11 +118,11 @@ public class EEA_BDC_ClientTest {
                 ||
                 (response.getTaxon().getTaxonName().getCanonicalName().startsWith("Prinobius") && response.getMatchingNameType().equals(NameType.SYNONYM))
                 );
-        Classification c = response.getTaxon().getClassification();
-        assertEquals("Cerambycidae", c.getFamily());
-        assertEquals("Coleoptera", c.getOrder());
-        assertEquals("Arthropoda", c.getPhylum());
-        assertEquals("Animalia", c.getKingdom());
+        List<HigherClassificationElement> hc = response.getTaxon().getHigherClassification();
+        assertEquals("Cerambycidae", getHigherClassification("Family", hc).getScientificName());
+        assertEquals("Coleoptera", getHigherClassification("Order", hc).getScientificName());
+        assertEquals("Arthropoda", getHigherClassification("Phylum", hc).getScientificName());
+        assertEquals("Animalia", getHigherClassification("Kingdom", hc).getScientificName());
     }
 
     @Test

@@ -13,7 +13,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.ParseException;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.RestClient;
-import org.cybertaxonomy.utis.tnr.msg.Classification;
+import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Query;
 import org.cybertaxonomy.utis.tnr.msg.Response;
@@ -224,7 +224,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         TaxonName taxonName = new TaxonName();
 
         String resName = (String) taxon.get("name");
-        taxonName.setFullName(resName);
+        taxonName.setScientificName(resName);
         NameParser ecatParser = new NameParser();
         String nameCanonical = ecatParser.parseToCanonical(resName);
         taxonName.setCanonicalName(nameCanonical);
@@ -255,15 +255,18 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         accTaxon.getSources().add(source);
 
         JSONObject classification =(JSONObject)taxon.get("classification");
-        if(classification != null) {
-            Classification c = new Classification();
-            c.setKingdom((String) classification.get("Kingdom"));
-            c.setPhylum((String) classification.get("Phylum"));
-            c.setClazz((String) classification.get("Class"));
-            c.setOrder((String) classification.get("Order"));
-            c.setFamily((String) classification.get("Family"));
-            c.setGenus((String) classification.get("Genus"));
-            accTaxon.setClassification(c);
+        String[] rankNames = new String[] {"Genus", "Family", "Order", "Class", "Phylum", "Kingdom"};
+        for(String rankName : rankNames) {
+            try {
+            String higherTaxonName = classification.get(rankName).toString();
+            HigherClassificationElement hce = new HigherClassificationElement();
+            hce.setScientificName(higherTaxonName);
+            hce.setRank(rankName);
+            accTaxon.getHigherClassification().add(hce);
+            } catch(NullPointerException e) {
+                // IGNORE, just try the next rank
+
+            }
         }
         return accTaxon;
     }
@@ -281,7 +284,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                 TaxonName taxonName = new TaxonName();
 
                 String resName = (String) synonymjs.get("name");
-                taxonName.setFullName(resName);
+                taxonName.setScientificName(resName);
                 NameParser ecatParser = new NameParser();
                 String nameCanonical = ecatParser.parseToCanonical(resName);
                 taxonName.setCanonicalName(nameCanonical);

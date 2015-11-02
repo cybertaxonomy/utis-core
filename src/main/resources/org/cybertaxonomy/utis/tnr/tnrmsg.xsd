@@ -42,7 +42,7 @@
   </xsd:complexType>
   <xsd:complexType name="taxonName">
     <xsd:sequence>
-      <xsd:element name="fullName">
+      <xsd:element name="scientificName">
         <xsd:annotation>
           <xsd:appinfo>
             <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty("The full scientific name, with authorship, publication date information and potentially further taxonomic information.")
@@ -120,6 +120,25 @@
       </xsd:element>
     </xsd:sequence>
   </xsd:complexType>
+  <xsd:complexType  name="higherClassificationElement">
+   <xsd:sequence>
+      <xsd:element minOccurs="0" name="rank">
+        <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="taxonID">
+        <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="scientificName">
+        <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+   </xsd:sequence>
+</xsd:complexType>
 
   <xsd:element name="Response">
     <xsd:complexType>
@@ -211,8 +230,7 @@
       <xsd:complexContent>
         <xsd:extension base="tns:taxonBase">
           <xsd:sequence>
-            <xsd:element minOccurs="0" ref="tns:classification">
-            </xsd:element>
+            <xsd:element name="higherClassification" type="tns:higherClassificationElement" maxOccurs="unbounded" minOccurs="0"></xsd:element>
             <xsd:element name="identifier" type="xsd:string"></xsd:element>
           </xsd:sequence>
         </xsd:extension>
@@ -227,50 +245,7 @@
     </xsd:complexContent>
   </xsd:complexType>
   </xsd:element>
-  <xsd:element name="classification">
-    <xsd:complexType>
-      <xsd:sequence>
-        <xsd:element minOccurs="0" name="kingdom">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string"></xsd:restriction>
-          </xsd:simpleType>
-        </xsd:element>
-        <xsd:element minOccurs="0" name="phylum">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string"></xsd:restriction>
-          </xsd:simpleType>
-        </xsd:element>
-        <xsd:element minOccurs="0" name="class">
-          <xsd:annotation>
-            <xsd:appinfo>
-              <annox:annotate target="getter">@com.fasterxml.jackson.annotation.JsonProperty("class")
-              </annox:annotate>
-              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The full scientific name of the class in which the taxon is classified." )
-              </annox:annotate>
-            </xsd:appinfo>
-          </xsd:annotation>
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string"></xsd:restriction>
-          </xsd:simpleType>
-        </xsd:element>
-        <xsd:element minOccurs="0" name="order">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string"></xsd:restriction>
-          </xsd:simpleType>
-        </xsd:element>
-        <xsd:element minOccurs="0" name="family">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string"></xsd:restriction>
-          </xsd:simpleType>
-        </xsd:element>
-        <xsd:element minOccurs="0" name="genus">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string"></xsd:restriction>
-          </xsd:simpleType>
-        </xsd:element>
-      </xsd:sequence>
-    </xsd:complexType>
-  </xsd:element>
+
   <xsd:element name="query">
     <xsd:complexType>
       <xsd:sequence>

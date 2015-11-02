@@ -8,11 +8,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.RestClient;
-import org.cybertaxonomy.utis.tnr.msg.Classification;
+import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
 import org.cybertaxonomy.utis.tnr.msg.Query;
 import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Source;
@@ -200,7 +201,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
         TaxonName taxonName = new TaxonName();
 
         String resName = (String) taxon.get("scientificName");
-        taxonName.setFullName(resName);
+        taxonName.setScientificName(resName);
 
         taxonName.setCanonicalName((String) taxon.get("canonicalName"));
 
@@ -225,14 +226,22 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
         source.setUrl(sourceUrl);
         accTaxon.getSources().add(source);
 
-        Classification c = new Classification();
-        c.setKingdom((String) taxon.get("kingdom"));
-        c.setPhylum((String) taxon.get("phylum"));
-        c.setClazz((String) taxon.get("class"));
-        c.setOrder((String) taxon.get("order"));
-        c.setFamily((String) taxon.get("family"));
-        c.setGenus((String) taxon.get("genus"));
-        accTaxon.setClassification(c);
+        String[] rankNames = new String[] {"genus", "family", "order", "class", "phylum", "kingdom"};
+        for(String rankName : rankNames) {
+            try {
+            String higherTaxonName = taxon.get(rankName).toString();
+            HigherClassificationElement hce = new HigherClassificationElement();
+            hce.setScientificName(higherTaxonName);
+            if(rankName.equals("clazz")) {
+                rankName = "class";
+            }
+            hce.setRank(StringUtils.capitalize(rankName));
+            accTaxon.getHigherClassification().add(hce);
+            } catch(NullPointerException e) {
+                // IGNORE, just try the next rank
+
+            }
+        }
 
         return accTaxon;
     }
@@ -243,7 +252,7 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
         TaxonName taxonName = new TaxonName();
 
         String resName = (String) synonym.get("scientificName");
-        taxonName.setFullName(resName);
+        taxonName.setScientificName(resName);
 
         taxonName.setCanonicalName((String) synonym.get("canonicalName"));
 

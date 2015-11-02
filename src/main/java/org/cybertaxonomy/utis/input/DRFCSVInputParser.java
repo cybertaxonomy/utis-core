@@ -210,15 +210,15 @@ public class DRFCSVInputParser {
                             } else if (name_complete_index >= 0
                                     && !nextLine[name_complete_index]
                                             .equals("")) {
-                                taxonName.setFullName(nextLine[name_complete_index]);
+                                taxonName.setScientificName(nextLine[name_complete_index]);
                                 NameParser ecatParser = new NameParser();
-                                String nameCanonical = ecatParser.parseToCanonical(taxonName.getFullName());
+                                String nameCanonical = ecatParser.parseToCanonical(taxonName.getScientificName());
                                 taxonName.setCanonicalName(nameCanonical);
                             } else if (taxon_name_index >= 0
                                     && !nextLine[taxon_name_index].equals("")) {
-                                taxonName.setFullName(nextLine[taxon_name_index]);
+                                taxonName.setScientificName(nextLine[taxon_name_index]);
                                 NameParser ecatParser = new NameParser();
-                                String nameCanonical = ecatParser.parseToCanonical(taxonName.getFullName());
+                                String nameCanonical = ecatParser.parseToCanonical(taxonName.getScientificName());
                                 taxonName.setCanonicalName(nameCanonical);
                             }
                             if (authorship_index >= 0
@@ -226,10 +226,10 @@ public class DRFCSVInputParser {
                                 taxonName.setAuthorship(nextLine[authorship_index]);
                             }
 
-                            if(taxonName.getAtomisedName() != null || taxonName.getFullName() != null) {
+                            if(taxonName.getAtomisedName() != null || taxonName.getScientificName() != null) {
 
                                 Query.Request tnrRequest = new Query.Request();
-                                tnrRequest.setQueryString(taxonName.getFullName());
+                                tnrRequest.setQueryString(taxonName.getScientificName());
 
                                 Query query = new Query();
                                 query.setRequest(tnrRequest);

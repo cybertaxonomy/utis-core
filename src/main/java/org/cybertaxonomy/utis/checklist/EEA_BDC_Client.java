@@ -12,7 +12,7 @@ import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.TinkerPopClient;
 import org.cybertaxonomy.utis.store.Neo4jStore;
 import org.cybertaxonomy.utis.store.Neo4jStoreManager;
-import org.cybertaxonomy.utis.tnr.msg.Classification;
+import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Query;
 import org.cybertaxonomy.utis.tnr.msg.Query.Request;
@@ -117,12 +117,8 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
 
     public enum SubCheckListId {
 
-        eunis, natura_2000;
-    }
-
-    private enum RankLevel{
-
-        Kingdom, Phylum, Clazz, Order, Family, Genus;
+        eunis
+        // , natura_2000; // not yet implemented
     }
 
     public EEA_BDC_Client() {
@@ -225,7 +221,6 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
         createSources(v, taxon);
 
         // classification
-        Classification c = null;
         Vertex parentV= null;
         try {
             parentV = queryClient.relatedVertex(v, RdfSchema.EUNIS_SPECIES, "taxonomy");
@@ -238,38 +233,12 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
             String level = queryClient.relatedVertexValue(parentV, RdfSchema.EUNIS_TAXONOMY, "level");
             String parentTaxonName = queryClient.relatedVertexValue(parentV, RdfSchema.EUNIS_TAXONOMY, "name");
 
-            RankLevel rankLevel = null;
-            try {
-                rankLevel = RankLevel.valueOf(level);
-            } catch (Exception e) {
-                // IGNORE
-            }
-            if(rankLevel != null) {
-                if(c == null) {
-                 c = new Classification();
-                }
-                switch(rankLevel) {
-                case Clazz:
-                    c.setClazz(parentTaxonName);
-                    break;
-                case Family:
-                    c.setFamily(parentTaxonName);
-                    break;
-                case Genus:
-                    c.setGenus(parentTaxonName);
-                    break;
-                case Kingdom:
-                    c.setKingdom(parentTaxonName);
-                    break;
-                case Order:
-                    c.setOrder(parentTaxonName);
-                    break;
-                case Phylum:
-                    c.setPhylum(parentTaxonName);
-                    break;
-                default:
-                    break;
-                }
+            if(level != null) {
+                HigherClassificationElement hce = new HigherClassificationElement();
+                hce.setRank(level);
+                hce.setScientificName(parentTaxonName);
+                hce.setTaxonID(parentV.getProperty(GraphSail.VALUE).toString());
+                taxon.getHigherClassification().add(hce );
             }
             Vertex lastParentV = parentV;
             parentV = queryClient.relatedVertex(parentV, RdfSchema.EUNIS_TAXONOMY, "parent");
@@ -278,9 +247,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
                 break;
             }
         }
-        if(c != null) {
-            taxon.setClassification(c);
-        }
+
         return taxon;
     }
 
@@ -320,7 +287,7 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
 
         TaxonName taxonName = new TaxonName();
         // TaxonName
-        taxonName.setFullName(queryClient.relatedVertexValue(v, RdfSchema.RDFS, "label"));
+        taxonName.setScientificName(queryClient.relatedVertexValue(v, RdfSchema.RDFS, "label"));
         taxonName.setCanonicalName(queryClient.relatedVertexValue(v, RdfSchema.EUNIS_SPECIES, "binomialName"));
         taxonName.setRank(queryClient.relatedVertexValue(v, RdfSchema.EUNIS_SPECIES, "taxonomicRank"));
         return taxonName;

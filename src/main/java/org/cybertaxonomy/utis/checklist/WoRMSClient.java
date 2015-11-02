@@ -1,6 +1,8 @@
 package org.cybertaxonomy.utis.checklist;
 
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.rmi.RemoteException;
 import java.util.EnumSet;
 
@@ -12,7 +14,7 @@ import org.cybertaxonomy.utis.checklist.worms.AphiaNameServicePortType;
 import org.cybertaxonomy.utis.checklist.worms.AphiaRecord;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.SoapClient;
-import org.cybertaxonomy.utis.tnr.msg.Classification;
+import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Query;
 import org.cybertaxonomy.utis.tnr.msg.Response;
@@ -122,7 +124,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
 
         // case when accepted name
         if(record.getAphiaID() == accNameGUID) {
-            Taxon accName = generateAccName(record);
+            Taxon accName = generateTaxon(record);
             tnrResponse.setTaxon(accName);
             if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                 tnrResponse.setMatchingNameType(NameType.TAXON);
@@ -130,7 +132,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         } else {
             // case when synonym
             AphiaRecord accNameRecord = aphianspt.getAphiaRecordByID(accNameGUID);
-            Taxon accName = generateAccName(accNameRecord);
+            Taxon accName = generateTaxon(accNameRecord);
             tnrResponse.setTaxon(accName);
             if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                 tnrResponse.setMatchingNameType(NameType.SYNONYM);
@@ -145,23 +147,23 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         return tnrResponse;
     }
 
-    private Taxon generateAccName(AphiaRecord taxonRecord) {
-        Taxon accName = new Taxon();
+    private Taxon generateTaxon(AphiaRecord taxonRecord) {
+        Taxon taxon = new Taxon();
         TaxonName taxonName = new TaxonName();
 
         String resName = taxonRecord.getScientificname();
-        taxonName.setFullName(resName + " " + taxonRecord.getAuthority());
+        taxonName.setScientificName(resName + " " + taxonRecord.getAuthority());
 
         taxonName.setCanonicalName(resName);
 
         taxonName.setRank(taxonRecord.getRank());
         taxonName.setAuthorship(taxonRecord.getAuthority());
 
-        accName.setTaxonName(taxonName);
-        accName.setTaxonomicStatus(taxonRecord.getStatus());
+        taxon.setTaxonName(taxonName);
+        taxon.setTaxonomicStatus(taxonRecord.getStatus());
 
-        accName.setUrl(taxonRecord.getUrl());
-        accName.setIdentifier(taxonRecord.getLsid());
+        taxon.setUrl(taxonRecord.getUrl());
+        taxon.setIdentifier(taxonRecord.getLsid());
 
 
         //FIXME : To fill in
@@ -175,18 +177,31 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         source.setDatasetName(sourceDatasetName);
         source.setName(sourceName);
         source.setUrl(sourceUrl);
-        accName.getSources().add(source);
+        taxon.getSources().add(source);
 
-        Classification c = new Classification();
-        c.setKingdom(taxonRecord.getKingdom());
-        c.setPhylum(taxonRecord.getPhylum());
-        c.setClazz("");
-        c.setOrder(taxonRecord.getOrder());
-        c.setFamily(taxonRecord.getFamily());
-        c.setGenus(taxonRecord.getGenus());
-        accName.setClassification(c);
+        String[] rankNames = new String[] {"Genus", "Family", "Order", "_class", "Phylum", "Kingdom"};
+        Method getRankLevelMethod = null;
+        for(String rankName : rankNames) {
+            try {
+            getRankLevelMethod = taxonRecord.getClass().getDeclaredMethod("get" + rankName, (Class<?>[])null);
+            String higherTaxonName = getRankLevelMethod.invoke(taxonRecord).toString();
+            HigherClassificationElement hce = new HigherClassificationElement();
+            hce.setScientificName(higherTaxonName);
+            if(rankName.equals("_class")) {
+                rankName  = "Class";
+            }
+            hce.setRank(rankName);
+            taxon.getHigherClassification().add(hce);
+            } catch(NullPointerException e) {
+                // IGNORE, just try the next rank
+                logger.debug(e.getMessage());
 
-        return accName;
+            } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return taxon;
     }
 
 
@@ -198,7 +213,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             TaxonName taxonName = new TaxonName();
 
             String resName = synRecord.getScientificname();
-            taxonName.setFullName(resName + " " + synRecord.getAuthority());
+            taxonName.setScientificName(resName + " " + synRecord.getAuthority());
 
             taxonName.setCanonicalName(resName);
 
