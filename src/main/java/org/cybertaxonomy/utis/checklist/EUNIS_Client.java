@@ -194,28 +194,37 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
         return queryString;
     }
 
-    private Taxon createTaxon(Vertex v) {
+    private Taxon createTaxon(Vertex taxonV) {
 
         Taxon taxon = new Taxon();
 
-        TaxonName taxonName = createTaxonName(v);
+        TaxonName taxonName = createTaxonName(taxonV);
 
         // Taxon
         taxon.setTaxonName(taxonName);
-        taxon.setIdentifier(v.getId().toString());
-        taxon.setUrl(v.getProperty(GraphSail.VALUE).toString());
-        taxon.setAccordingTo(queryClient.relatedVertexValue(v, RdfSchema.DWC, "nameAccordingToID"));
-        URI typeUri = queryClient.vertexURI(v, RdfSchema.RDF, "type");
+        taxon.setUrl(taxonV.getProperty(GraphSail.VALUE).toString());
+        taxon.setIdentifier(taxon.getUrl());
+
+        GremlinPipeline<Graph, Vertex> accordingToPipe = new GremlinPipeline<Graph, Vertex>(taxonV);
+        try {
+        taxon.setAccordingTo(
+                accordingToPipe.outE(RdfSchema.DWC.property("nameAccordingToID")).inV()
+                .outE(RdfSchema.DCTERMS.property("title")).inV()
+                .toList().get(0).getProperty(GraphSail.VALUE).toString());
+        } catch (IndexOutOfBoundsException e) {
+            logger.debug("No nameAccordingTo found");
+        }
+        URI typeUri = queryClient.vertexURI(taxonV, RdfSchema.RDF, "type");
         taxon.setTaxonomicStatus(typeUri.getFragment());
 
-        createSources(v, taxon);
+        createSources(taxonV, taxon);
 
         // classification
         Vertex parentV= null;
         try {
-            parentV = queryClient.relatedVertex(v, RdfSchema.EUNIS_SPECIES, "taxonomy");
+            parentV = queryClient.relatedVertex(taxonV, RdfSchema.EUNIS_SPECIES, "taxonomy");
         } catch (Exception e) {
-            logger.error("No taxonomy information for " + v.toString());
+            logger.error("No taxonomy information for " + taxonV.toString());
         }
 
         while (parentV != null) {

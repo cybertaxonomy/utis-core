@@ -70,6 +70,8 @@ public class EUNIS_ClientTest {
         assertEquals("Canis aureus", response.getMatchingNameString());
         assertEquals("Canis aureus", response.getTaxon().getTaxonName().getCanonicalName());
         logger.info("Accepted: " + response.getTaxon().getTaxonName().getScientificName() + " (" + response.getTaxon().getUrl() + ")");
+        assertTrue(response.getTaxon().getUrl() != null);
+        assertTrue(response.getTaxon().getIdentifier() != null);
         assertTrue(response.getSynonym().size() > 0);
         for(Synonym syn : response.getSynonym()) {
             logger.info("Synonym: " + syn.getTaxonName().getScientificName() + " (" + syn.getUrl() + ")");
@@ -79,6 +81,21 @@ public class EUNIS_ClientTest {
         assertEquals("Carnivora", getHigherClassification("Order", hc).getScientificName());
         assertEquals("Chordata", getHigherClassification("Phylum", hc).getScientificName());
         assertEquals("Animalia", getHigherClassification("Kingdom", hc).getScientificName());
+    }
+
+    @Test
+    public void scientificNameExact_Accepted_Test_2() throws DRFChecklistException, TnrMsgException {
+
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Bellis perennis", true);
+        client.queryChecklist(tnrMsg);
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+        assertEquals(1, tnrMsg.getQuery().get(0).getResponse().size());
+        Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
+        assertEquals("Bellis perennis", response.getMatchingNameString());
+        assertEquals("Bellis perennis", response.getTaxon().getTaxonName().getCanonicalName());
+        logger.info("Accepted: " + response.getTaxon().getTaxonName().getScientificName() + " (" + response.getTaxon().getUrl() + ")");
+        assertEquals("Flora Europaea Website", response.getTaxon().getAccordingTo());
     }
 
     @Test
