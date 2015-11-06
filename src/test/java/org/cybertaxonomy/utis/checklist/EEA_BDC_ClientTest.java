@@ -21,11 +21,11 @@ public class EEA_BDC_ClientTest {
 
     protected static final Logger logger = LoggerFactory.getLogger(EEA_BDC_ClientTest.class);
 
-    static EEA_BDC_Client client;
+    static EUNIS_Client client;
 
     @BeforeClass
     public static void  setup() {
-        client =  new EEA_BDC_Client();
+        client =  new EUNIS_Client();
         client.setChecklistInfo(client.buildServiceProviderInfo());
     }
 

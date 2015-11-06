@@ -36,17 +36,16 @@ import com.tinkerpop.gremlin.java.GremlinPipeline;
 import com.tinkerpop.pipes.util.FastNoSuchElementException;
 import com.tinkerpop.pipes.util.structures.Table;
 
-public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> implements UpdatableStoreInfo {
+public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> implements UpdatableStoreInfo {
 
     /**
      *
      */
-    public static final String ID = "eea_bdc";
-    public static final String LABEL = "European Environment Agency (EEA) Biodiversity data centre (BDC)";
-    public static final String DOC_URL = "http://semantic.eea.europa.eu/documentation";
-    public static final String COPYRIGHT_URL = "http://www.eea.europa.eu/legal/eea-data-policy";
+    public static final String ID = "eunis";
+    public static final String LABEL = "EUNIS (European Nature Information System) by the European Environment Agency (EEA)";
+    public static final String DOC_URL = "http://www.eea.europa.eu/themes/biodiversity/eunis/eunis-db#tab-metadata";
+    public static final String COPYRIGHT_URL = "http://www.eea.europa.eu/legal/copyright";
 
-//    private static final String DOWNLOAD_BASE_URL = "http://localhost/download/";
     private static final String DOWNLOAD_BASE_URL = "http://eunis.eea.europa.eu/rdf/";
 
     private static final String SPECIES_RDF_FILE_URL = DOWNLOAD_BASE_URL + "species.rdf.gz";
@@ -115,18 +114,12 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
 
     }
 
-    public enum SubCheckListId {
-
-        eunis
-        // , natura_2000; // not yet implemented
-    }
-
-    public EEA_BDC_Client() {
+    public EUNIS_Client() {
 
         super();
     }
 
-    public EEA_BDC_Client(String checklistInfoJson) throws DRFChecklistException {
+    public EUNIS_Client(String checklistInfoJson) throws DRFChecklistException {
 
         super(checklistInfoJson);
     }
@@ -174,9 +167,6 @@ public class EEA_BDC_Client extends AggregateChecklistClient<TinkerPopClient> im
     public ServiceProviderInfo buildServiceProviderInfo() {
 
         ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID, LABEL, DOC_URL, COPYRIGHT_URL, getSearchModes());
-        checklistInfo.addSubChecklist(new ServiceProviderInfo(SubCheckListId.eunis.name(), "EUNIS",
-                "http://www.eea.europa.eu/themes/biodiversity/eunis/eunis-db#tab-metadata",
-                "http://www.eea.europa.eu/legal/copyright", SEARCH_MODES));
         return checklistInfo;
     }
 
