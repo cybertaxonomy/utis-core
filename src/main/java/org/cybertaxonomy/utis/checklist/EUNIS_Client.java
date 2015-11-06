@@ -288,6 +288,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
         // TaxonName
         taxonName.setScientificName(queryClient.relatedVertexValue(v, RdfSchema.RDFS, "label"));
         taxonName.setCanonicalName(queryClient.relatedVertexValue(v, RdfSchema.EUNIS_SPECIES, "binomialName"));
+        taxonName.setAuthorship(queryClient.relatedVertexValue(v, RdfSchema.DWC,  "scientificNameAuthorship"));
         taxonName.setRank(queryClient.relatedVertexValue(v, RdfSchema.EUNIS_SPECIES, "taxonomicRank"));
         return taxonName;
     }

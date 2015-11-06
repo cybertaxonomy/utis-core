@@ -72,6 +72,7 @@ public class EUNIS_ClientTest {
         logger.info("Accepted: " + response.getTaxon().getTaxonName().getScientificName() + " (" + response.getTaxon().getUrl() + ")");
         assertTrue(response.getTaxon().getUrl() != null);
         assertTrue(response.getTaxon().getIdentifier() != null);
+        assertEquals("Linnaeus, 1758", response.getTaxon().getTaxonName().getAuthorship());
         assertTrue(response.getSynonym().size() > 0);
         for(Synonym syn : response.getSynonym()) {
             logger.info("Synonym: " + syn.getTaxonName().getScientificName() + " (" + syn.getUrl() + ")");
@@ -96,6 +97,7 @@ public class EUNIS_ClientTest {
         assertEquals("Bellis perennis", response.getTaxon().getTaxonName().getCanonicalName());
         logger.info("Accepted: " + response.getTaxon().getTaxonName().getScientificName() + " (" + response.getTaxon().getUrl() + ")");
         assertEquals("Flora Europaea Website", response.getTaxon().getAccordingTo());
+        assertEquals("L.", response.getTaxon().getTaxonName().getAuthorship());
     }
 
     @Test
