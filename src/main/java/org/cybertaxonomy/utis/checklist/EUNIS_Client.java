@@ -26,6 +26,7 @@ import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.IdentifierUtils;
 import org.cybertaxonomy.utis.utils.Profiler;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
+import org.gbif.api.vocabulary.TaxonomicStatus;
 import org.neo4j.graphdb.Relationship;
 
 import com.tinkerpop.blueprints.Graph;
@@ -204,6 +205,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
         taxon.setTaxonName(taxonName);
         taxon.setUrl(taxonV.getProperty(GraphSail.VALUE).toString());
         taxon.setIdentifier(taxon.getUrl());
+        taxon.setTaxonomicStatus(TaxonomicStatus.ACCEPTED.name());
 
         GremlinPipeline<Graph, Vertex> accordingToPipe = new GremlinPipeline<Graph, Vertex>(taxonV);
         try {
