@@ -325,43 +325,41 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
     @Override
     public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
 
-        for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
+        ServiceProviderInfo checklistInfo = getServiceProviderInfo();
 
-            // FIXME query specific subchecklist
+        // selecting one request as representative, only
+        // the search mode and addSynonmy flag are important
+        // for the further usage of the request object
+        Query query = singleQueryFrom(tnrMsg);
 
-            // selecting one request as representative, only
-            // the search mode and addSynonmy flag are important
-            // for the further usage of the request object
-            Query query = singleQueryFrom(tnrMsg);
+        String queryString = query.getRequest().getQueryString();
+        logger.debug("original queryString: "+ queryString);
+        queryString = QueryParser.escape(queryString);
+        queryString = queryString.replace(" ", "\\ ");
+        if(query.getRequest().getSearchMode().equals(SearchMode.scientificNameLike.name())) {
+            queryString += "*";
+        }
+        logger.debug("prepared queryString: "+ queryString);
 
-            String queryString = query.getRequest().getQueryString();
-            logger.debug("original queryString: "+ queryString);
-            queryString = QueryParser.escape(queryString);
-            queryString = queryString.replace(" ", "\\ ");
-            if(query.getRequest().getSearchMode().equals(SearchMode.scientificNameLike.name())) {
-                queryString += "*";
-            }
-            logger.debug("prepared queryString: "+ queryString);
-
-            GremlinPipeline<Graph, Vertex> pipe = null;
+        GremlinPipeline<Graph, Vertex> pipe = null;
 
 //            Profiler profiler = Profiler.newCpuProfiler(false);
 
-            logger.debug("Neo4jINDEX");
+        logger.debug("Neo4jINDEX");
 
-            ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
-            pipe = new GremlinPipeline<Graph, Vertex>(hitVs);
+        ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
+        pipe = new GremlinPipeline<Graph, Vertex>(hitVs);
 
-            List<Vertex> vertices = new ArrayList<Vertex>();
-            pipe.in(RdfSchema.EUNIS_SPECIES.property("binomialName"),
-                    RdfSchema.DWC.property("subgenus"), // EUNIS has no subgenera but this is added for future compatibility
-                    RdfSchema.DWC.property("genus")
-                    // no taxa for higher ranks in EUNIS
-                    ).fill(vertices);
+        List<Vertex> vertices = new ArrayList<Vertex>();
+        pipe.in(RdfSchema.EUNIS_SPECIES.property("binomialName"),
+                RdfSchema.DWC.property("subgenus"), // EUNIS has no subgenera but this is added for future compatibility
+                RdfSchema.DWC.property("genus")
+                // no taxa for higher ranks in EUNIS
+                ).fill(vertices);
 
-            updateQueriesWithResponse(vertices, null, null, checklistInfo, query);
+        updateQueriesWithResponse(vertices, null, null, checklistInfo, query);
 //            profiler.end(System.err);
-        }
+
     }
 
     @Override
@@ -375,32 +373,30 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
     public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
         List<Query> queryList = tnrMsg.getQuery();
 
-        for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
+        ServiceProviderInfo checklistInfo = getServiceProviderInfo();
 
-            // FIXME query specific subchecklist
+        // selecting one request as representative, only
+        // the search mode and addSynonmy flag are important
+        // for the further usage of the request object
+        Query query = singleQueryFrom(tnrMsg);
 
-            // selecting one request as representative, only
-            // the search mode and addSynonmy flag are important
-            // for the further usage of the request object
-            Query query = singleQueryFrom(tnrMsg);
+        String queryString = query.getRequest().getQueryString();
+        logger.debug("original queryString: "+ queryString);
+        queryString = QueryParser.escape(queryString);
+        queryString = queryString.replace(" ", "\\ ");
+        if(query.getRequest().getSearchMode().equals(SearchMode.vernacularNameLike.name())) {
+            queryString = "*" + queryString + "*";
+        }
 
-            String queryString = query.getRequest().getQueryString();
-            logger.debug("original queryString: "+ queryString);
-            queryString = QueryParser.escape(queryString);
-            queryString = queryString.replace(" ", "\\ ");
-            if(query.getRequest().getSearchMode().equals(SearchMode.vernacularNameLike.name())) {
-                queryString = "*" + queryString + "*";
-            }
+        logger.debug("prepared queryString: "+ queryString);
 
-            logger.debug("prepared queryString: "+ queryString);
+        GremlinPipeline<Graph, Vertex> pipe = null;
 
-            GremlinPipeline<Graph, Vertex> pipe = null;
+        Profiler profiler = Profiler.newCpuProfiler(false);
 
-            Profiler profiler = Profiler.newCpuProfiler(false);
-
-            // by using the Neo4j index directly it is possible to
-            // take full advantage of the underlying Lucene search engine
-            ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
+        // by using the Neo4j index directly it is possible to
+        // take full advantage of the underlying Lucene search engine
+        ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
 
 //            List<String> matchingNames = new ArrayList<String>(hitVs.size());
 //            for(Vertex v : hitVs) {
@@ -409,16 +405,15 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
 //                logger.debug("matchingName  " + matchValue);
 //            }
 
-            List<Vertex> vertices = new ArrayList<Vertex>();
-            pipe = new GremlinPipeline<Graph, Vertex>(hitVs);
-            Table table = new Table();
-            pipe.as("match").in(RdfSchema.DWC.property("vernacularName")).as("taxon").table(table).iterate();
+        List<Vertex> vertices = new ArrayList<Vertex>();
+        pipe = new GremlinPipeline<Graph, Vertex>(hitVs);
+        Table table = new Table();
+        pipe.as("match").in(RdfSchema.DWC.property("vernacularName")).as("taxon").table(table).iterate();
 
-            updateQueriesWithResponse(
-                    table.getColumn("taxon"), table.getColumn("match"),
-                    NameType.VERNACULAR_NAME, checklistInfo, query);
-            profiler.end(System.err);
-        }
+        updateQueriesWithResponse(
+                table.getColumn("taxon"), table.getColumn("match"),
+                NameType.VERNACULAR_NAME, checklistInfo, query);
+        profiler.end(System.err);
     }
 
     @Override
@@ -429,22 +424,20 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
     @Override
     public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
 
-        for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
+        ServiceProviderInfo checklistInfo = getServiceProviderInfo();
 
-            // FIXME query specific subchecklist
-            Query query = singleQueryFrom(tnrMsg);
-            String queryString = query.getRequest().getQueryString();
+        Query query = singleQueryFrom(tnrMsg);
+        String queryString = query.getRequest().getQueryString();
 
-            // by using the Neo4j index directly it is possible to
-            // take full advantage of the underlying Lucene search engine
-            queryString = QueryParser.escape(queryString);
-            ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
-            if(hitVs.size() > 0) {
-                Response response = tnrResponseFromResource(hitVs.get(0), query.getRequest(), null, null, checklistInfo);
-                query.getResponse().add(response);
-            } else if(hitVs.size() > 1) {
-                throw new DRFChecklistException("More than one node with the id '" + queryString + "' found");
-            }
+        // by using the Neo4j index directly it is possible to
+        // take full advantage of the underlying Lucene search engine
+        queryString = QueryParser.escape(queryString);
+        ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
+        if(hitVs.size() > 0) {
+            Response response = tnrResponseFromResource(hitVs.get(0), query.getRequest(), null, null, checklistInfo);
+            query.getResponse().add(response);
+        } else if(hitVs.size() > 1) {
+            throw new DRFChecklistException("More than one node with the id '" + queryString + "' found");
         }
     }
 

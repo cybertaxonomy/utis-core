@@ -17,9 +17,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EEA_BDC_ClientTest {
+public class EUNIS_ClientTest {
 
-    protected static final Logger logger = LoggerFactory.getLogger(EEA_BDC_ClientTest.class);
+    protected static final Logger logger = LoggerFactory.getLogger(EUNIS_ClientTest.class);
 
     static EUNIS_Client client;
 
