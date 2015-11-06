@@ -205,7 +205,6 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
         taxon.setTaxonName(taxonName);
         taxon.setUrl(taxonV.getProperty(GraphSail.VALUE).toString());
         taxon.setIdentifier(taxon.getUrl());
-        taxon.setTaxonomicStatus(TaxonomicStatus.ACCEPTED.name());
 
         GremlinPipeline<Graph, Vertex> accordingToPipe = new GremlinPipeline<Graph, Vertex>(taxonV);
         try {
@@ -217,7 +216,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
             logger.debug("No nameAccordingTo found");
         }
         URI typeUri = queryClient.vertexURI(taxonV, RdfSchema.RDF, "type");
-        taxon.setTaxonomicStatus(typeUri.getFragment());
+        taxon.setTaxonomicStatus(TaxonomicStatus.ACCEPTED.name());
 
         createSources(taxonV, taxon);
 
