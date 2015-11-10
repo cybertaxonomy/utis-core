@@ -178,10 +178,18 @@ public class Neo4jStore extends Store{
      * @throws IOException
      */
     public void setLastModified(Date lastModified) throws IOException {
+
         File lastModifiedFile = lastModifiedFile();
-        FileWriter fw = new FileWriter(lastModifiedFile);
-        fw.append(DateUtil.formatDate(lastModified));
-        fw.close();
+        File updateLogFile = updateLogFile();
+
+        // write the timestamp as only content into the last modified file
+        FileUtils.write(lastModifiedFile, DateUtil.formatDate(lastModified));
+
+        // append a new line to the log file
+        FileWriter logFileWriter = new FileWriter(updateLogFile);
+        logFileWriter.append("\n").append(DateUtil.formatDate(lastModified));
+        logFileWriter.close();
+
         // getLastModified() reads the date from the file
         this.lastModified = getLastModified();
         // test if file has been written correctly
@@ -194,6 +202,10 @@ public class Neo4jStore extends Store{
      */
     private File lastModifiedFile() {
         return new File(storeLocation, "LAST_IMPORT_DATE");
+    }
+
+    private File updateLogFile() {
+        return new File(storeLocation, "UPDATE.log");
     }
 
 
