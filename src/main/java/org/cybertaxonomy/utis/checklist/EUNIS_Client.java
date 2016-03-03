@@ -452,6 +452,15 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void taxonomicChildren(TnrMsg tnrMsg) throws DRFChecklistException {
+        throw new DRFChecklistException("taxonomicChildren mode not supported by " + this.getClass().getSimpleName());
+
+    }
+
     private void updateQueriesWithResponse(List<Vertex> taxonNodes, List<Vertex> matchNodes, NameType matchType, ServiceProviderInfo ci, Query query){
 
         if (taxonNodes == null) {

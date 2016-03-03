@@ -419,6 +419,15 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void taxonomicChildren(TnrMsg tnrMsg) throws DRFChecklistException {
+        throw new DRFChecklistException("taxonomicChildren mode not supported by " + this.getClass().getSimpleName());
+
+    }
+
     private void updateQueriesWithResponse(String responseBody, ServiceProviderInfo ci, Query.Request request) throws DRFChecklistException {
 
         if(responseBody == null || responseBody.isEmpty()){

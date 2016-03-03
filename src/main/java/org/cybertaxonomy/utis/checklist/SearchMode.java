@@ -6,6 +6,7 @@ public enum SearchMode {
     scientificNameLike,
     vernacularNameExact,
     vernacularNameLike,
-    findByIdentifier;
+    findByIdentifier,
+    taxonomicChildren;
 
 }

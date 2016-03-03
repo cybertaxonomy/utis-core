@@ -105,6 +105,14 @@ public abstract class BaseChecklistClient<QC extends IQueryClient> extends Abstr
                     throw new UnsupportedIdentifierException("Queries contain unsupported identifier strings");
                 }
                 break;
+            case taxonomicChildren:
+                if(checkSupportedIdentifieres(tnrMsg)){
+                    taxonomicChildren(tnrMsg);
+                } else {
+                    logger.info("The queries contain unsupported identifier strings");
+                    throw new UnsupportedIdentifierException("Queries contain unsupported identifier strings");
+                }
+                break;
             default:
                 throw new DRFChecklistException("Unimplemented SearchMode");
             }
@@ -187,6 +195,15 @@ public abstract class BaseChecklistClient<QC extends IQueryClient> extends Abstr
      * @throws DRFChecklistException
      */
     public abstract void  findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException;
+
+    /**
+     * Lists the taxonomic children of taxa having a specific identifier
+     *
+     * @param tnrMsg
+     * @throws DRFChecklistException
+     */
+    public abstract void  taxonomicChildren(TnrMsg tnrMsg) throws DRFChecklistException;
+
 
     public abstract EnumSet<SearchMode> getSearchModes();
 

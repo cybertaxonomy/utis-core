@@ -225,6 +225,15 @@ public class Species2000ColClient extends BaseChecklistClient<RestClient> {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void taxonomicChildren(TnrMsg tnrMsg) throws DRFChecklistException {
+        throw new DRFChecklistException("taxonomicChildren mode not supported by " + this.getClass().getSimpleName());
+
+    }
+
 
 }
 

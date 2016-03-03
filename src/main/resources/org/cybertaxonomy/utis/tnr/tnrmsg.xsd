@@ -265,7 +265,7 @@
               <xsd:annotation>
                   <xsd:appinfo>
                     <annox:annotate target="getter">
-                      @com.wordnik.swagger.annotations.ApiModelProperty("Specified the search mode to be usedPossible search modes are: scientificNameExact, scientificNameLike (begins with), vernacularNameExact, vernacularNameLike (contains).")
+                      @com.wordnik.swagger.annotations.ApiModelProperty("Specified the search mode to be used. Possible search modes are: scientificNameExact, scientificNameLike (begins with), vernacularNameExact, vernacularNameLike (contains), findByIdentifier, taxonomicChildren.")
                     </annox:annotate>
                   </xsd:appinfo>
                 </xsd:annotation>

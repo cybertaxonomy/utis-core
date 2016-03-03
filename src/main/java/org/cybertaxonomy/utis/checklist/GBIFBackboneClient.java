@@ -349,7 +349,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
 
     @Override
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
+        throw new DRFChecklistException("resolveVernacularNamesLike mode not supported by " + this.getClass().getSimpleName());
 
     }
 
@@ -360,7 +360,15 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
 
     @Override
     public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
+        throw new DRFChecklistException("findByIdentifier mode not supported by " + this.getClass().getSimpleName());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void taxonomicChildren(TnrMsg tnrMsg) throws DRFChecklistException {
+        throw new DRFChecklistException("taxonomicChildren mode not supported by " + this.getClass().getSimpleName());
 
     }
 

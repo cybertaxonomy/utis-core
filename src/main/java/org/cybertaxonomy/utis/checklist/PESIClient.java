@@ -372,6 +372,15 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void taxonomicChildren(TnrMsg tnrMsg) throws DRFChecklistException {
+        throw new DRFChecklistException("taxonomicChildren mode not supported by " + this.getClass().getSimpleName());
+
+    }
+
+    /**
      * @param pesinspt
      * @param record
      * @param searchMode TODO

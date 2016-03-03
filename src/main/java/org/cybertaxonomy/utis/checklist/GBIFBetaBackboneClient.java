@@ -314,6 +314,15 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void taxonomicChildren(TnrMsg tnrMsg) throws DRFChecklistException {
+        throw new DRFChecklistException("taxonomicChildren mode not supported by " + this.getClass().getSimpleName());
+
+    }
+
 
 }
 
