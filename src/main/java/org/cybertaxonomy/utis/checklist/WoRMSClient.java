@@ -1,8 +1,6 @@
 package org.cybertaxonomy.utis.checklist;
 
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.rmi.RemoteException;
 import java.util.EnumSet;
 
@@ -12,6 +10,7 @@ import org.apache.http.HttpHost;
 import org.cybertaxonomy.utis.checklist.worms.AphiaNameServiceLocator;
 import org.cybertaxonomy.utis.checklist.worms.AphiaNameServicePortType;
 import org.cybertaxonomy.utis.checklist.worms.AphiaRecord;
+import org.cybertaxonomy.utis.checklist.worms.Classification;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.SoapClient;
 import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
@@ -180,26 +179,26 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         source.setUrl(sourceUrl);
         taxon.getSources().add(source);
 
-        String[] rankNames = new String[] {"Genus", "Family", "Order", "_class", "Phylum", "Kingdom"};
-        Method getRankLevelMethod = null;
-        for(String rankName : rankNames) {
-            try {
-            getRankLevelMethod = taxonRecord.getClass().getDeclaredMethod("get" + rankName, (Class<?>[])null);
-            String higherTaxonName = getRankLevelMethod.invoke(taxonRecord).toString();
-            HigherClassificationElement hce = new HigherClassificationElement();
-            hce.setScientificName(higherTaxonName);
-            if(rankName.equals("_class")) {
-                rankName  = "Class";
-            }
-            hce.setRank(rankName);
-            taxon.getHigherClassification().add(hce);
-            } catch(NullPointerException e) {
-                // IGNORE, just try the next rank
-                logger.debug(e.getMessage());
+        // the classification information contained in the taxon is incomplete
+        // it is necessary to to a second request to obtain the full classification
+        try {
+            AphiaNameServicePortType aphianspt = getAphiaNameService();
+            Classification classification = aphianspt.getAphiaClassificationByID(taxonRecord.getAphiaID());
 
-            } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                throw new RuntimeException(e);
+            while(classification != null && classification.getRank() != null) {
+                HigherClassificationElement hce = new HigherClassificationElement();
+                hce.setScientificName(classification.getScientificname());
+                hce.setRank(classification.getRank());
+                AphiaRecord taxonAtRankRecord = aphianspt.getAphiaRecordByID(classification.getAphiaID());
+                hce.setTaxonID(taxonAtRankRecord.getLsid());
+                taxon.getHigherClassification().add(hce);
+                System.err.println(classification.getRank());
+                classification = classification.getChild();
             }
+
+        } catch (DRFChecklistException | RemoteException e) {
+            String msg = "Error while obtainig classification informtation for " + taxonRecord.getLsid();
+            logger.error(msg, e);
         }
 
         return taxon;
