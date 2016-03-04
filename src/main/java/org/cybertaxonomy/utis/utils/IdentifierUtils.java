@@ -2,12 +2,13 @@ package org.cybertaxonomy.utis.utils;
 
 import java.net.MalformedURLException;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
-import com.ibm.lsid.MalformedLSIDException;
-import com.ibm.lsid.client.LSIDAuthority;
 import com.sun.jndi.toolkit.url.Uri;
 
 public class IdentifierUtils {
+
+    final static Pattern LSID_PATTERN = Pattern.compile("^urn:lsid(:[\\w\\.-]*){3,4}$");
 
     public static boolean checkInteger(String value){
 
@@ -29,15 +30,14 @@ public class IdentifierUtils {
         return true;
     }
 
-    @SuppressWarnings("unused")
+    /**
+     * Checks if the given <code>value</code> confirms to {@code urn:lsid:<Authority>:<Namespace>:<ObjectID>[:<Version>]}
+     * @param value
+     * @return
+     */
     public static boolean checkLSID(String value){
 
-        try {
-           new LSIDAuthority(value);
-        } catch (MalformedLSIDException e) {
-            return false;
-        }
-        return true;
+        return LSID_PATTERN.matcher(value).matches();
     }
 
     /**
