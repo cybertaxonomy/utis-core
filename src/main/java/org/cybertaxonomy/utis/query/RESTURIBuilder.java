@@ -10,21 +10,21 @@ public class RESTURIBuilder extends URIBuilder {
 
 	public RESTURIBuilder(String hostName,
 			int port,
-			String endpointSuffix, 
+			String endpointSuffix,
 			String key,
 			Map<String, String> paramMap) {
 		this.querykey = key;
 		setScheme("http");
 		setHost(hostName);
 		setPort(port);
-		setPath(endpointSuffix);		
+		setPath(endpointSuffix);
 		if(paramMap != null) {
 			for (Map.Entry<String, String> entry : paramMap.entrySet()) {
-				setParameter(entry.getKey(), entry.getValue());		    
+				setParameter(entry.getKey(), entry.getValue());
 			}
 		}
 	}
-	
+
 	public RESTURIBuilder(String hostName,
 			int port,
 			String endpointUrl,
@@ -33,16 +33,16 @@ public class RESTURIBuilder extends URIBuilder {
 		setScheme("http");
 		setHost(hostName);
 		setPort(port);
-		setPath(endpointUrl);		
+		setPath(endpointUrl);
 		if(paramMap != null) {
 			for (Map.Entry<String, String> entry : paramMap.entrySet()) {
-				setParameter(entry.getKey(), entry.getValue());		    
+				setParameter(entry.getKey(), entry.getValue());
 			}
 		}
 	}
-	
+
 	public void addQuery(String query) {
-		addParameter(querykey, query.trim());		 
+		addParameter(querykey, query.trim());
 	}
-	
+
 }

@@ -81,10 +81,12 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {
         ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,DOC_URL,COPYRIGHT_URL, getSearchModes());
-        checklistInfo.addSubChecklist(new ServiceProviderInfo("col",
+        ServiceProviderInfo col = new ServiceProviderInfo("col",
                 "Catalogue Of Life (EDIT - name catalogue end point)",
                 "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html",
-                "http://www.catalogueoflife.org/col/info/copyright", ServiceProviderInfo.DEFAULT_SEARCH_MODE));
+                "http://www.catalogueoflife.org/col/info/copyright", ServiceProviderInfo.DEFAULT_SEARCH_MODE);
+        col.setDefaultClassificationId("29d4011f-a6dd-4081-beb8-559ba6b84a6b");
+        checklistInfo.addSubChecklist(col);
         return checklistInfo;
     }
 
@@ -212,7 +214,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
     }
 
-    private Taxon generateAccName(JSONObject taxon, boolean addClassification) {
+    private Taxon generateTaxon(JSONObject taxon, boolean addClassification, ServiceProviderInfo ci, String taxonUuid) throws DRFChecklistException {
         Taxon accTaxon = new Taxon();
         TaxonName taxonName = new TaxonName();
 
@@ -248,7 +250,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         accTaxon.getSources().add(source);
 
         if(addClassification) {
-            addClassification(taxon, accTaxon);
+            addClassification(taxon, accTaxon, ci, taxonUuid);
         }
         return accTaxon;
     }
@@ -256,21 +258,35 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
     /**
      * @param taxon
      * @param accTaxon
+     * @param ci
+     * @param taxonUuid
+     * @throws DRFChecklistException
      */
-    private void addClassification(JSONObject taxon, Taxon accTaxon) {
-        JSONObject classification =(JSONObject)taxon.get("classification");
-        String[] rankNames = new String[] {"Genus", "Family", "Order", "Class", "Phylum", "Kingdom"};
-        for(String rankName : rankNames) {
-            try {
-                String higherTaxonName = classification.get(rankName).toString();
-                HigherClassificationElement hce = new HigherClassificationElement();
-                hce.setScientificName(higherTaxonName);
-                hce.setRank(rankName);
-                accTaxon.getHigherClassification().add(hce);
-            } catch(NullPointerException e) {
-                // IGNORE, just try the next rank
+    private void addClassification(JSONObject taxon, Taxon accTaxon, ServiceProviderInfo ci, String taxonUuid) throws DRFChecklistException {
 
-            }
+        // need to fetch the full classification from the cdm REST api:
+
+        URI classificationUri = queryClient.buildURI(SERVER_PATH_PREFIX + ci.getId()
+                + "/portal/classification/" + ci.getDefaultClassificationId() + "/pathFrom/" + taxonUuid + ".json", null);
+
+        String responseBody = queryClient.get(classificationUri);
+
+        JSONArray pathToRoot  = null;
+        try {
+            // pathtoroot i a list of TaxonNode objects
+            pathToRoot = parseResponseBody(responseBody, JSONArray.class);
+        } catch (ParseException e1) {
+            throw new DRFChecklistException("Error parsing response from " + classificationUri.toString(), e1);
+        }
+
+        for(Object o: pathToRoot) {
+            JSONObject taxonNodeJson = (JSONObject)o;
+
+            HigherClassificationElement hce = new HigherClassificationElement();
+            hce.setScientificName(taxonNodeJson.get("titleCache").toString());
+            hce.setRank(taxonNodeJson.get("rankLabel").toString());
+            hce.setTaxonID(taxonNodeJson.get("uuid").toString()); // need to get the LSId instead!!!!
+            accTaxon.getHigherClassification().add(hce);
         }
     }
 
@@ -482,23 +498,23 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
             i++;
             JSONObject taxonInfo = itrTaxonMsgs.next();
             JSONObject taxonResponse = (JSONObject) taxonInfo.get("response");
-            JSONObject taxon = (JSONObject) taxonResponse.get("taxon");
+            JSONObject jsonTaxon = (JSONObject) taxonResponse.get("taxon");
             JSONArray relatedTaxa = (JSONArray) taxonResponse.get("relatedTaxa");
 
             JSONObject taxonRequest = (JSONObject) taxonInfo.get("request");
             String taxonUuid = (String) taxonRequest.get("taxonUuid");
 
-            if(taxon != null) {
+            if(jsonTaxon != null) {
                 Response tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
 
                 String matchingName = taxonIdMatchStringMap.get(taxonUuid);
                 if(matchingName != null){
                     tnrResponse.setMatchingNameString(matchingName);
-                    tnrResponse.setMatchingNameType(matchingName.equals(taxon.get("name").toString()) ? NameType.TAXON : NameType.SYNONYM);
+                    tnrResponse.setMatchingNameType(matchingName.equals(jsonTaxon.get("name").toString()) ? NameType.TAXON : NameType.SYNONYM);
                 }
 
-                Taxon accName = generateAccName(taxon, addClassification);
-                tnrResponse.setTaxon(accName);
+                Taxon taxon = generateTaxon(jsonTaxon, addClassification, ci, taxonUuid);
+                tnrResponse.setTaxon(taxon);
 
                 if(request.isAddSynonymy()){
                     generateSynonyms(relatedTaxa, tnrResponse);

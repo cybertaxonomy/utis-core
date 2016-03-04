@@ -18,7 +18,8 @@ public class ServiceProviderInfo {
     private String documentationUrl;
     private String copyrightUrl;
     private String version;
-    private List<ServiceProviderInfo> subChecklists = new ArrayList<ServiceProviderInfo>();
+    private String defaultClassificationId;
+    private final List<ServiceProviderInfo> subChecklists = new ArrayList<ServiceProviderInfo>();
     protected EnumSet<SearchMode> searchModes;
 
     /**
@@ -136,6 +137,20 @@ public class ServiceProviderInfo {
      */
     public void setSearchModes(EnumSet<SearchMode> matchModes) {
         this.searchModes = matchModes;
+    }
+
+    /**
+     * @return the defaultClassificationId
+     */
+    public String getDefaultClassificationId() {
+        return defaultClassificationId;
+    }
+
+    /**
+     * @param defaultClassificationId the defaultClassificationId to set
+     */
+    public void setDefaultClassificationId(String defaultClassificationId) {
+        this.defaultClassificationId = defaultClassificationId;
     }
 
 }
