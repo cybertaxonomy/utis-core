@@ -165,7 +165,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
                     Long key = (Long)res.get("key");
                     accTaxonId = key.toString();
 
-                    Taxon accName = generateTaxon(res);
+                    Taxon accName = generateTaxon(res, false);
                     tnrResponse.setTaxon(accName);
 
                 } else
@@ -178,7 +178,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
                     String responseBody = queryClient.get(taxonUri);
 
                     JSONObject taxon = JSONUtils.parseJsonToObject(responseBody);
-                    Taxon accName = generateTaxon(taxon);
+                    Taxon accName = generateTaxon(taxon, false);
                     tnrResponse.setTaxon(accName);
 
                 } else {
@@ -211,7 +211,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
         }
     }
 
-    private Taxon generateTaxon(JSONObject taxon) {
+    private Taxon generateTaxon(JSONObject taxon, boolean addClassification) {
         Taxon accTaxon = new Taxon();
         TaxonName taxonName = new TaxonName();
 
@@ -246,23 +246,25 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
         source.setUrl(sourceUrl);
         accTaxon.getSources().add(source);
 
+        if(addClassification) {
+            String[] rankNames = new String[] {"genus", "family", "order", "clazz", "phylum", "kingdom"};
+            for(String rankName : rankNames) {
+                try {
+                String higherTaxonName = taxon.get(rankName).toString();
+                HigherClassificationElement hce = new HigherClassificationElement();
+                hce.setScientificName(higherTaxonName);
+                if(rankName.equals("clazz")) {
+                    rankName = "class";
+                }
+                hce.setRank(StringUtils.capitalize(rankName));
+                accTaxon.getHigherClassification().add(hce);
+                } catch(NullPointerException e) {
+                    // IGNORE, just try the next rank
 
-        String[] rankNames = new String[] {"genus", "family", "order", "clazz", "phylum", "kingdom"};
-        for(String rankName : rankNames) {
-            try {
-            String higherTaxonName = taxon.get(rankName).toString();
-            HigherClassificationElement hce = new HigherClassificationElement();
-            hce.setScientificName(higherTaxonName);
-            if(rankName.equals("clazz")) {
-                rankName = "class";
-            }
-            hce.setRank(StringUtils.capitalize(rankName));
-            accTaxon.getHigherClassification().add(hce);
-            } catch(NullPointerException e) {
-                // IGNORE, just try the next rank
-
+                }
             }
         }
+
         return accTaxon;
 
     }
@@ -372,5 +374,13 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void higherClassification(TnrMsg tnrMsg) throws DRFChecklistException {
+        throw new DRFChecklistException("higherClassification mode not supported by " + this.getClass().getSimpleName());
+
+    }
 
 }

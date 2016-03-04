@@ -234,7 +234,14 @@ public class Species2000ColClient extends BaseChecklistClient<RestClient> {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void higherClassification(TnrMsg tnrMsg) throws DRFChecklistException {
+        throw new DRFChecklistException("higherClassification mode not supported by " + this.getClass().getSimpleName());
 
+    }
 }
 
 

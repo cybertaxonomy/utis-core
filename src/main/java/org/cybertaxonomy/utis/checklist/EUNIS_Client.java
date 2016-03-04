@@ -64,7 +64,9 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
             SearchMode.scientificNameLike,
             SearchMode.vernacularNameExact,
             SearchMode.vernacularNameLike,
-            SearchMode.findByIdentifier);
+            SearchMode.findByIdentifier,
+            SearchMode.higherClassification
+            );
 
     public static enum RdfSchema {
 
@@ -195,7 +197,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
         return queryString;
     }
 
-    private Taxon createTaxon(Vertex taxonV) {
+    private Taxon createTaxon(Vertex taxonV, boolean addClassification) {
 
         Taxon taxon = new Taxon();
 
@@ -220,34 +222,35 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
 
         createSources(taxonV, taxon);
 
-        // classification
-        Vertex parentV= null;
-        try {
-            parentV = queryClient.relatedVertex(taxonV, RdfSchema.EUNIS_SPECIES, "taxonomy");
-        } catch (Exception e) {
-            logger.error("No taxonomy information for " + taxonV.toString());
-        }
-
-        while (parentV != null) {
-            logger.debug("parent taxon: " + parentV.toString());
-            String level = queryClient.relatedVertexValue(parentV, RdfSchema.EUNIS_TAXONOMY, "level");
-            String parentTaxonName = queryClient.relatedVertexValue(parentV, RdfSchema.EUNIS_TAXONOMY, "name");
-
-            if(level != null) {
-                HigherClassificationElement hce = new HigherClassificationElement();
-                hce.setRank(level);
-                hce.setScientificName(parentTaxonName);
-                hce.setTaxonID(parentV.getProperty(GraphSail.VALUE).toString());
-                taxon.getHigherClassification().add(hce );
+        if(addClassification) {
+            // classification
+            Vertex parentV= null;
+            try {
+                parentV = queryClient.relatedVertex(taxonV, RdfSchema.EUNIS_SPECIES, "taxonomy");
+            } catch (Exception e) {
+                logger.error("No taxonomy information for " + taxonV.toString());
             }
-            Vertex lastParentV = parentV;
-            parentV = queryClient.relatedVertex(parentV, RdfSchema.EUNIS_TAXONOMY, "parent");
-            if(lastParentV.equals(parentV)) {
-                // avoid endless looping when data is not correct
-                break;
+
+            while (parentV != null) {
+                logger.debug("parent taxon: " + parentV.toString());
+                String level = queryClient.relatedVertexValue(parentV, RdfSchema.EUNIS_TAXONOMY, "level");
+                String parentTaxonName = queryClient.relatedVertexValue(parentV, RdfSchema.EUNIS_TAXONOMY, "name");
+
+                if(level != null) {
+                    HigherClassificationElement hce = new HigherClassificationElement();
+                    hce.setRank(level);
+                    hce.setScientificName(parentTaxonName);
+                    hce.setTaxonID(parentV.getProperty(GraphSail.VALUE).toString());
+                    taxon.getHigherClassification().add(hce );
+                }
+                Vertex lastParentV = parentV;
+                parentV = queryClient.relatedVertex(parentV, RdfSchema.EUNIS_TAXONOMY, "parent");
+                if(lastParentV.equals(parentV)) {
+                    // avoid endless looping when data is not correct
+                    break;
+                }
             }
         }
-
         return taxon;
     }
 
@@ -435,6 +438,15 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
     @Override
     public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
 
+        _findByIdentifier(tnrMsg, false);
+    }
+
+    /**
+     * @param tnrMsg
+     * @param addClassification TODO
+     * @throws DRFChecklistException
+     */
+    private void _findByIdentifier(TnrMsg tnrMsg, boolean addClassification) throws DRFChecklistException {
         ServiceProviderInfo checklistInfo = getServiceProviderInfo();
 
         Query query = singleQueryFrom(tnrMsg);
@@ -445,7 +457,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
         queryString = QueryParser.escape(queryString);
         ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
         if(hitVs.size() > 0) {
-            Response response = tnrResponseFromResource(hitVs.get(0), query.getRequest(), null, null, checklistInfo);
+            Response response = tnrResponseFromResource(hitVs.get(0), query.getRequest(), null, null, checklistInfo, addClassification);
             query.getResponse().add(response);
         } else if(hitVs.size() > 1) {
             throw new DRFChecklistException("More than one node with the id '" + queryString + "' found");
@@ -458,6 +470,15 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
     @Override
     public void taxonomicChildren(TnrMsg tnrMsg) throws DRFChecklistException {
         throw new DRFChecklistException("taxonomicChildren mode not supported by " + this.getClass().getSimpleName());
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void higherClassification(TnrMsg tnrMsg) throws DRFChecklistException {
+        _findByIdentifier(tnrMsg, true);
 
     }
 
@@ -484,7 +505,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
             if(matchNodes != null) {
                 matchNode = matchNodes.get(i);
             }
-            Response tnrResponse = tnrResponseFromResource(v, query.getRequest(), matchNode, matchType, ci);
+            Response tnrResponse = tnrResponseFromResource(v, query.getRequest(), matchNode, matchType, ci, false);
             if(tnrResponse != null) {
                 query.getResponse().add(tnrResponse);
             }
@@ -492,15 +513,16 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
     }
 
     /**
+     * @param request
+     * @param matchNode
+     * @param matchType
+     * @param ci
+     * @param addClassification TODO
      * @param model
      * @param taxonR
-     * @param request
-     * @param matchType
-     * @param matchNode
-     * @param ci
      * @return
      */
-    private Response tnrResponseFromResource(Vertex taxonV, Request request, Vertex matchNode, NameType matchType, ServiceProviderInfo ci) {
+    private Response tnrResponseFromResource(Vertex taxonV, Request request, Vertex matchNode, NameType matchType, ServiceProviderInfo ci, boolean addClassification) {
 
         Response tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
 
@@ -521,7 +543,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
 
         // case when accepted name
         if(isAccepted) {
-            Taxon taxon = createTaxon(taxonV);
+            Taxon taxon = createTaxon(taxonV, false);
             tnrResponse.setTaxon(taxon);
             if(matchNode == null) {
                 tnrResponse.setMatchingNameType(NameType.TAXON);
@@ -541,7 +563,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
             }
 
             if(taxonV != null) {
-                Taxon taxon = createTaxon(taxonV);
+                Taxon taxon = createTaxon(taxonV, false);
                 tnrResponse.setTaxon(taxon);
             } else {
             }

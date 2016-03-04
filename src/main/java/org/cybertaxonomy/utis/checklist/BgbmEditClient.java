@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpHost;
-import org.apache.http.ParseException;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.RestClient;
 import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
@@ -29,6 +28,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
@@ -50,7 +50,8 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
             SearchMode.scientificNameLike,
-            SearchMode.findByIdentifier
+            SearchMode.findByIdentifier,
+            SearchMode.higherClassification
             );
 
     public BgbmEditClient() {
@@ -95,8 +96,9 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
      * @param queryList
      * @param responseBodyJson
      * @throws DRFChecklistException
+     * @throws ParseException
      */
-    private void buildTaxonIdMapsFromCatalogueServiceResponse(List<Query> queryList , String responseBody) throws DRFChecklistException {
+    private void buildTaxonIdMapsFromCatalogueServiceResponse(List<Query> queryList , String responseBody) throws DRFChecklistException, ParseException {
 
         JSONArray responseBodyJson = parseResponseBody(responseBody, JSONArray.class);
 
@@ -140,8 +142,9 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
      * @param queryList
      * @param responseBodyJson
      * @throws DRFChecklistException
+     * @throws ParseException
      */
-    private void addTaxaToTaxonIdMapFromIdentifierServiceResponse(List<Query> queryList , String responseBody) throws DRFChecklistException {
+    private void addTaxaToTaxonIdMapFromIdentifierServiceResponse(List<Query> queryList , String responseBody) throws DRFChecklistException, ParseException {
 
         /*
          * {"class":"DefaultPagerImpl","count":8,"currentIndex":0,"firstRecord":1,"indices":[0],"lastRecord":8,"nextIndex":0,"pageSize":30,"pagesAvailable":1,"prevIndex":0,
@@ -176,7 +179,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
     }
 
-    private void addTaxonToTaxonIdMap(List<Query> queryList , String responseBody) throws DRFChecklistException {
+    private void addTaxonToTaxonIdMap(List<Query> queryList , String responseBody) throws DRFChecklistException, ParseException {
 
 
         if(queryList.size() > 1){
@@ -195,22 +198,12 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
      * @param responseBody
      * @return
      * @throws DRFChecklistException
+     * @throws org.json.simple.parser.ParseException
      */
-    private <T extends JSONAware> T parseResponseBody(String responseBody, Class<T> jsonType) throws DRFChecklistException {
+    private <T extends JSONAware> T parseResponseBody(String responseBody, Class<T> jsonType) throws DRFChecklistException, org.json.simple.parser.ParseException {
         // TODO use Jackson instead? it is much faster!
         JSONParser parser = new JSONParser();
-        Object obj;
-        try {
-            obj = parser.parse(responseBody);
-        } catch (ParseException e) {
-            logger.error("parseResponseBody() - ", e);
-            throw new DRFChecklistException(e);
-        } catch (org.json.simple.parser.ParseException e) {
-
-            logger.error("parseResponseBody() - ", e);
-            throw new DRFChecklistException(e);
-        }
-
+        Object obj = parser.parse(responseBody);
         if(jsonType.isAssignableFrom(obj.getClass())){
             return jsonType.cast(obj);
         } else {
@@ -219,7 +212,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
     }
 
-    private Taxon generateAccName(JSONObject taxon) {
+    private Taxon generateAccName(JSONObject taxon, boolean addClassification) {
         Taxon accTaxon = new Taxon();
         TaxonName taxonName = new TaxonName();
 
@@ -254,21 +247,31 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         source.setUrl(sourceUrl);
         accTaxon.getSources().add(source);
 
+        if(addClassification) {
+            addClassification(taxon, accTaxon);
+        }
+        return accTaxon;
+    }
+
+    /**
+     * @param taxon
+     * @param accTaxon
+     */
+    private void addClassification(JSONObject taxon, Taxon accTaxon) {
         JSONObject classification =(JSONObject)taxon.get("classification");
         String[] rankNames = new String[] {"Genus", "Family", "Order", "Class", "Phylum", "Kingdom"};
         for(String rankName : rankNames) {
             try {
-            String higherTaxonName = classification.get(rankName).toString();
-            HigherClassificationElement hce = new HigherClassificationElement();
-            hce.setScientificName(higherTaxonName);
-            hce.setRank(rankName);
-            accTaxon.getHigherClassification().add(hce);
+                String higherTaxonName = classification.get(rankName).toString();
+                HigherClassificationElement hce = new HigherClassificationElement();
+                hce.setScientificName(higherTaxonName);
+                hce.setRank(rankName);
+                accTaxon.getHigherClassification().add(hce);
             } catch(NullPointerException e) {
                 // IGNORE, just try the next rank
 
             }
         }
-        return accTaxon;
     }
 
     private void generateSynonyms(JSONArray relatedTaxa, Response tnrResponse) {
@@ -326,14 +329,17 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         Query.Request request = queryList.get(0).getRequest();
 
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
+
             URI namesUri = queryClient.buildUriFromQueryList(queryList,
                     SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue.json",
                     "query",
                     "*", null);
-
-            String searchResponseBody = queryClient.get(namesUri);
-
-            buildTaxonIdMapsFromCatalogueServiceResponse(queryList, searchResponseBody);
+            try {
+                String searchResponseBody = queryClient.get(namesUri);
+                buildTaxonIdMapsFromCatalogueServiceResponse(queryList, searchResponseBody);
+            } catch (ParseException e) {
+               throw new DRFChecklistException("Error while parsing the response of " + namesUri, e);
+            }
 
             List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
 
@@ -343,7 +349,11 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                         "taxonUuid",
                         null);
                 String taxonResponseBody = queryClient.get(taxonUri);
-                updateQueriesWithResponse(taxonResponseBody, checklistInfo, request);
+                try {
+                    updateQueriesWithResponse(taxonResponseBody, checklistInfo, request, false);
+                } catch (ParseException e) {
+                    throw new DRFChecklistException("Error while parsing the response of " + namesUri, e);
+                }
             }
         }
     }
@@ -370,6 +380,16 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
     @Override
     public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
 
+        _findByIdentifier(tnrMsg, false);
+
+    }
+
+    /**
+     * @param tnrMsg
+     * @param addClassification TODO
+     * @throws DRFChecklistException
+     */
+    private void _findByIdentifier(TnrMsg tnrMsg, boolean addClassification) throws DRFChecklistException {
         List<Query> queryList = tnrMsg.getQuery();
 
         if(queryList.size() > 1){
@@ -384,25 +404,31 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
 
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
-            // taxon/findByIdentifier.json?identifier=1&includeEntity=1
-            if(IdentifierUtils.checkLSID(identifier)){
-                URI namesUri = queryClient.buildUriFromQueryList(queryList,
-                        SERVER_PATH_PREFIX + checklistInfo.getId() + "/authority/metadata.do",
-                        "lsid",
-                        null,
-                        null );
+            // taxon/findByIdentifier.json?identifier=1&includeEntity=
+            URI namesUri = null;
+            try {
+                if(IdentifierUtils.checkLSID(identifier)){
+                    namesUri = queryClient.buildUriFromQueryList(queryList,
+                            SERVER_PATH_PREFIX + checklistInfo.getId() + "/authority/metadata.do",
+                            "lsid",
+                            null,
+                            null );
 
-                String responseBody = queryClient.get(namesUri);
-                addTaxonToTaxonIdMap(queryList, responseBody);
-            } else {
-                URI namesUri = queryClient.buildUriFromQueryList(queryList,
-                        SERVER_PATH_PREFIX + checklistInfo.getId() + "/taxon/findByIdentifier.json",
-                        "identifier",
-                        null, // like search for identifiers not supported by this client
-                        findByIdentifierParameters );
+                    String responseBody = queryClient.get(namesUri);
+                    addTaxonToTaxonIdMap(queryList, responseBody);
+                } else {
+                    namesUri = queryClient.buildUriFromQueryList(queryList,
+                            SERVER_PATH_PREFIX + checklistInfo.getId() + "/taxon/findByIdentifier.json",
+                            "identifier",
+                            null, // like search for identifiers not supported by this client
+                            findByIdentifierParameters );
 
-                String responseBody = queryClient.get(namesUri);
-                addTaxaToTaxonIdMapFromIdentifierServiceResponse(queryList, responseBody);
+                    String responseBody = queryClient.get(namesUri);
+                    addTaxaToTaxonIdMapFromIdentifierServiceResponse(queryList, responseBody);
+                }
+            } catch (ParseException e) {
+                throw new DRFChecklistException("Error while parsing the response of " + namesUri, e);
+
             }
 
             List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
@@ -413,10 +439,13 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                         "taxonUuid",
                         null);
                 String taxonResponseBody = queryClient.get(taxonUri);
-                updateQueriesWithResponse(taxonResponseBody, checklistInfo, request);
+                try {
+                    updateQueriesWithResponse(taxonResponseBody, checklistInfo, request, addClassification);
+                } catch (ParseException e) {
+                    throw new DRFChecklistException("Error while parsing the response of " + taxonUri, e);
+                }
             }
         }
-
     }
 
     /**
@@ -428,7 +457,17 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
     }
 
-    private void updateQueriesWithResponse(String responseBody, ServiceProviderInfo ci, Query.Request request) throws DRFChecklistException {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void higherClassification(TnrMsg tnrMsg) throws DRFChecklistException {
+
+        _findByIdentifier(tnrMsg, true);
+
+    }
+
+    private void updateQueriesWithResponse(String responseBody, ServiceProviderInfo ci, Query.Request request, boolean addClassification) throws DRFChecklistException, ParseException {
 
         if(responseBody == null || responseBody.isEmpty()){
             return;
@@ -458,7 +497,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                     tnrResponse.setMatchingNameType(matchingName.equals(taxon.get("name").toString()) ? NameType.TAXON : NameType.SYNONYM);
                 }
 
-                Taxon accName = generateAccName(taxon);
+                Taxon accName = generateAccName(taxon, addClassification);
                 tnrResponse.setTaxon(accName);
 
                 if(request.isAddSynonymy()){

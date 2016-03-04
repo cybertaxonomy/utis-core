@@ -80,7 +80,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             SearchMode.scientificNameLike,
             SearchMode.vernacularNameExact,
             SearchMode.vernacularNameLike,
-            SearchMode.findByIdentifier
+            SearchMode.findByIdentifier,
+            SearchMode.higherClassification
             );
 
     public static final EnumSet<SearchMode> SCIENTIFICNAME_SEARCH_MODES = EnumSet.of(
@@ -157,7 +158,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
         return parsed;
     }
 
-    private Taxon generateTaxon(PESIRecord taxonRecord) {
+    private Taxon generateTaxon(PESIRecord taxonRecord, boolean addClassification) {
 
 
         Taxon taxon = new Taxon();
@@ -192,24 +193,26 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             taxon.getSources().add(source);
         }
 
-        String[] rankNames = new String[] {"Genus", "Family", "Order", "_class", "Phylum", "Kingdom"};
-        Method getRankLevelMethod = null;
-        for(String rankName : rankNames) {
-            try {
-            getRankLevelMethod = taxonRecord.getClass().getDeclaredMethod("get" + rankName, (Class<?>[])null);
-            String higherTaxonName = getRankLevelMethod.invoke(taxonRecord).toString();
-            HigherClassificationElement hce = new HigherClassificationElement();
-            hce.setScientificName(higherTaxonName);
-            if(rankName.equals("_class")) {
-                rankName  = "Class";
-            }
-            hce.setRank(rankName);
-            taxon.getHigherClassification().add(hce);
-            } catch(NullPointerException e) {
-                // IGNORE, just try the next rank
+        if(addClassification) {
+            String[] rankNames = new String[] {"Genus", "Family", "Order", "_class", "Phylum", "Kingdom"};
+            Method getRankLevelMethod = null;
+            for(String rankName : rankNames) {
+                try {
+                    getRankLevelMethod = taxonRecord.getClass().getDeclaredMethod("get" + rankName, (Class<?>[])null);
+                    String higherTaxonName = getRankLevelMethod.invoke(taxonRecord).toString();
+                    HigherClassificationElement hce = new HigherClassificationElement();
+                    hce.setScientificName(higherTaxonName);
+                    if(rankName.equals("_class")) {
+                        rankName  = "Class";
+                    }
+                    hce.setRank(rankName);
+                    taxon.getHigherClassification().add(hce);
+                } catch(NullPointerException e) {
+                    // IGNORE, just try the next rank
 
-            } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                throw new RuntimeException(e);
+                } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
 
@@ -265,7 +268,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             PESIRecord[] records = pesinspt.getPESIRecords(name, false);
             if(records != null){
                 for (PESIRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest());
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest(), false);
                     query.getResponse().add(tnrResponse);
                 }
             }
@@ -289,7 +292,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             PESIRecord[] records = pesinspt.getPESIRecords(name, true);
             if(records != null){
                 for (PESIRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest());
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest(), false);
                     query.getResponse().add(tnrResponse);
                 }
             }
@@ -313,7 +316,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             PESIRecord[] records = pesinspt.getPESIRecordsByVernacular(name);
             if(records != null){
                 for (PESIRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest());
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest(), false);
                     query.getResponse().add(tnrResponse);
                 }
             }
@@ -337,7 +340,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             PESIRecord[] records = pesinspt.getPESIRecordsByVernacular("%" + name + "%");
             if(records != null){
                 for (PESIRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest());
+                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest(), false);
                     query.getResponse().add(tnrResponse);
                 }
             }
@@ -350,6 +353,16 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
 
     @Override
     public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
+
+        _findByIdenifier(tnrMsg, false);
+    }
+
+    /**
+     * @param tnrMsg
+     * @param addClassification TODO
+     * @throws DRFChecklistException
+     */
+    private void _findByIdenifier(TnrMsg tnrMsg, boolean addClassification) throws DRFChecklistException {
         Query query = singleQueryFrom(tnrMsg);
         String name = query.getRequest().getQueryString();
         PESINameServiceLocator pesins = new PESINameServiceLocator();
@@ -359,7 +372,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
         try {
             PESIRecord record = pesinspt.getPESIRecordByGUID(name);
             if(record != null){
-                Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest());
+                Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest(), addClassification);
                 query.getResponse().add(tnrResponse);
             }
 
@@ -367,8 +380,6 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             logger.error("Error in getPESIRecordByGUID method in PESINameService", e);
             throw new DRFChecklistException("Error in getPESIRecordByGUID method in PESINameService");
         }
-
-
     }
 
     /**
@@ -381,12 +392,22 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void higherClassification(TnrMsg tnrMsg) throws DRFChecklistException {
+
+        _findByIdenifier(tnrMsg, true);
+    }
+
+    /**
      * @param pesinspt
      * @param record
+     * @param addClassification TODO
      * @param searchMode TODO
      * @throws RemoteException
      */
-    private Response tnrResponseFromRecord(PESINameServicePortType pesinspt, PESIRecord record, Query.Request request) throws RemoteException {
+    private Response tnrResponseFromRecord(PESINameServicePortType pesinspt, PESIRecord record, Query.Request request, boolean addClassification) throws RemoteException {
 
         Response tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
 
@@ -401,7 +422,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
 
             // case when accepted name
             if(record.getGUID() != null && record.getGUID().equals(taxonGUID)) {
-                Taxon taxon = generateTaxon(record);
+                Taxon taxon = generateTaxon(record, addClassification);
                 tnrResponse.setTaxon(taxon);
                 if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                     tnrResponse.setMatchingNameType(NameType.TAXON);
@@ -409,7 +430,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             } else {
                 // case when synonym
                 PESIRecord taxonRecord = pesinspt.getPESIRecordByGUID(taxonGUID);
-                Taxon taxon = generateTaxon(taxonRecord);
+                Taxon taxon = generateTaxon(taxonRecord, false);
                 tnrResponse.setTaxon(taxon);
                 if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                     tnrResponse.setMatchingNameType(NameType.SYNONYM);
