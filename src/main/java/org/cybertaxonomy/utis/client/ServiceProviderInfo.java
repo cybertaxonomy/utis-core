@@ -140,9 +140,12 @@ public class ServiceProviderInfo {
     }
 
     /**
+     * This must not be a getter since this information should not be
+     * made public in the front end.
+     *
      * @return the defaultClassificationId
      */
-    public String getDefaultClassificationId() {
+    public String defaultClassificationId() {
         return defaultClassificationId;
     }
 

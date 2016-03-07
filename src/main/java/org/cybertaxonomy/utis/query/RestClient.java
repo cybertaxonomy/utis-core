@@ -20,11 +20,10 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 import org.cybertaxonomy.utis.checklist.SearchMode;
@@ -64,7 +63,7 @@ public class RestClient implements IQueryClient{
      * @throws DRFChecklistException
      */
     public String get(URI uri) throws DRFChecklistException {
-        HttpClient client = new DefaultHttpClient();
+        CloseableHttpClient client = HttpClientBuilder.create().build();
         HttpGet request = new HttpGet(uri);
 
         try {
@@ -78,14 +77,15 @@ public class RestClient implements IQueryClient{
 
             return responseBody;
 
-        } catch (ClientProtocolException e1) {
-            e1.printStackTrace();
-//            throw new DRFChecklistException(e1);
         } catch (IOException e) {
-            e.printStackTrace();
-            throw new DRFChecklistException(e);
+            throw new DRFChecklistException("Error on http get request for " + uri, e);
+        } finally {
+            try {
+                client.close();
+            } catch (Exception e) {
+                /* IGNORE */
+            }
         }
-        return null;
     }
 
     /**
