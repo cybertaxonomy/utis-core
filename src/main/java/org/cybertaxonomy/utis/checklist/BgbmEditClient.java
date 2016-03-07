@@ -29,12 +29,13 @@ import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
-    /**
-     *
-     */
+    private static final Logger logger = LoggerFactory.getLogger(BgbmEditClient.class);
+
     public static final String ID = "bgbm-cdm-server";
     public static final String LABEL = "Name catalogues served by the BGBM CDM Server";
     public static final String DOC_URL = "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html";

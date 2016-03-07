@@ -28,6 +28,8 @@ import org.cybertaxonomy.utis.utils.Profiler;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
 import org.gbif.api.vocabulary.TaxonomicStatus;
 import org.neo4j.graphdb.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
@@ -39,9 +41,8 @@ import com.tinkerpop.pipes.util.structures.Table;
 
 public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> implements UpdatableStoreInfo {
 
-    /**
-     *
-     */
+    protected static final Logger logger = LoggerFactory.getLogger(BaseChecklistClient.class);
+
     public static final String ID = "eunis";
     public static final String LABEL = "EUNIS (European Nature Information System) by the European Environment Agency (EEA)";
     public static final String DOC_URL = "http://www.eea.europa.eu/themes/biodiversity/eunis/eunis-db#tab-metadata";
@@ -447,6 +448,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
      * @throws DRFChecklistException
      */
     private void _findByIdentifier(TnrMsg tnrMsg, boolean addClassification) throws DRFChecklistException {
+
         ServiceProviderInfo checklistInfo = getServiceProviderInfo();
 
         Query query = singleQueryFrom(tnrMsg);

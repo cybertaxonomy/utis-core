@@ -24,13 +24,15 @@ import org.cybertaxonomy.utis.tnr.msg.TaxonName;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.IdentifierUtils;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class WoRMSClient extends BaseChecklistClient<SoapClient> {
 
-    /**
-     *
-     */
+    private static final Logger logger = LoggerFactory.getLogger(WoRMSClient.class);
+
+
     private static final HttpHost HTTP_HOST = new HttpHost("http://www.marinespecies.org",80);
     public static final String ID = "worms";
     public static final String LABEL = "WoRMS";

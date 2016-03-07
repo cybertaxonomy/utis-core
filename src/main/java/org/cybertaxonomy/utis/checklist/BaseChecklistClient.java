@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class BaseChecklistClient<QC extends IQueryClient> extends AbstractClient<QC> {
 
-    protected Logger logger = LoggerFactory.getLogger(BaseChecklistClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(BaseChecklistClient.class);
 
     protected final static String CHECKLIST_KEY = "checklist";
     protected final static String CHECKLIST_URL_KEY = "checklist_url";

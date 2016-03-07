@@ -25,13 +25,13 @@ import org.cybertaxonomy.utis.utils.JSONUtils;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient> {
 
-    /**
-     *
-     */
+    private static final Logger logger = LoggerFactory.getLogger(GBIFBetaBackboneClient.class);
+
     private static final HttpHost HTTP_HOST = new HttpHost("ecat-dev.gbif.org",80);
     public static final String ID = "gbif";
     public static final String LABEL = "GBIF Checklist Bank";
@@ -79,7 +79,6 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
 
         try {
             uri = uriBuilder.build();
-            logger = LoggerFactory.getLogger(GBIFBetaBackboneClient.class);
             logger.debug("building Checklist Map");
             String responseBody = queryClient.get(uri);
 

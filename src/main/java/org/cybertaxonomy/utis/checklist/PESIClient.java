@@ -27,13 +27,14 @@ import org.cybertaxonomy.utis.tnr.msg.TaxonName;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.IdentifierUtils;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class PESIClient extends BaseChecklistClient<SoapClient> {
 
-    /**
-     *
-     */
+    private static final Logger logger = LoggerFactory.getLogger(PESIClient.class);
+
     private static final HttpHost HTTP_HOST = new HttpHost("http://www.eu-nomen.eu",80);
     public static final String ID = "pesi";
     public static final String LABEL = "PESI";
