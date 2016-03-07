@@ -23,3 +23,14 @@ then compile the java classes
 
 
     java -cp  $(mvn3 dependency:build-classpath | grep -v "\[")  org.apache.axis.wsdl.WSDL2Java <url-to-wsdl-file>
+    
+### debug the neo4j store
+
+1. Download the neo4j community edition (neo4j-community-2.0.4) and extract it
+1. In the extracted package navigate to the bin folder and start the neo4j shell:
+
+    ./neo4j-shell -path ~/.utis/neo4j/
+
+NOTE: you need to stop utis in advance of starting the neo4j shell!
+    
+    
