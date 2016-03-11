@@ -58,7 +58,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
     /**
      * check for updates once a day
      */
-    private static final int CHECK_UPDATE_MINUTES = 60 * 24;
+    private static final int CHECK_UPDATE_MINUTES = 60 * 24 * 1000;
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,

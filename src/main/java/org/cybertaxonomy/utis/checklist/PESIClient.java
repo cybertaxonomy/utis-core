@@ -23,6 +23,7 @@ import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Source;
 import org.cybertaxonomy.utis.tnr.msg.Synonym;
 import org.cybertaxonomy.utis.tnr.msg.Taxon;
+import org.cybertaxonomy.utis.tnr.msg.TaxonBase;
 import org.cybertaxonomy.utis.tnr.msg.TaxonName;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.IdentifierUtils;
@@ -180,19 +181,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
         String lsid = taxonRecord.getValid_guid();
         taxon.setIdentifier(lsid);
 
-        String sourceString = taxonRecord.getCitation(); // concatenation of sec. reference and url
-        ParsedCitation parsed = parsePesiCitation(sourceString);
-        taxon.setAccordingTo(parsed.accordingTo);
-
-
-        // TODO ask VLIZ for adding all the the sourceFKs to the service and fill additional the data in here
-        if(parsed.sourceTaxonUrl != null){
-            Source source = new Source();
-            source.setUrl(parsed.sourceTaxonUrl);
-            source.setTitle(parsed.accordingTo);
-            source.setIdentifier(lsid);
-            taxon.getSources().add(source);
-        }
+        String secReference  = addSources(taxonRecord.getGUID(), taxon);
+        taxon.setAccordingTo(secReference);
 
         if(addClassification) {
             String[] rankNames = new String[] {"Genus", "Family", "Order", "_class", "Phylum", "Kingdom"};
@@ -233,16 +223,11 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
 
             taxonName.setCanonicalName(resName);
 
-            String sourceString = synRecord.getCitation(); // concatenation of sec. reference and url
-            ParsedCitation parsed = parsePesiCitation(sourceString);
-            synonym.setAccordingTo(parsed.accordingTo);
-
-            if(parsed.sourceTaxonUrl != null){
-                Source source = new Source();
-                source.setUrl(parsed.sourceTaxonUrl);
-                source.setTitle(parsed.accordingTo);
-                synonym.getSources().add(source);
+            if(logger.isDebugEnabled()) {
+                logger.debug("source citation is " + synRecord.getCitation());
             }
+            String secReference = addSources(synRecord.getGUID(), synonym);
+            synonym.setAccordingTo(secReference);
 
             taxonName.setRank(synRecord.getRank());
             taxonName.setAuthorship(synRecord.getAuthority());
@@ -254,6 +239,62 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
 
             tnrResponse.getSynonym().add(synonym);
         }
+    }
+
+    /**
+     *
+     * @param synRecord
+     * @param taxonBase
+     *
+     * @return
+     *    A string containing the creator property of the
+     *   first source returned by the PESI web service. This citation actually is the secReference!
+     */
+    private String addSources(String guid, TaxonBase taxonBase) {
+        /*
+         * The source citation info is concatenated into one string which is split in this example into the 3 main sections:
+         *
+         * 1.] "Marhold, K. (2011): Caryophyllaceae. – In: Euro+Med Plantbase - the information resource for Euro-Mediterranean plant diversity. "
+         * 2.] "Cerastium vulgatum subsp. caespitosum (Asch.) Dostál"
+         * 3.] "http://ww2.bgbm.org/euroPlusMed/PTaxonDetail.asp?UUID=9002CE99-A6A3-4BF3-9EBD-8C197E440752"
+         *
+         * 1. = source citation = sec reference of synonym
+         * 2. = name in source = synonym
+         * 3. = Uri to the name in source = uri to the synonym
+         */
+        String secReference = null;
+        PESINameServiceLocator pesins = new PESINameServiceLocator();
+        try {
+            PESINameServicePortType pesinspt = getPESINameService(pesins);
+
+            org.cybertaxonomy.utis.checklist.pesi.Source[] pesiSources = pesinspt.getPESISourcesByGUID(guid);
+            if(logger.isDebugEnabled()) {
+                logger.debug(pesiSources.length + " sources found for taxon (" + taxonBase.getTaxonName().getScientificName() + ") GUID " + guid);
+            }
+            for(org.cybertaxonomy.utis.checklist.pesi.Source sourceRecord : pesiSources) {
+                Source source = new Source();
+                if(sourceRecord.getBibliographicCitation() == null) {
+                    logger.error("BibliographicCitation must not be null for " + guid);
+                }
+                source.setTitle(sourceRecord.getBibliographicCitation()); // source citation
+                source.setIdentifier(sourceRecord.getIdentifier()); // seems always to be NULL
+                //source.setUrl(sourceRecord.sourceTaxonUrl()); //TODO use the synRecord.getUrl() ?
+                //source.setName(sourceRecord.getTaxonName()); //TODO used the taxonName ?
+                taxonBase.getSources().add(source);
+                if(secReference == null) {
+                    secReference = sourceRecord.getCreator();
+                }
+            }
+        } catch (DRFChecklistException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (RemoteException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return secReference;
     }
 
     @Override
