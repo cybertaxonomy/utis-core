@@ -11,6 +11,8 @@ See https://github.com/highsource/jaxb2-annotate-plugin  for more information.
 
 ### compiling wsdl2java
 
+* https://axis.apache.org/axis/java/reference.html
+
 re-enable the disabled dependencies in the pom.xml by un-commenting them. The according section is
 between:
 
@@ -21,8 +23,9 @@ between:
     
 then compile the java classes
 
+    java -cp  $(mvn dependency:build-classpath | grep -v "\[")  org.apache.axis.wsdl.WSDL2Java "http://www.eu-nomen.eu/portal/soap.php\?wsdl\=1"  -p org.cybertaxonomy.utis.checklist.pesi -o src/main/java/
 
-    java -cp  $(mvn3 dependency:build-classpath | grep -v "\[")  org.apache.axis.wsdl.WSDL2Java <url-to-wsdl-file>
+
     
 ### debug the neo4j store
 
