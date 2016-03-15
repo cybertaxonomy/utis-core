@@ -226,8 +226,6 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             if(logger.isDebugEnabled()) {
                 logger.debug("source citation is " + synRecord.getCitation());
             }
-            String secReference = addSources(synRecord.getGUID(), synonym);
-            synonym.setAccordingTo(secReference);
 
             taxonName.setRank(synRecord.getRank());
             taxonName.setAuthorship(synRecord.getAuthority());
@@ -236,6 +234,9 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             synonym.setTaxonomicStatus(synRecord.getStatus());
 
             synonym.setUrl(synRecord.getUrl());
+
+            String secReference = addSources(synRecord.getGUID(), synonym);
+            synonym.setAccordingTo(secReference);
 
             tnrResponse.getSynonym().add(synonym);
         }
@@ -273,11 +274,15 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             }
             for(org.cybertaxonomy.utis.checklist.pesi.Source sourceRecord : pesiSources) {
                 Source source = new Source();
+                if(sourceRecord.getCreator() == null && sourceRecord.getBibliographicCitation() == null) {
+                    logger.error("A source must at least have  creator or  bibliographicCitation " + guid);
+                }
                 if(sourceRecord.getBibliographicCitation() == null) {
-                    logger.error("BibliographicCitation must not be null for " + guid);
+                    logger.debug("Source only containes the secReference?, skipping.");
+                    continue;
                 }
                 source.setTitle(sourceRecord.getBibliographicCitation()); // source citation
-                source.setIdentifier(sourceRecord.getIdentifier()); // seems always to be NULL
+                source.setIdentifier(sourceRecord.getIdentifier()); // often contains the URI to the source, in case of marine species (see 'Salmo'), other wise it is null
                 //source.setUrl(sourceRecord.sourceTaxonUrl()); //TODO use the synRecord.getUrl() ?
                 //source.setName(sourceRecord.getTaxonName()); //TODO used the taxonName ?
                 taxonBase.getSources().add(source);
