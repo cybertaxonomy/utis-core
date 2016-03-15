@@ -38,8 +38,8 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
     public static final String ID = "bgbm-cdm-server";
     public static final String LABEL = "Name catalogues served by the BGBM CDM Server";
-    public static final String DOC_URL = "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html";
-    public static final String COPYRIGHT_URL = "http://wp5.e-taxonomy.eu/cdmlib/license.html";
+    public static final String DOC_URL = "http://cybertaxonomy.eu/cdmlib/rest-api-name-catalogue.html";
+    public static final String COPYRIGHT_URL = "http://cybertaxonomy.eu/cdmlib/license.html";
     private static final String SERVER_PATH_PREFIX = "/";
     private static final HttpHost HTTP_HOST = new HttpHost("api.cybertaxonomy.org", 80); // new HttpHost("test.e-taxonomy.eu", 80);
 
@@ -85,7 +85,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,DOC_URL,COPYRIGHT_URL, getSearchModes());
         ServiceProviderInfo col = new ServiceProviderInfo("col",
                 "Catalogue Of Life (EDIT - name catalogue end point)",
-                "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html",
+                "http://cybertaxonomy.eu/cdmlib/rest-api-name-catalogue.html",
                 "http://www.catalogueoflife.org/col/info/copyright", ServiceProviderInfo.DEFAULT_SEARCH_MODE);
         col.setDefaultClassificationId("29d4011f-a6dd-4081-beb8-559ba6b84a6b");
         col.setSearchModes(SEARCH_MODES);
