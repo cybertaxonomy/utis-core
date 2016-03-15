@@ -15,9 +15,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
@@ -29,6 +26,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.cybertaxonomy.utis.utils.VersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,53 +38,26 @@ import org.slf4j.LoggerFactory;
 public abstract class Store {
 
     protected static final Logger logger = LoggerFactory.getLogger(Store.class);
+
     private static final File tmpDir = new File(System.getProperty("java.io.tmpdir"));
     private static final File userHomeDir = new File(System.getProperty("user.home"));
-    private static final String PROJECT_VERSION_KEY = "project.version";
-    protected static String VERSION = "0.0-DEFAULT";
     protected static File utisHome = null;
-    private static final Pattern majorMinorPattern = Pattern.compile("^(\\d+\\.\\d+).*$");
 
     static {
-            Properties versionProps = new Properties();
-            InputStream propsResource = Store.class.getResourceAsStream("/version.properties");
-            if(propsResource == null) {
-                logger.error("No resource named 'version.properties' found, using default version '0.0-DEFAULT'");
-            }
-            try {
-            versionProps.load(propsResource);
-            VERSION = versionProps.get(PROJECT_VERSION_KEY).toString();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
         if(System.getProperty("utis.home") != null){
             utisHome = new File(System.getProperty("utis.home"));
             logger.info("utis.home defined by system property: " + utisHome.getAbsolutePath());
         } else {
             // this is the folder for production mode
             // /var/lib/utis must be created prior starting the application
-            File varLibUtis = new File("/var/lib/utis");
-            if(varLibUtis.canWrite()) {
-                utisHome = new File(varLibUtis, majorMinorVersion());
-                try {
-                    FileUtils.forceMkdir(utisHome);
-                    logger.info("utis.home " + utisHome.getAbsolutePath());
-                } catch (IOException e) {
-                    utisHome = null;
-                    logger.error("Failed to create sub folder in " + varLibUtis.getAbsolutePath() + ", giving up ...", e);
-                }
-            } else {
-                logger.info(varLibUtis.getAbsolutePath() + " is not writable ...");
-            }
-
-            if(utisHome == null){
-                logger.info("... trying other location ...");
+            utisHome = new File("/var/lib/utis");
+            logger.info("utis.home " + utisHome.getAbsolutePath());
+            if(!utisHome.canWrite()) {
+                logger.info("utis.home " + utisHome.getAbsolutePath() +  " is not writable, trying other location ...");
                 // this is the folder for development mode
                 // if the application is started inside a service as jetty
                 // this folder will most probably not be writable.
-                utisHome = new File(userHomeDir, ".utis" + File.separator + majorMinorVersion());
+                utisHome = new File(userHomeDir, ".utis");
             }
             logger.info("utis.home finally is " + utisHome.getAbsolutePath());
         }
@@ -94,7 +65,7 @@ public abstract class Store {
     protected File storeLocation = null;
 
     public Store() throws Exception {
-        storeLocation = new File(utisHome, storeName() + File.separator);
+        storeLocation = new File(utisHome, VersionInfo.majorMinorVersion() + File.separator + storeName() + File.separator);
         if( !storeLocation.exists()) {
             storeLocation.mkdirs();
             logger.debug("new store location created at " + storeLocation.getAbsolutePath());
@@ -108,13 +79,6 @@ public abstract class Store {
      */
     protected abstract String storeName();
 
-    protected static String majorMinorVersion() {
-        Matcher matcher = majorMinorPattern.matcher(VERSION);
-        if(matcher.matches() && matcher.groupCount() == 1) {
-            return matcher.group(1);
-        }
-        return VERSION;
-    }
 
     /**
      * @param rdfFileUri
