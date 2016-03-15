@@ -30,6 +30,12 @@ import org.slf4j.LoggerFactory;
 
 public class WoRMSClient extends BaseChecklistClient<SoapClient> {
 
+    /**
+     *
+     */
+    private static final int DEFAULT_SERVICE_PAGE_SIZE = 50;
+
+
     private static final Logger logger = LoggerFactory.getLogger(WoRMSClient.class);
 
 
@@ -129,6 +135,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         // case when accepted name
         if(record.getAphiaID() == accNameGUID) {
             Taxon accName = generateTaxon(record, false);
+            logger.debug("    > " + accName.getTaxonName().getScientificName());
             tnrResponse.setTaxon(accName);
             if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                 tnrResponse.setMatchingNameType(NameType.TAXON);
@@ -285,15 +292,23 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         AphiaNameServicePortType aphianspt = getAphiaNameService();
         boolean fuzzy = false;
 
+        boolean tryNextPage = true;
+        int pageIndex = 1;
+
         try {
-            AphiaRecord[] records = aphianspt.getAphiaRecords(name + "%", true, fuzzy, false, 1);
-            if(records != null){
-                for (AphiaRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
-                    query.getResponse().add(tnrResponse);
+            while (tryNextPage) {
+                AphiaRecord[] records = aphianspt.getAphiaRecords(name + "%", true, fuzzy, false, (pageIndex++ * DEFAULT_SERVICE_PAGE_SIZE) + 1);
+                if(records != null){
+                    logger.debug("page " + (pageIndex - 1) + " has " + records.length + " records");
+                    tryNextPage = records.length == DEFAULT_SERVICE_PAGE_SIZE;
+                    for (AphiaRecord record : records) {
+                        Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
+                        query.getResponse().add(tnrResponse);
+                    }
+                }  else {
+                    tryNextPage = false;
                 }
             }
-
         } catch (RemoteException e) {
             logger.error("Error in getGUID method in AphiaNameSerice", e);
             throw new DRFChecklistException("Error in getGUID method in AphiaNameSerice", e);
@@ -331,13 +346,22 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         String name = query.getRequest().getQueryString();
         AphiaNameServicePortType aphianspt = getAphiaNameService();
 
+        boolean tryNextPage = true;
+        int pageIndex = 1;
         try {
-            AphiaRecord[] records = aphianspt.getAphiaRecordsByVernacular(name, true, 1);
-            if(records != null){
-                for (AphiaRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
-                    query.getResponse().add(tnrResponse);
+            while(tryNextPage) {
+                AphiaRecord[] records = aphianspt.getAphiaRecordsByVernacular(name, true, (pageIndex++ * DEFAULT_SERVICE_PAGE_SIZE) + 1);
+                if(records != null){
+                    tryNextPage = records.length == DEFAULT_SERVICE_PAGE_SIZE;
+                    logger.debug("page " + (pageIndex - 1) + " has " + records.length + " records");
+                    for (AphiaRecord record : records) {
+                        Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
+                        query.getResponse().add(tnrResponse);
+                    }
+                } else {
+                    tryNextPage = false;
                 }
+
             }
 
         } catch (RemoteException e) {
