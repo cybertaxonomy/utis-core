@@ -55,5 +55,9 @@ public class VersionInfo {
         return VERSION;
     }
 
+    public static String version() {
+        return VERSION;
+    }
+
 
 }
