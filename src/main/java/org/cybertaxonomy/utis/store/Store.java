@@ -67,10 +67,22 @@ public abstract class Store {
         } else {
             // this is the folder for production mode
             // /var/lib/utis must be created prior starting the application
-            utisHome = new File("/var/lib/utis" + File.separator + majorMinorVersion());
-            logger.info("utis.home " + utisHome.getAbsolutePath());
-            if(!utisHome.canWrite()) {
-                logger.info("utis.home " + utisHome.getAbsolutePath() +  " is not writable, trying other location ...");
+            File varLibUtis = new File("/var/lib/utis");
+            if(varLibUtis.canWrite()) {
+                utisHome = new File(varLibUtis, majorMinorVersion());
+                try {
+                    FileUtils.forceMkdir(utisHome);
+                    logger.info("utis.home " + utisHome.getAbsolutePath());
+                } catch (IOException e) {
+                    utisHome = null;
+                    logger.error("Failed to create sub folder in " + varLibUtis.getAbsolutePath() + ", giving up ...", e);
+                }
+            } else {
+                logger.info(varLibUtis.getAbsolutePath() + " is not writable ...");
+            }
+
+            if(utisHome == null){
+                logger.info("... trying other location ...");
                 // this is the folder for development mode
                 // if the application is started inside a service as jetty
                 // this folder will most probably not be writable.
