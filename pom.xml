@@ -178,6 +178,12 @@
         <groupId>org.neo4j</groupId>
         <artifactId>neo4j-ha</artifactId>
         <version>${neo4j.version}</version>
+        <exclusions>
+            <exclusion>
+              <groupId>ch.qos.logback</groupId>
+              <artifactId>logback-classic</artifactId>
+            </exclusion>
+        </exclusions>
     </dependency>
     <!-- yourkit profiler api controller -->
     <!-- the 2015 version is not available via maven 
