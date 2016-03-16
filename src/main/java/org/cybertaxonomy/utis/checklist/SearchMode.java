@@ -1,13 +1,11 @@
 package org.cybertaxonomy.utis.checklist;
 
-public enum SearchMode {
+public enum SearchMode implements UtisAction{
 
     scientificNameExact,
     scientificNameLike,
     vernacularNameExact,
     vernacularNameLike,
-    findByIdentifier,
-    taxonomicChildren,
-    higherClassification;
+    findByIdentifier;
 
 }

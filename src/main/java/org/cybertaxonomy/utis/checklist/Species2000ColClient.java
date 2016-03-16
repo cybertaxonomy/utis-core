@@ -55,6 +55,8 @@ public class Species2000ColClient extends BaseChecklistClient<RestClient> {
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(SearchMode.scientificNameExact);
 
+    public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.noneOf(ClassificationAction.class);
+
 
     public Species2000ColClient() {
         super();
@@ -208,6 +210,14 @@ public class Species2000ColClient extends BaseChecklistClient<RestClient> {
     @Override
     public EnumSet<SearchMode> getSearchModes() {
         return SEARCH_MODES;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EnumSet<ClassificationAction> getClassificationActions() {
+        return CLASSIFICATION_ACTION;
     }
 
     @Override

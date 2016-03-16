@@ -51,9 +51,12 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
             SearchMode.scientificNameLike,
-            SearchMode.findByIdentifier,
-            SearchMode.higherClassification,
-            SearchMode.taxonomicChildren
+            SearchMode.findByIdentifier
+            );
+
+    public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.of(
+            ClassificationAction.higherClassification,
+            ClassificationAction.taxonomicChildren
             );
 
     public BgbmEditClient() {
@@ -619,11 +622,20 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         return SEARCH_MODES ;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EnumSet<ClassificationAction> getClassificationActions() {
+        return CLASSIFICATION_ACTION;
+    }
+
     @Override
     public boolean isSupportedIdentifier(String value) {
         // return IdentifierUtils.checkLSID(value) || IdentifierUtils.checkUUID(value);
         return value != null;
     }
+
 
 
 

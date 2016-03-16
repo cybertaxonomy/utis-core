@@ -65,8 +65,11 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
             SearchMode.scientificNameLike,
             SearchMode.vernacularNameExact,
             SearchMode.vernacularNameLike,
-            SearchMode.findByIdentifier,
-            SearchMode.higherClassification
+            SearchMode.findByIdentifier
+            );
+    
+    public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.of(
+            ClassificationAction.higherClassification
             );
 
     public static enum RdfSchema {
@@ -608,6 +611,14 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
     @Override
     public EnumSet<SearchMode> getSearchModes() {
         return SEARCH_MODES;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EnumSet<ClassificationAction> getClassificationActions() {
+        return CLASSIFICATION_ACTION;
     }
 
     @Override

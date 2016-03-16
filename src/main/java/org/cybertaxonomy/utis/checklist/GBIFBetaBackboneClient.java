@@ -40,6 +40,8 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(SearchMode.scientificNameExact);
 
+    public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.noneOf(ClassificationAction.class);
+
 
     public GBIFBetaBackboneClient() {
         super();
@@ -296,6 +298,14 @@ public class GBIFBetaBackboneClient extends AggregateChecklistClient<RestClient>
     @Override
     public EnumSet<SearchMode> getSearchModes() {
         return SEARCH_MODES;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EnumSet<ClassificationAction> getClassificationActions() {
+        return CLASSIFICATION_ACTION;
     }
 
     @Override

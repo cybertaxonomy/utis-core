@@ -76,15 +76,17 @@ public abstract class BaseChecklistClient<QC extends IQueryClient> extends Abstr
 
         TnrMsgUtils.assertSearchModeSet(tnrMsg, true);
 
-        SearchMode mode = TnrMsgUtils.getSearchMode(tnrMsg);
+        UtisAction mode = TnrMsgUtils.getUtisAction(tnrMsg);
 
         preExcuteQuery(tnrMsg);
 
-        if(!getSearchModes().contains(mode)){
-            throw new DRFChecklistException("Unsupported SearchMode");
+        if(!isSupportedAction(mode)){
+            logger.error("Utis Action " + mode + " not supported by the ChecklistClient implementation " + this.getClass().getSimpleName());
+            throw new DRFChecklistException("Unsupported Utis Action " + mode);
         }
+
         if (getSearchModes().contains(mode)){
-            switch(mode){
+            switch((SearchMode)mode){
             case scientificNameExact:
                  resolveScientificNamesExact(tnrMsg);
                  break;
@@ -105,6 +107,12 @@ public abstract class BaseChecklistClient<QC extends IQueryClient> extends Abstr
                     throw new UnsupportedIdentifierException("Queries contain unsupported identifier strings");
                 }
                 break;
+           default:
+               throw new DRFChecklistException("Unimplemented SearchMode: " + mode);
+
+            }
+        } else if (getClassificationActions().contains(mode)){
+            switch ((ClassificationAction)mode) {
             case taxonomicChildren:
                 if(checkSupportedIdentifieres(tnrMsg)){
                     taxonomicChildren(tnrMsg);
@@ -122,10 +130,10 @@ public abstract class BaseChecklistClient<QC extends IQueryClient> extends Abstr
                 }
                 break;
             default:
-                throw new DRFChecklistException("Unimplemented SearchMode");
+                throw new DRFChecklistException("Unimplemented ClassificationAction " + mode);
             }
         } else {
-            logger.info("Search mode " + mode + " not supported by this ChecklistClient implementation");
+            throw new DRFChecklistException("Unknown Utis Action type " + mode);
         }
 
         postExcuteQuery(tnrMsg);
@@ -221,7 +229,17 @@ public abstract class BaseChecklistClient<QC extends IQueryClient> extends Abstr
     public abstract void  higherClassification(TnrMsg tnrMsg) throws DRFChecklistException;
 
 
+    public boolean isSupportedAction(UtisAction action) {
+        if(action == null) {
+            throw new NullPointerException("Parameter action must not be NULL");
+        }
+        return getSearchModes().contains(action) || getClassificationActions().contains(action);
+
+    }
+
     public abstract EnumSet<SearchMode> getSearchModes();
+
+    public abstract EnumSet<ClassificationAction> getClassificationActions();
 
     public abstract boolean isSupportedIdentifier(String value);
 

@@ -50,14 +50,17 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             SearchMode.scientificNameLike,
             SearchMode.vernacularNameExact,
             SearchMode.vernacularNameLike,
-            SearchMode.findByIdentifier,
-            SearchMode.higherClassification,
-            SearchMode.taxonomicChildren
+            SearchMode.findByIdentifier
             );
 
     public static final EnumSet<SearchMode> SCIENTIFICNAME_SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
             SearchMode.scientificNameLike
+            );
+
+    public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.of(
+            ClassificationAction.higherClassification,
+            ClassificationAction.taxonomicChildren
             );
 
 
@@ -92,6 +95,14 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
     @Override
     public EnumSet<SearchMode> getSearchModes() {
         return SEARCH_MODES;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EnumSet<ClassificationAction> getClassificationActions() {
+        return CLASSIFICATION_ACTION;
     }
 
     /**

@@ -26,13 +26,15 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.lang3.StringUtils;
+import org.cybertaxonomy.utis.checklist.ClassificationAction;
 import org.cybertaxonomy.utis.checklist.SearchMode;
+import org.cybertaxonomy.utis.checklist.UtisAction;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.tnr.msg.Query;
-import org.cybertaxonomy.utis.tnr.msg.Response;
-import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.tnr.msg.Query.ClientStatus;
 import org.cybertaxonomy.utis.tnr.msg.Query.Request;
+import org.cybertaxonomy.utis.tnr.msg.Response;
+import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
@@ -147,13 +149,13 @@ public class TnrMsgUtils {
             return finalTnrMsgList;
         }
 
-        public static TnrMsg convertStringToTnrMsg(String name, SearchMode searchMode, boolean addSynonymy) {
+        public static TnrMsg convertStringToTnrMsg(String name, UtisAction action, boolean addSynonymy) {
             TnrMsg tnrMsg = new TnrMsg();
             Query query = new Query();
             Request request = new Request();
 
             request.setQueryString(name);
-            request.setSearchMode(searchMode.toString());
+            request.setSearchMode(action.toString());
             request.setAddSynonymy(addSynonymy);
             query.setRequest(request);
             tnrMsg.getQuery().add(query);
@@ -254,12 +256,17 @@ public class TnrMsgUtils {
             }
         }
 
-        public static SearchMode getSearchMode(TnrMsg tnrMsg){
+        public static UtisAction getUtisAction(TnrMsg tnrMsg){
 
             for(Query query :  tnrMsg.getQuery()){
-                String searchMode = query.getRequest().getSearchMode();
-                if(searchMode != null){
-                    return SearchMode.valueOf(searchMode);
+                String actionString = query.getRequest().getSearchMode();
+                if(actionString != null){
+                    UtisAction action = null;
+                    action = SearchMode.valueOf(actionString);
+                    if(action == null) {
+                        action = ClassificationAction.valueOf(actionString);
+                    }
+                    return action;
                 }
             }
             return null;
