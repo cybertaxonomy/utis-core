@@ -91,7 +91,8 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                 "http://cybertaxonomy.eu/cdmlib/rest-api-name-catalogue.html",
                 "http://www.catalogueoflife.org/col/info/copyright", ServiceProviderInfo.DEFAULT_SEARCH_MODE);
         col.setDefaultClassificationId("29d4011f-a6dd-4081-beb8-559ba6b84a6b");
-        col.setSearchModes(SEARCH_MODES);
+        col.getSupportedActions().addAll(SEARCH_MODES);
+        col.getSupportedActions().addAll(CLASSIFICATION_ACTION);
         checklistInfo.addSubChecklist(col);
         return checklistInfo;
     }

@@ -251,7 +251,7 @@ public class TnrMsgUtils {
                     throw new AssertionError("SearchMode missing in query : " + query.toString());
                 }
                 if(unique && lastSearchMode != null && !lastSearchMode.equals(searchMode)){
-                    throw new AssertionError("mixed searchModes in queries");
+                    throw new AssertionError("mixed supportedActions in queries");
                 }
             }
         }

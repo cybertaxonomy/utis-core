@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 import org.cybertaxonomy.utis.checklist.SearchMode;
+import org.cybertaxonomy.utis.checklist.UtisAction;
 
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
@@ -20,7 +23,7 @@ public class ServiceProviderInfo {
     private String version;
     private String defaultClassificationId;
     private final List<ServiceProviderInfo> subChecklists = new ArrayList<ServiceProviderInfo>();
-    protected EnumSet<SearchMode> searchModes;
+    protected Set<UtisAction> supportedActions = new HashSet<UtisAction>();
 
     /**
      * [SearchMode.scientificNameExact]
@@ -31,7 +34,7 @@ public class ServiceProviderInfo {
     }
 
     /**
-     * Constructor without <code>searchModes</code> parameter, the searchModes
+     * Constructor without <code>supportedActions</code> parameter, the supportedActions
      * will be set to the default: <code>[SearchMode.scientificNameExact]</code>
      * @param id
      * @param label
@@ -47,7 +50,7 @@ public class ServiceProviderInfo {
      * @param label
      * @param documentationUrl
      * @param copyrightUrl
-     * @param searchModes TODO
+     * @param supportedActions TODO
      */
     public ServiceProviderInfo(String id, String label, String documentationUrl, String copyrightUrl, EnumSet<SearchMode> searchModes) {
         this(id,label,DEFAULT_SEARCH_MODE,documentationUrl, copyrightUrl, "");
@@ -57,7 +60,7 @@ public class ServiceProviderInfo {
      *
      * @param id
      * @param label
-     * @param searchModes
+     * @param supportedActions
      * @param documentationUrl
      * @param copyrightUrl
      * @param version
@@ -65,10 +68,10 @@ public class ServiceProviderInfo {
     public ServiceProviderInfo(String id, String label, EnumSet<SearchMode> searchModes, String documentationUrl, String copyrightUrl, String version) {
         this.id = id;
         this.label = label;
-        this.searchModes = searchModes;
         this.documentationUrl = documentationUrl;
         this.copyrightUrl = copyrightUrl;
         this.version = version;
+        this.supportedActions.addAll(searchModes);
     }
 
     public String getId() {
@@ -126,17 +129,9 @@ public class ServiceProviderInfo {
     /**
      * @return the matchModes
      */
-    @ApiModelProperty("Set of the different SearchModes supported by the service provider and client implementation."
-            + "Possible search modes are: scientificNameExact, scientificNameLike, vernacularName")
-    public EnumSet<SearchMode> getSearchModes() {
-        return searchModes;
-    }
-
-    /**
-     * @param matchModes the matchModes to set
-     */
-    public void setSearchModes(EnumSet<SearchMode> matchModes) {
-        this.searchModes = matchModes;
+    @ApiModelProperty("Set of the different actions supported by the service provider and client implementation.")
+    public Set<UtisAction> getSupportedActions() {
+        return supportedActions;
     }
 
     /**
