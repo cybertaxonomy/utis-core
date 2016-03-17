@@ -285,21 +285,16 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             }
             for(org.cybertaxonomy.utis.checklist.pesi.Source sourceRecord : pesiSources) {
                 Source source = new Source();
-                if(sourceRecord.getCreator() == null && sourceRecord.getBibliographicCitation() == null) {
-                    logger.error("A source must at least have  creator or  bibliographicCitation " + guid);
+                if(sourceRecord.getTitle() == null && sourceRecord.getBibliographicCitation() == null) {
+                    logger.error("A source should at least have title or  bibliographicCitation " + guid);
                 }
-                if(sourceRecord.getBibliographicCitation() == null) {
-                    logger.debug("Source only containes the secReference?, skipping.");
+                if(sourceRecord.getType().equals("nameAccordingTo")) {
+                    secReference = sourceRecord.getTitle();
                     continue;
                 }
                 source.setTitle(sourceRecord.getBibliographicCitation()); // source citation
                 source.setIdentifier(sourceRecord.getIdentifier()); // often contains the URI to the source, in case of marine species (see 'Salmo'), other wise it is null
-                //source.setUrl(sourceRecord.sourceTaxonUrl()); //TODO use the synRecord.getUrl() ?
-                //source.setName(sourceRecord.getTaxonName()); //TODO used the taxonName ?
                 taxonBase.getSources().add(source);
-                if(secReference == null) {
-                    secReference = sourceRecord.getCreator();
-                }
             }
         } catch (DRFChecklistException e) {
             // TODO Auto-generated catch block
