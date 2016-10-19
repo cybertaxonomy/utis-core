@@ -281,12 +281,16 @@ public class TnrMsgUtils {
             return action;
         }
 
-        public static TnrMsg createRequest(SearchMode searchMode, String queryString, boolean addSynonymy) {
+        public static TnrMsg createRequest(UtisAction utisAction, String queryString, boolean addSynonymy) {
             TnrMsg msg = new TnrMsg();
             Query q = new Query();
             Request r = new Request();
             r.setQueryString(queryString);
-            r.setSearchMode(searchMode.name());
+            if(utisAction instanceof ClassificationAction) {
+                r.setSearchMode(((ClassificationAction)utisAction).name());
+            } else {
+                r.setSearchMode(((SearchMode)utisAction).name());
+            }
             r.setAddSynonymy(addSynonymy);
             q.setRequest(r);
             msg.getQuery().add(q);

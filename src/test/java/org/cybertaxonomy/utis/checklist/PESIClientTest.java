@@ -1,8 +1,5 @@
 package org.cybertaxonomy.utis.checklist;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -12,6 +9,7 @@ import javax.xml.bind.JAXBException;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.input.DRFCSVInputParser;
 import org.cybertaxonomy.utis.input.DRFInputException;
+import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
 import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Synonym;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
@@ -24,7 +22,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PESIClientTest {
+public class PESIClientTest extends org.junit.Assert {
 
     protected static final Logger logger = LoggerFactory.getLogger(PESIClientTest.class);
 
@@ -89,9 +87,10 @@ public class PESIClientTest {
 
         TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Lactuca virosa", true);
         client.queryChecklist(tnrMsg);
-        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
 
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
+
         assertEquals(2, tnrMsg.getQuery().get(0).getResponse().size());
 
         Response response1 = tnrMsg.getQuery().get(0).getResponse().get(0);
@@ -119,5 +118,44 @@ public class PESIClientTest {
         }
 
     }
+
+    @Test
+    public void higherClassificationTest() throws DRFChecklistException, TnrMsgException {
+
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(ClassificationAction.higherClassification, "2074E4B2-1F58-4D61-ADE6-A37E02674F4D", true);
+        client.queryChecklist(tnrMsg);
+
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+
+        assertEquals(1, tnrMsg.getQuery().get(0).getResponse().size());
+
+        Response response1 = tnrMsg.getQuery().get(0).getResponse().get(0);
+        assertEquals("Lactuca virosa", response1.getTaxon().getTaxonName().getCanonicalName());
+        assertEquals("L.", response1.getTaxon().getTaxonName().getAuthorship());
+        List<HigherClassificationElement> hcl = response1.getTaxon().getHigherClassification();
+        assertNotNull(hcl);
+        assertEquals(6, hcl.size());
+
+        assertEquals("Genus", hcl.get(0).getRank());
+        assertEquals("Lactuca", hcl.get(0).getScientificName());
+
+        assertEquals("Family", hcl.get(1).getRank());
+        assertEquals("Compositae", hcl.get(1).getScientificName());
+
+        assertEquals("Order", hcl.get(2).getRank());
+        assertEquals("Asterales", hcl.get(2).getScientificName());
+
+        assertEquals("Class", hcl.get(3).getRank());
+        assertEquals("Magnoliopsida", hcl.get(3).getScientificName());
+
+        assertEquals("Phylum", hcl.get(4).getRank());
+        assertEquals("Tracheophyta", hcl.get(4).getScientificName());
+
+        assertEquals("Kingdom", hcl.get(5).getRank());
+        assertEquals("Plantae", hcl.get(5).getScientificName());
+    }
+
+
 }
 
