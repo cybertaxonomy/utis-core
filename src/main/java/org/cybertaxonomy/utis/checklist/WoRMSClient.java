@@ -135,7 +135,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
 
         Response tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
 
-        SearchMode searchMode = SearchMode.valueOf(request.getSearchMode());
+        UtisAction searchMode = TnrMsgUtils.utisActionFrom(request.getSearchMode());
 
         int accNameGUID = record.getValid_AphiaID();
         String matchingName = record.getScientificname();

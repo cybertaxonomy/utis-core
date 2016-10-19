@@ -29,6 +29,7 @@ import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 import org.cybertaxonomy.utis.checklist.SearchMode;
 import org.cybertaxonomy.utis.tnr.msg.Query;
 import org.cybertaxonomy.utis.tnr.msg.Query.Request;
+import org.cybertaxonomy.utis.utils.TnrMsgUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,7 +111,7 @@ public class RestClient implements IQueryClient{
         for(Query query : queryList) {
             Request tnrRequest = query.getRequest();
             String queryString = tnrRequest.getQueryString();
-            if(likeModes.contains(SearchMode.valueOf(tnrRequest.getSearchMode()))){
+            if(likeModes.contains(TnrMsgUtils.utisActionFrom(tnrRequest.getSearchMode()))){
                 queryString += likeModeWildcard;
             }
             queries.add(queryString);

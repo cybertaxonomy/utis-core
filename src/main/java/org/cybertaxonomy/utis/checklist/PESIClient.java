@@ -464,7 +464,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
 
         Response tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
 
-        SearchMode searchMode = SearchMode.valueOf(request.getSearchMode());
+        UtisAction searchMode = TnrMsgUtils.utisActionFrom(request.getSearchMode());
 
         String taxonGUID = record.getValid_guid();
         if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){

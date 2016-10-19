@@ -260,16 +260,25 @@ public class TnrMsgUtils {
 
             for(Query query :  tnrMsg.getQuery()){
                 String actionString = query.getRequest().getSearchMode();
-                if(actionString != null){
-                    UtisAction action = null;
-                    action = SearchMode.valueOf(actionString);
-                    if(action == null) {
-                        action = ClassificationAction.valueOf(actionString);
-                    }
-                    return action;
-                }
+                return utisActionFrom(actionString);
             }
             return null;
+        }
+
+        /**
+         * @param actionString
+         * @return
+         */
+        public static UtisAction utisActionFrom(String actionString) {
+            UtisAction action = null;
+            if(actionString != null){
+                try {
+                action = SearchMode.valueOf(actionString);
+                } catch (IllegalArgumentException e1) {
+                    action = ClassificationAction.valueOf(actionString);
+                }
+            }
+            return action;
         }
 
         public static TnrMsg createRequest(SearchMode searchMode, String queryString, boolean addSynonymy) {
