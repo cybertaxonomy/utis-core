@@ -6,9 +6,6 @@ import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
-import org.cybertaxonomy.utis.checklist.DRFChecklistException;
-import org.cybertaxonomy.utis.checklist.GBIFBackboneClient;
-import org.cybertaxonomy.utis.checklist.SearchMode;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.input.DRFCSVInputParser;
 import org.cybertaxonomy.utis.input.DRFInputException;
@@ -90,7 +87,7 @@ public class GBIFChecklistTest {
     @Test
     public void nameCompleteStringListTest() throws DRFChecklistException, DRFInputException, JAXBException, TnrMsgException {
         parser = new DRFCSVInputParser();
-        List<TnrMsg> tnrMsgs = TnrMsgUtils.convertStringListToTnrMsgList(nameCompleteList, SearchMode.scientificNameExact, false);
+        List<TnrMsg> tnrMsgs = TnrMsgUtils.convertStringListToTnrMsgList(nameCompleteList, SearchMode.scientificNameExact, false, false);
         //List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/cybertaxonomy/utis/tnr/singleNameCompleteOnly.csv","UTF-8"));
         List<String> chosenKeyList = new ArrayList<String>();
         chosenKeyList.add("7ddf754f-d193-4cc9-b351-99906754a03b");

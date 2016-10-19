@@ -20,6 +20,7 @@ import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Source;
 import org.cybertaxonomy.utis.tnr.msg.Synonym;
 import org.cybertaxonomy.utis.tnr.msg.Taxon;
+import org.cybertaxonomy.utis.tnr.msg.Taxon.ParentTaxon;
 import org.cybertaxonomy.utis.tnr.msg.TaxonBase;
 import org.cybertaxonomy.utis.tnr.msg.TaxonName;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
@@ -201,7 +202,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
         return queryString;
     }
 
-    private Taxon createTaxon(Vertex taxonV, boolean addClassification) {
+    private Taxon createTaxon(Vertex taxonV, boolean addClassification, boolean addParentTaxon) {
 
         Taxon taxon = new Taxon();
 
@@ -225,6 +226,24 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
         taxon.setTaxonomicStatus(TaxonomicStatus.ACCEPTED.name());
 
         createSources(taxonV, taxon);
+
+        if(addParentTaxon) {
+            Vertex parentV= null;
+            try {
+                parentV = queryClient.relatedVertex(taxonV, RdfSchema.EUNIS_SPECIES, "taxonomy");
+                logger.debug("parent taxon: " + parentV.toString());
+                String parentTaxonName = queryClient.relatedVertexValue(parentV, RdfSchema.EUNIS_TAXONOMY, "name");
+                if(parentTaxonName != null) {
+                    ParentTaxon parentTaxon = new ParentTaxon();
+                    parentTaxon.setScientificName(parentTaxonName);
+                    parentTaxon.setIdentifier(parentV.getProperty(GraphSail.VALUE).toString());
+                    taxon.setParentTaxon(parentTaxon);
+                }
+
+            } catch (Exception e) {
+                logger.error("No taxonomy information for " + taxonV.toString());
+            }
+        }
 
         if(addClassification) {
             // classification
@@ -548,7 +567,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
 
         // case when accepted name
         if(isAccepted) {
-            Taxon taxon = createTaxon(taxonV, addClassification);
+            Taxon taxon = createTaxon(taxonV, addClassification, request.isAddParentTaxon());
             tnrResponse.setTaxon(taxon);
             if(matchNode == null) {
                 tnrResponse.setMatchingNameType(NameType.TAXON);
@@ -568,7 +587,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
             }
 
             if(taxonV != null) {
-                Taxon taxon = createTaxon(taxonV, false);
+                Taxon taxon = createTaxon(taxonV, false, false);
                 tnrResponse.setTaxon(taxon);
             } else {
             }

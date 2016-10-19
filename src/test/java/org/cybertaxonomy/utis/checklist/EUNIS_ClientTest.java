@@ -75,11 +75,10 @@ public class EUNIS_ClientTest extends Assert {
         for(Synonym syn : response.getSynonym()) {
             logger.info("Synonym: " + syn.getTaxonName().getScientificName() + " (" + syn.getUrl() + ")");
         }
-        List<HigherClassificationElement> hc = response.getTaxon().getHigherClassification();
-        assertEquals("Canidae", getHigherClassification("Family", hc).getScientificName());
-        assertEquals("Carnivora", getHigherClassification("Order", hc).getScientificName());
-        assertEquals("Chordata", getHigherClassification("Phylum", hc).getScientificName());
-        assertEquals("Animalia", getHigherClassification("Kingdom", hc).getScientificName());
+
+        assertNotNull(response.getTaxon().getParentTaxon());
+        assertEquals("Canidae", response.getTaxon().getParentTaxon().getScientificName());
+        assertEquals("http://eunis.eea.europa.eu/taxonomy/2425", response.getTaxon().getParentTaxon().getIdentifier());
     }
 
     @Test

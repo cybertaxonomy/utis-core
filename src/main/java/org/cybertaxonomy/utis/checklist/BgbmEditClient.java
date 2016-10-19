@@ -3,6 +3,7 @@ package org.cybertaxonomy.utis.checklist;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,6 +20,7 @@ import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Source;
 import org.cybertaxonomy.utis.tnr.msg.Synonym;
 import org.cybertaxonomy.utis.tnr.msg.Taxon;
+import org.cybertaxonomy.utis.tnr.msg.Taxon.ParentTaxon;
 import org.cybertaxonomy.utis.tnr.msg.TaxonName;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.IdentifierUtils;
@@ -221,7 +223,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
     }
 
-    private Taxon generateTaxon(JSONObject taxon, boolean addClassification, ServiceProviderInfo ci, String taxonUuid) throws DRFChecklistException {
+    private Taxon generateTaxon(JSONObject taxon, boolean addClassification, boolean addParentTaxon, ServiceProviderInfo ci, String taxonUuid) throws DRFChecklistException {
         Taxon accTaxon = new Taxon();
         TaxonName taxonName = new TaxonName();
 
@@ -256,8 +258,20 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         source.setUrl(sourceUrl);
         accTaxon.getSources().add(source);
 
-        if(addClassification) {
+        if(addClassification || addParentTaxon) {
             addClassification(taxon, accTaxon, ci, taxonUuid);
+        }
+        if(addParentTaxon) {
+            if(accTaxon.getHigherClassification().size() > 1) {
+                ParentTaxon parentTaxon = new ParentTaxon();
+                int parentTaxonPosition = 1;
+                parentTaxon.setScientificName(accTaxon.getHigherClassification().get(parentTaxonPosition).getScientificName());
+                parentTaxon.setIdentifier(accTaxon.getHigherClassification().get(parentTaxonPosition).getTaxonID());
+                accTaxon.setParentTaxon(parentTaxon);
+            }
+        }
+        if(!addClassification) {
+            accTaxon.getHigherClassification().clear();
         }
         return accTaxon;
     }
@@ -272,7 +286,6 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
     private void addClassification(JSONObject taxon, Taxon accTaxon, ServiceProviderInfo ci, String taxonUuid) throws DRFChecklistException {
 
         // need to fetch the full classification from the cdm REST api:
-
         URI classificationUri = queryClient.buildURI(SERVER_PATH_PREFIX + ci.getId()
                 + "/portal/classification/" + ci.defaultClassificationId() + "/pathFrom/" + taxonUuid + ".json", null);
 
@@ -280,7 +293,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
         JSONArray pathToRoot  = null;
         try {
-            // pathtoroot i a list of TaxonNode objects
+            // pathtoroot is a list of TaxonNode objects
             pathToRoot = parseResponseBody(responseBody, JSONArray.class);
         } catch (ParseException e1) {
             throw new DRFChecklistException("Error parsing response from " + classificationUri.toString(), e1);
@@ -288,13 +301,17 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
         for(Object o: pathToRoot) {
             JSONObject taxonNodeJson = (JSONObject)o;
-
             HigherClassificationElement hce = new HigherClassificationElement();
             hce.setScientificName(taxonNodeJson.get("titleCache").toString());
             hce.setRank(taxonNodeJson.get("rankLabel").toString());
             hce.setTaxonID(taxonNodeJson.get("uuid").toString()); // need to get the LSId instead!!!!
             accTaxon.getHigherClassification().add(hce);
         }
+
+        // remove the last since this is the taxon itself
+        accTaxon.getHigherClassification().remove(accTaxon.getHigherClassification().size() - 1);
+        // finally invert the order
+        Collections.reverse(accTaxon.getHigherClassification());
     }
 
     private void generateSynonyms(JSONArray relatedTaxa, Response tnrResponse) {
@@ -603,7 +620,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                     tnrResponse.setMatchingNameType(matchingName.equals(jsonTaxon.get("name").toString()) ? NameType.TAXON : NameType.SYNONYM);
                 }
 
-                Taxon taxon = generateTaxon(jsonTaxon, addClassification, ci, taxonUuid);
+                Taxon taxon = generateTaxon(jsonTaxon, addClassification, request.isAddParentTaxon(), ci, taxonUuid);
                 tnrResponse.setTaxon(taxon);
 
                 if(request.isAddSynonymy()){

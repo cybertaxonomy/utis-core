@@ -2,6 +2,7 @@ package org.cybertaxonomy.utis.checklist;
 
 
 import java.rmi.RemoteException;
+import java.util.Collections;
 import java.util.EnumSet;
 
 import javax.xml.rpc.ServiceException;
@@ -20,6 +21,7 @@ import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Source;
 import org.cybertaxonomy.utis.tnr.msg.Synonym;
 import org.cybertaxonomy.utis.tnr.msg.Taxon;
+import org.cybertaxonomy.utis.tnr.msg.Taxon.ParentTaxon;
 import org.cybertaxonomy.utis.tnr.msg.TaxonName;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.IdentifierUtils;
@@ -145,7 +147,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
 
         // case when accepted name
         if(record.getAphiaID() == accNameGUID) {
-            Taxon accName = generateTaxon(record, false);
+            Taxon accName = generateTaxon(record, addClassification, request.isAddParentTaxon());
             logger.debug("    > " + accName.getTaxonName().getScientificName());
             tnrResponse.setTaxon(accName);
             if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
@@ -154,7 +156,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         } else {
             // case when synonym
             AphiaRecord accNameRecord = aphianspt.getAphiaRecordByID(accNameGUID);
-            Taxon accName = generateTaxon(accNameRecord, addClassification);
+            Taxon accName = generateTaxon(accNameRecord, false, false);
             tnrResponse.setTaxon(accName);
             if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                 tnrResponse.setMatchingNameType(NameType.SYNONYM);
@@ -169,7 +171,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         return tnrResponse;
     }
 
-    private Taxon generateTaxon(AphiaRecord taxonRecord, boolean addClassification) {
+    private Taxon generateTaxon(AphiaRecord taxonRecord, boolean addClassification, boolean addParentTaxon) {
         Taxon taxon = new Taxon();
         TaxonName taxonName = new TaxonName();
 
@@ -201,7 +203,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         source.setUrl(sourceUrl);
         taxon.getSources().add(source);
 
-        if(addClassification) {
+        if(addClassification | addParentTaxon) {
          // the classification information contained in the taxon is incomplete
             // it is necessary to to a second request to obtain the full classification
             try {
@@ -223,6 +225,25 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
                 String msg = "Error while obtainig classification informtation for " + taxonRecord.getLsid();
                 logger.error(msg, e);
             }
+
+            // remove last item since this is the taxon itself
+            taxon.getHigherClassification().remove(taxon.getHigherClassification().size() -1);
+            // revert order
+            Collections.reverse(taxon.getHigherClassification());
+
+        }
+
+        if(addParentTaxon) {
+            if(taxon.getHigherClassification().size() > 2) {
+                ParentTaxon parentTaxon = new ParentTaxon();
+                int parentTaxonPosition = 0;
+                parentTaxon.setScientificName(taxon.getHigherClassification().get(parentTaxonPosition).getScientificName());
+                parentTaxon.setIdentifier(taxon.getHigherClassification().get(parentTaxonPosition).getTaxonID());
+                taxon.setParentTaxon(parentTaxon);
+            }
+        }
+        if(!addClassification) {
+            taxon.getHigherClassification().clear();
         }
 
         return taxon;
@@ -403,7 +424,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             AphiaRecord record = null;
             try {
                 record = aphianspt.getAphiaRecordByExtID(name, "lsid");
-                Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
+                Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), addClassification);
                 query.getResponse().add(tnrResponse);
             } catch(NullPointerException npe) {
                 //FIXME : Workaround for NPE thrown by the aphia stub due to a,

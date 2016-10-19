@@ -23,6 +23,7 @@ import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Source;
 import org.cybertaxonomy.utis.tnr.msg.Synonym;
 import org.cybertaxonomy.utis.tnr.msg.Taxon;
+import org.cybertaxonomy.utis.tnr.msg.Taxon.ParentTaxon;
 import org.cybertaxonomy.utis.tnr.msg.TaxonBase;
 import org.cybertaxonomy.utis.tnr.msg.TaxonName;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
@@ -171,7 +172,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
         return parsed;
     }
 
-    private Taxon generateTaxon(PESIRecord taxonRecord, boolean addClassification) {
+    private Taxon generateTaxon(PESIRecord taxonRecord, boolean addClassification, boolean addParentTaxon) {
 
 
         Taxon taxon = new Taxon();
@@ -194,6 +195,12 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
 
         String secReference  = addSources(taxonRecord.getGUID(), taxon);
         taxon.setAccordingTo(secReference);
+
+        if(addParentTaxon) {
+            ParentTaxon parentTaxon = new ParentTaxon();
+            parentTaxon.setScientificName(taxonRecord.getGenus());
+            taxon.setParentTaxon(parentTaxon);
+        }
 
         if(addClassification) {
             String[] rankNames = new String[] {"Genus", "Family", "Order", "_class", "Phylum", "Kingdom"};
@@ -407,7 +414,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
     @Override
     public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
 
-        _findByIdenifier(tnrMsg, false);
+        _findByIdentifier(tnrMsg, false);
     }
 
     /**
@@ -415,7 +422,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
      * @param addClassification TODO
      * @throws DRFChecklistException
      */
-    private void _findByIdenifier(TnrMsg tnrMsg, boolean addClassification) throws DRFChecklistException {
+    private void _findByIdentifier(TnrMsg tnrMsg, boolean addClassification) throws DRFChecklistException {
         Query query = singleQueryFrom(tnrMsg);
         String name = query.getRequest().getQueryString();
         PESINameServiceLocator pesins = new PESINameServiceLocator();
@@ -450,7 +457,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
     @Override
     public void higherClassification(TnrMsg tnrMsg) throws DRFChecklistException {
 
-        _findByIdenifier(tnrMsg, true);
+        _findByIdentifier(tnrMsg, true);
     }
 
     /**
@@ -475,7 +482,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
 
             // case when accepted name
             if(record.getGUID() != null && record.getGUID().equals(taxonGUID)) {
-                Taxon taxon = generateTaxon(record, addClassification);
+                Taxon taxon = generateTaxon(record, addClassification, request.isAddParentTaxon());
                 tnrResponse.setTaxon(taxon);
                 if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                     tnrResponse.setMatchingNameType(NameType.TAXON);
@@ -483,17 +490,18 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             } else {
                 // case when synonym
                 PESIRecord taxonRecord = pesinspt.getPESIRecordByGUID(taxonGUID);
-                Taxon taxon = generateTaxon(taxonRecord, false);
+                Taxon taxon = generateTaxon(taxonRecord, false, false);
                 tnrResponse.setTaxon(taxon);
                 if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                     tnrResponse.setMatchingNameType(NameType.SYNONYM);
                 }
             }
 
-            // FIXME check for isAddSynonymy prior doing the request
-            PESIRecord[] records = pesinspt.getPESISynonymsByGUID(taxonGUID);
-            if(request.isAddSynonymy() &&  records != null && records.length > 0) {
-                generateSynonyms(records,tnrResponse);
+            if(request.isAddSynonymy()) {
+                PESIRecord[] records = pesinspt.getPESISynonymsByGUID(taxonGUID);
+                if(records != null && records.length > 0) {
+                    generateSynonyms(records,tnrResponse);
+                }
             }
         }
 

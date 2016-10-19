@@ -85,7 +85,7 @@ public class PESIClientTest extends org.junit.Assert {
     @Test
     public void exactScientificNameTest() throws DRFChecklistException, TnrMsgException {
 
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Lactuca virosa", true);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Lactuca virosa", true, true);
         client.queryChecklist(tnrMsg);
 
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
@@ -104,6 +104,8 @@ public class PESIClientTest extends org.junit.Assert {
         for(Synonym syn : response1.getSynonym()) {
             logger.info("Synonym: " + syn.getTaxonName().getScientificName() + " (" + syn.getUrl() + ")");
         }
+        assertNotNull(response1.getTaxon().getParentTaxon());
+        assertEquals("Lactuca", response1.getTaxon().getParentTaxon().getScientificName());
 
         Response response2 = tnrMsg.getQuery().get(0).getResponse().get(1);
         assertEquals("Lactuca virosa", response2.getMatchingNameString());
@@ -116,13 +118,12 @@ public class PESIClientTest extends org.junit.Assert {
         for(Synonym syn : response2.getSynonym()) {
             logger.info("Synonym: " + syn.getTaxonName().getScientificName() + " (" + syn.getUrl() + ")");
         }
-
     }
 
     @Test
     public void higherClassificationTest() throws DRFChecklistException, TnrMsgException {
 
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(ClassificationAction.higherClassification, "2074E4B2-1F58-4D61-ADE6-A37E02674F4D", true);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(ClassificationAction.higherClassification, "2074E4B2-1F58-4D61-ADE6-A37E02674F4D", true, false);
         client.queryChecklist(tnrMsg);
 
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);

@@ -149,7 +149,7 @@ public class TnrMsgUtils {
             return finalTnrMsgList;
         }
 
-        public static TnrMsg convertStringToTnrMsg(String name, UtisAction action, boolean addSynonymy) {
+        public static TnrMsg convertStringToTnrMsg(String name, UtisAction action, boolean addSynonymy, boolean addParentTaxon) {
             TnrMsg tnrMsg = new TnrMsg();
             Query query = new Query();
             Request request = new Request();
@@ -157,17 +157,18 @@ public class TnrMsgUtils {
             request.setQueryString(name);
             request.setSearchMode(action.toString());
             request.setAddSynonymy(addSynonymy);
+            request.setAddParentTaxon(addParentTaxon);
             query.setRequest(request);
             tnrMsg.getQuery().add(query);
 
             return tnrMsg;
         }
 
-        public static List<TnrMsg> convertStringListToTnrMsgList(List<String> names, SearchMode searchMode, boolean addSynonymy) {
+        public static List<TnrMsg> convertStringListToTnrMsgList(List<String> names, SearchMode searchMode, boolean addSynonymy, boolean addParentTaxon) {
             List<TnrMsg> tnrMsgList = new ArrayList<TnrMsg>();
             Iterator<String> itrStringMsg = names.iterator();
             while(itrStringMsg.hasNext()) {
-                TnrMsg tnrMsg = convertStringToTnrMsg(itrStringMsg.next(), searchMode, addSynonymy);
+                TnrMsg tnrMsg = convertStringToTnrMsg(itrStringMsg.next(), searchMode, addSynonymy, addParentTaxon);
                 tnrMsgList.add(tnrMsg);
             }
             return tnrMsgList;
@@ -281,7 +282,7 @@ public class TnrMsgUtils {
             return action;
         }
 
-        public static TnrMsg createRequest(UtisAction utisAction, String queryString, boolean addSynonymy) {
+        public static TnrMsg createRequest(UtisAction utisAction, String queryString, boolean addSynonymy, boolean addParentTaxon) {
             TnrMsg msg = new TnrMsg();
             Query q = new Query();
             Request r = new Request();
@@ -292,6 +293,7 @@ public class TnrMsgUtils {
                 r.setSearchMode(((SearchMode)utisAction).name());
             }
             r.setAddSynonymy(addSynonymy);
+            r.setAddParentTaxon(addParentTaxon);
             q.setRequest(r);
             msg.getQuery().add(q);
             return msg;
