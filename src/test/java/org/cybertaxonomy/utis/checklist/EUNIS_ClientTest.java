@@ -1,8 +1,5 @@
 package org.cybertaxonomy.utis.checklist;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
 
 import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
@@ -12,12 +9,13 @@ import org.cybertaxonomy.utis.tnr.msg.Synonym;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.TnrMsgException;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EUNIS_ClientTest {
+public class EUNIS_ClientTest extends Assert {
 
     protected static final Logger logger = LoggerFactory.getLogger(EUNIS_ClientTest.class);
 
@@ -46,7 +44,7 @@ public class EUNIS_ClientTest {
     @Test
     public void scientificNameExact_Synonym_Test() throws DRFChecklistException, TnrMsgException {
 
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Canis dalmatinus", false);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Canis dalmatinus", false, false);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
@@ -61,7 +59,7 @@ public class EUNIS_ClientTest {
     @Test
     public void scientificNameExact_Accepted_Test() throws DRFChecklistException, TnrMsgException {
 
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Canis aureus", true);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Canis aureus", true, true);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
@@ -87,7 +85,7 @@ public class EUNIS_ClientTest {
     @Test
     public void scientificNameExact_Accepted_Test_2() throws DRFChecklistException, TnrMsgException {
 
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Bellis perennis", true);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Bellis perennis", true, false);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
@@ -103,7 +101,7 @@ public class EUNIS_ClientTest {
     @Test
     public void scientificNameExact_withSynonym_Test() throws DRFChecklistException, TnrMsgException {
 
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Prinobius myardi", true);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Prinobius myardi", true, false);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
@@ -125,10 +123,12 @@ public class EUNIS_ClientTest {
     @Test
     public void genus_Test() throws DRFChecklistException, TnrMsgException {
 
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Prionus", true);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Prionus", true, true);
         client.queryChecklist(tnrMsg);
+
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
+
         assertEquals(8, tnrMsg.getQuery().get(0).getResponse().size());
         Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
         assertTrue(response.getMatchingNameString().startsWith("Prionus"));
@@ -138,6 +138,29 @@ public class EUNIS_ClientTest {
                 (response.getTaxon().getTaxonName().getCanonicalName().startsWith("Prinobius") && response.getMatchingNameType().equals(NameType.SYNONYM))
                 );
         List<HigherClassificationElement> hc = response.getTaxon().getHigherClassification();
+        assertNotNull(hc);
+        assertTrue(!hc.isEmpty());
+        assertEquals("Cerambycidae", getHigherClassification("Family", hc).getScientificName());
+        assertEquals("Coleoptera", getHigherClassification("Order", hc).getScientificName());
+        assertEquals("Arthropoda", getHigherClassification("Phylum", hc).getScientificName());
+        assertEquals("Animalia", getHigherClassification("Kingdom", hc).getScientificName());
+    }
+
+    @Test
+    public void higherClassification_Test() throws DRFChecklistException, TnrMsgException {
+
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(ClassificationAction.higherClassification, "http://eunis.eea.europa.eu/species/116371", false, false);
+        client.queryChecklist(tnrMsg);
+
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+
+        assertEquals(1, tnrMsg.getQuery().get(0).getResponse().size());
+        Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
+        assertEquals("Prinobius myardi", response.getTaxon().getTaxonName().getCanonicalName());
+        List<HigherClassificationElement> hc = response.getTaxon().getHigherClassification();
+        assertNotNull(hc);
+        assertTrue(!hc.isEmpty());
         assertEquals("Cerambycidae", getHigherClassification("Family", hc).getScientificName());
         assertEquals("Coleoptera", getHigherClassification("Order", hc).getScientificName());
         assertEquals("Arthropoda", getHigherClassification("Phylum", hc).getScientificName());
@@ -147,7 +170,7 @@ public class EUNIS_ClientTest {
     @Test
     public void scientificNameLikeTest_1() throws DRFChecklistException, TnrMsgException {
         String queryString = "Cani";
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameLike, queryString, false);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameLike, queryString, false, false);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
@@ -159,7 +182,7 @@ public class EUNIS_ClientTest {
 
     @Test
     public void scientificNameLikeTest_2() throws DRFChecklistException, TnrMsgException {
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameLike, "Abies par", false);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameLike, "Abies par", false, false);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
@@ -168,7 +191,7 @@ public class EUNIS_ClientTest {
 
     @Test
     public void scientificNameLikeTest_3() throws DRFChecklistException, TnrMsgException {
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameLike, "ies par", false);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameLike, "ies par", false, false);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
@@ -177,7 +200,7 @@ public class EUNIS_ClientTest {
 
     @Test
     public void vernacularNameExactTest_1() throws DRFChecklistException, TnrMsgException {
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.vernacularNameExact, "Farkas", false);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.vernacularNameExact, "Farkas", false, false);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
@@ -187,7 +210,7 @@ public class EUNIS_ClientTest {
 
     @Test
     public void vernacularNameLikeTest_1() throws DRFChecklistException, TnrMsgException {
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.vernacularNameLike, "egwart", false);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.vernacularNameLike, "egwart", false, false);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
@@ -200,7 +223,7 @@ public class EUNIS_ClientTest {
 
     @Test
     public void findByIdentifierTest_1() throws DRFChecklistException, TnrMsgException {
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.findByIdentifier, "http://eunis.eea.europa.eu/species/1367", false);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.findByIdentifier, "http://eunis.eea.europa.eu/species/1367", false, false);
         client.queryChecklist(tnrMsg);
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);

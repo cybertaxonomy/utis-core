@@ -67,7 +67,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
             SearchMode.vernacularNameLike,
             SearchMode.findByIdentifier
             );
-    
+
     public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.of(
             ClassificationAction.higherClassification
             );
@@ -548,7 +548,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
 
         // case when accepted name
         if(isAccepted) {
-            Taxon taxon = createTaxon(taxonV, false);
+            Taxon taxon = createTaxon(taxonV, addClassification);
             tnrResponse.setTaxon(taxon);
             if(matchNode == null) {
                 tnrResponse.setMatchingNameType(NameType.TAXON);
