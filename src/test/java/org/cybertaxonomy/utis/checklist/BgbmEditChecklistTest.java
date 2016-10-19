@@ -73,7 +73,8 @@ public class BgbmEditChecklistTest extends Assert {
         //List<TnrMsg> tnrMsgs = parser.parse(BiovelUtils.getResourceAsString("/org/cybertaxonomy/utis/tnr/nameCompleteOnly.csv","UTF-8"));
         TnrMsg tnrMsg = TnrMsgUtils.mergeTnrMsgs(tnrMsgs);
         String json = JSONUtils.convertObjectToJson(ci);
-        BaseChecklistClient<RestClient> bec = new BgbmEditClient(json);
+        // BaseChecklistClient<RestClient> bec = new BgbmEditClient(json);
+        BaseChecklistClient<RestClient> bec = client;
 
 
         for(Query query : tnrMsg.getQuery()) {

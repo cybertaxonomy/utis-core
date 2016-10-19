@@ -137,12 +137,7 @@ public class EUNIS_ClientTest extends Assert {
                 (response.getTaxon().getTaxonName().getCanonicalName().startsWith("Prinobius") && response.getMatchingNameType().equals(NameType.SYNONYM))
                 );
         List<HigherClassificationElement> hc = response.getTaxon().getHigherClassification();
-        assertNotNull(hc);
-        assertTrue(!hc.isEmpty());
-        assertEquals("Cerambycidae", getHigherClassification("Family", hc).getScientificName());
-        assertEquals("Coleoptera", getHigherClassification("Order", hc).getScientificName());
-        assertEquals("Arthropoda", getHigherClassification("Phylum", hc).getScientificName());
-        assertEquals("Animalia", getHigherClassification("Kingdom", hc).getScientificName());
+
     }
 
     @Test
