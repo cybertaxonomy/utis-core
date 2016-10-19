@@ -227,11 +227,24 @@
   </xsd:element>
   <xsd:element name="taxon">
     <xsd:complexType>
+      <xsd:annotation>
+        <xsd:appinfo>
+            <annox:annotate target="class">@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)</annox:annotate>
+        </xsd:appinfo>
+      </xsd:annotation>
       <xsd:complexContent>
         <xsd:extension base="tns:taxonBase">
           <xsd:sequence>
             <xsd:element name="higherClassification" type="tns:higherClassificationElement" maxOccurs="unbounded" minOccurs="0"></xsd:element>
             <xsd:element name="identifier" type="xsd:string"></xsd:element>
+            <xsd:element name="parentTaxon">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="scientificName" type="xsd:string"></xsd:element>
+                        <xsd:element name="identifier" type="xsd:string"></xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
           </xsd:sequence>
         </xsd:extension>
       </xsd:complexContent>
@@ -275,6 +288,15 @@
                   <xsd:appinfo>
                     <annox:annotate target="getter">
                       @com.wordnik.swagger.annotations.ApiModelProperty("Indicates whether the synonymy of the accepted taxon should be included into the response. Turning this option on may lead to an increased response time.")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+              <xsd:element name="addParentTaxon" type="xsd:boolean">
+              <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">
+                      @com.wordnik.swagger.annotations.ApiModelProperty("Indicates whether the direct higher taxon of the accepted taxon should be included into the response. Turning this option on may lead to an slight increase of the response time.")
                     </annox:annotate>
                   </xsd:appinfo>
                 </xsd:annotation>
