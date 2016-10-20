@@ -89,20 +89,21 @@ public class BgbmEditChecklistTest extends Assert {
     @Test
     public void exactScientificNameTest() throws DRFChecklistException, TnrMsgException {
 
-        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Lactuca virosa", true, true);
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameExact, "Lactuca perennis", true, true);
         client.queryChecklist(tnrMsg);
 
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
 
-        assertEquals(4, tnrMsg.getQuery().get(0).getResponse().size());
+        assertEquals(1, tnrMsg.getQuery().get(0).getResponse().size());
 
         Response response1 = tnrMsg.getQuery().get(0).getResponse().get(0);
-        assertEquals("Lactuca virosa L.", response1.getMatchingNameString());
-        assertEquals("Lactuca virosa", response1.getTaxon().getTaxonName().getCanonicalName());
+        assertNotNull(response1);
+        assertEquals("Lactuca perennis L.", response1.getMatchingNameString());
+        assertEquals("Lactuca perennis", response1.getTaxon().getTaxonName().getCanonicalName());
         logger.info("Accepted: " + response1.getTaxon().getTaxonName().getScientificName() + " (" + response1.getTaxon().getUrl() + ")");
         // assertTrue(response1.getTaxon().getUrl() != null); // TODO?
-        assertEquals("urn:lsid:catalogueoflife.org:taxon:88fca8c1-bfda-11e4-811c-020044200006:col20150401", response1.getTaxon().getIdentifier());
+        assertEquals("urn:lsid:catalogueoflife.org:taxon:7edd6542-bfda-11e4-811c-020044200006:col20150401", response1.getTaxon().getIdentifier());
         assertTrue(response1.getSynonym().size() > 0);
         for(Synonym syn : response1.getSynonym()) {
             logger.info("Synonym: " + syn.getTaxonName().getScientificName() + " (" + syn.getUrl() + ")");
