@@ -42,7 +42,7 @@
   </xsd:complexType>
   <xsd:complexType name="taxonName">
     <xsd:sequence>
-      <xsd:element name="fullName">
+      <xsd:element name="scientificName">
         <xsd:annotation>
           <xsd:appinfo>
             <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty("The full scientific name, with authorship, publication date information and potentially further taxonomic information.")
@@ -120,6 +120,25 @@
       </xsd:element>
     </xsd:sequence>
   </xsd:complexType>
+  <xsd:complexType  name="higherClassificationElement">
+   <xsd:sequence>
+      <xsd:element minOccurs="0" name="rank">
+        <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="taxonID">
+        <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element minOccurs="0" name="scientificName">
+        <xsd:simpleType>
+            <xsd:restriction base="xsd:string"></xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+   </xsd:sequence>
+</xsd:complexType>
 
   <xsd:element name="Response">
     <xsd:complexType>
@@ -208,12 +227,24 @@
   </xsd:element>
   <xsd:element name="taxon">
     <xsd:complexType>
+      <xsd:annotation>
+        <xsd:appinfo>
+            <annox:annotate target="class">@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)</annox:annotate>
+        </xsd:appinfo>
+      </xsd:annotation>
       <xsd:complexContent>
         <xsd:extension base="tns:taxonBase">
           <xsd:sequence>
-            <xsd:element minOccurs="0" ref="tns:classification">
-            </xsd:element>
+            <xsd:element name="higherClassification" type="tns:higherClassificationElement" maxOccurs="unbounded" minOccurs="0"></xsd:element>
             <xsd:element name="identifier" type="xsd:string"></xsd:element>
+            <xsd:element name="parentTaxon">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="scientificName" type="xsd:string"></xsd:element>
+                        <xsd:element name="identifier" type="xsd:string"></xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
           </xsd:sequence>
         </xsd:extension>
       </xsd:complexContent>
@@ -227,50 +258,7 @@
     </xsd:complexContent>
   </xsd:complexType>
   </xsd:element>
-  <xsd:element name="classification">
-    <xsd:complexType>
-      <xsd:sequence>
-        <xsd:element minOccurs="0" name="kingdom">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string"></xsd:restriction>
-          </xsd:simpleType>
-        </xsd:element>
-        <xsd:element minOccurs="0" name="phylum">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string"></xsd:restriction>
-          </xsd:simpleType>
-        </xsd:element>
-        <xsd:element minOccurs="0" name="class">
-          <xsd:annotation>
-            <xsd:appinfo>
-              <annox:annotate target="getter">@com.fasterxml.jackson.annotation.JsonProperty("class")
-              </annox:annotate>
-              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The full scientific name of the class in which the taxon is classified." )
-              </annox:annotate>
-            </xsd:appinfo>
-          </xsd:annotation>
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string"></xsd:restriction>
-          </xsd:simpleType>
-        </xsd:element>
-        <xsd:element minOccurs="0" name="order">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string"></xsd:restriction>
-          </xsd:simpleType>
-        </xsd:element>
-        <xsd:element minOccurs="0" name="family">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string"></xsd:restriction>
-          </xsd:simpleType>
-        </xsd:element>
-        <xsd:element minOccurs="0" name="genus">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string"></xsd:restriction>
-          </xsd:simpleType>
-        </xsd:element>
-      </xsd:sequence>
-    </xsd:complexType>
-  </xsd:element>
+
   <xsd:element name="query">
     <xsd:complexType>
       <xsd:sequence>
@@ -290,7 +278,7 @@
               <xsd:annotation>
                   <xsd:appinfo>
                     <annox:annotate target="getter">
-                      @com.wordnik.swagger.annotations.ApiModelProperty("Specified the search mode to be usedPossible search modes are: scientificNameExact, scientificNameLike (begins with), vernacularNameExact, vernacularNameLike (contains).")
+                      @com.wordnik.swagger.annotations.ApiModelProperty("Specified the search mode to be used. Possible search modes are: scientificNameExact, scientificNameLike (begins with), vernacularNameExact, vernacularNameLike (contains), findByIdentifier, taxonomicChildren.")
                     </annox:annotate>
                   </xsd:appinfo>
                 </xsd:annotation>
@@ -300,6 +288,15 @@
                   <xsd:appinfo>
                     <annox:annotate target="getter">
                       @com.wordnik.swagger.annotations.ApiModelProperty("Indicates whether the synonymy of the accepted taxon should be included into the response. Turning this option on may lead to an increased response time.")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+              <xsd:element name="addParentTaxon" type="xsd:boolean">
+              <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">
+                      @com.wordnik.swagger.annotations.ApiModelProperty("Indicates whether the direct higher taxon of the accepted taxon should be included into the response. Turning this option on may lead to an slight increase of the response time.")
                     </annox:annotate>
                   </xsd:appinfo>
                 </xsd:annotation>

@@ -6,9 +6,6 @@ import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
-import org.cybertaxonomy.utis.checklist.DRFChecklistException;
-import org.cybertaxonomy.utis.checklist.GBIFBetaBackboneClient;
-import org.cybertaxonomy.utis.checklist.SearchMode;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.input.DRFCSVInputParser;
 import org.cybertaxonomy.utis.input.DRFInputException;
@@ -21,7 +18,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
+@Ignore // TODO client not officially supported in utis + test is causing problems: please check
 public class GBIFBetaChecklistTest {
 
     private static DRFCSVInputParser parser;

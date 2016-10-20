@@ -3,6 +3,7 @@ package org.cybertaxonomy.utis.checklist;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -10,16 +11,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpHost;
-import org.apache.http.ParseException;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.RestClient;
-import org.cybertaxonomy.utis.tnr.msg.Classification;
+import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Query;
 import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Source;
 import org.cybertaxonomy.utis.tnr.msg.Synonym;
 import org.cybertaxonomy.utis.tnr.msg.Taxon;
+import org.cybertaxonomy.utis.tnr.msg.Taxon.ParentTaxon;
 import org.cybertaxonomy.utis.tnr.msg.TaxonName;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.IdentifierUtils;
@@ -29,16 +30,18 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
-    /**
-     *
-     */
+    private static final Logger logger = LoggerFactory.getLogger(BgbmEditClient.class);
+
     public static final String ID = "bgbm-cdm-server";
     public static final String LABEL = "Name catalogues served by the BGBM CDM Server";
-    public static final String DOC_URL = "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html";
-    public static final String COPYRIGHT_URL = "http://wp5.e-taxonomy.eu/cdmlib/license.html";
+    public static final String DOC_URL = "http://cybertaxonomy.eu/cdmlib/rest-api-name-catalogue.html";
+    public static final String COPYRIGHT_URL = "http://cybertaxonomy.eu/cdmlib/license.html";
     private static final String SERVER_PATH_PREFIX = "/";
     private static final HttpHost HTTP_HOST = new HttpHost("api.cybertaxonomy.org", 80); // new HttpHost("test.e-taxonomy.eu", 80);
 
@@ -51,6 +54,11 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
             SearchMode.scientificNameExact,
             SearchMode.scientificNameLike,
             SearchMode.findByIdentifier
+            );
+
+    public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.of(
+            ClassificationAction.higherClassification,
+            ClassificationAction.taxonomicChildren
             );
 
     public BgbmEditClient() {
@@ -80,10 +88,14 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {
         ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,DOC_URL,COPYRIGHT_URL, getSearchModes());
-        checklistInfo.addSubChecklist(new ServiceProviderInfo("col",
+        ServiceProviderInfo col = new ServiceProviderInfo("col",
                 "Catalogue Of Life (EDIT - name catalogue end point)",
-                "http://wp5.e-taxonomy.eu/cdmlib/rest-api-name-catalogue.html",
-                "http://www.catalogueoflife.org/col/info/copyright", ServiceProviderInfo.DEFAULT_SEARCH_MODE));
+                "http://cybertaxonomy.eu/cdmlib/rest-api-name-catalogue.html",
+                "http://www.catalogueoflife.org/col/info/copyright", ServiceProviderInfo.DEFAULT_SEARCH_MODE);
+        col.setDefaultClassificationId("29d4011f-a6dd-4081-beb8-559ba6b84a6b");
+        col.getSupportedActions().addAll(SEARCH_MODES);
+        col.getSupportedActions().addAll(CLASSIFICATION_ACTION);
+        checklistInfo.addSubChecklist(col);
         return checklistInfo;
     }
 
@@ -95,8 +107,9 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
      * @param queryList
      * @param responseBodyJson
      * @throws DRFChecklistException
+     * @throws ParseException
      */
-    private void buildTaxonIdMapsFromCatalogueServiceResponse(List<Query> queryList , String responseBody) throws DRFChecklistException {
+    private void buildTaxonIdMapsFromCatalogueServiceResponse(List<Query> queryList , String responseBody) throws DRFChecklistException, ParseException {
 
         JSONArray responseBodyJson = parseResponseBody(responseBody, JSONArray.class);
 
@@ -140,8 +153,9 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
      * @param queryList
      * @param responseBodyJson
      * @throws DRFChecklistException
+     * @throws ParseException
      */
-    private void addTaxaToTaxonIdMapFromIdentifierServiceResponse(List<Query> queryList , String responseBody) throws DRFChecklistException {
+    private void addTaxaToTaxonIdMapFromIdentifierServiceResponse(List<Query> queryList , String responseBody) throws DRFChecklistException, ParseException {
 
         /*
          * {"class":"DefaultPagerImpl","count":8,"currentIndex":0,"firstRecord":1,"indices":[0],"lastRecord":8,"nextIndex":0,"pageSize":30,"pagesAvailable":1,"prevIndex":0,
@@ -176,7 +190,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
     }
 
-    private void addTaxonToTaxonIdMap(List<Query> queryList , String responseBody) throws DRFChecklistException {
+    private void addTaxonToTaxonIdMap(List<Query> queryList , String responseBody) throws DRFChecklistException, ParseException {
 
 
         if(queryList.size() > 1){
@@ -195,22 +209,12 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
      * @param responseBody
      * @return
      * @throws DRFChecklistException
+     * @throws org.json.simple.parser.ParseException
      */
-    private <T extends JSONAware> T parseResponseBody(String responseBody, Class<T> jsonType) throws DRFChecklistException {
+    private <T extends JSONAware> T parseResponseBody(String responseBody, Class<T> jsonType) throws DRFChecklistException, org.json.simple.parser.ParseException {
         // TODO use Jackson instead? it is much faster!
         JSONParser parser = new JSONParser();
-        Object obj;
-        try {
-            obj = parser.parse(responseBody);
-        } catch (ParseException e) {
-            logger.error("parseResponseBody() - ", e);
-            throw new DRFChecklistException(e);
-        } catch (org.json.simple.parser.ParseException e) {
-
-            logger.error("parseResponseBody() - ", e);
-            throw new DRFChecklistException(e);
-        }
-
+        Object obj = parser.parse(responseBody);
         if(jsonType.isAssignableFrom(obj.getClass())){
             return jsonType.cast(obj);
         } else {
@@ -219,12 +223,12 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
     }
 
-    private Taxon generateAccName(JSONObject taxon) {
+    private Taxon generateTaxon(JSONObject taxon, boolean addClassification, boolean addParentTaxon, ServiceProviderInfo ci, String taxonUuid) throws DRFChecklistException {
         Taxon accTaxon = new Taxon();
         TaxonName taxonName = new TaxonName();
 
         String resName = (String) taxon.get("name");
-        taxonName.setFullName(resName);
+        taxonName.setScientificName(resName);
         NameParser ecatParser = new NameParser();
         String nameCanonical = ecatParser.parseToCanonical(resName);
         taxonName.setCanonicalName(nameCanonical);
@@ -254,18 +258,60 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         source.setUrl(sourceUrl);
         accTaxon.getSources().add(source);
 
-        JSONObject classification =(JSONObject)taxon.get("classification");
-        if(classification != null) {
-            Classification c = new Classification();
-            c.setKingdom((String) classification.get("Kingdom"));
-            c.setPhylum((String) classification.get("Phylum"));
-            c.setClazz((String) classification.get("Class"));
-            c.setOrder((String) classification.get("Order"));
-            c.setFamily((String) classification.get("Family"));
-            c.setGenus((String) classification.get("Genus"));
-            accTaxon.setClassification(c);
+        if(addClassification || addParentTaxon) {
+            addClassification(taxon, accTaxon, ci, taxonUuid);
+        }
+        if(addParentTaxon) {
+            if(accTaxon.getHigherClassification().size() > 1) {
+                ParentTaxon parentTaxon = new ParentTaxon();
+                int parentTaxonPosition = 1;
+                parentTaxon.setScientificName(accTaxon.getHigherClassification().get(parentTaxonPosition).getScientificName());
+                parentTaxon.setIdentifier(accTaxon.getHigherClassification().get(parentTaxonPosition).getTaxonID());
+                accTaxon.setParentTaxon(parentTaxon);
+            }
+        }
+        if(!addClassification) {
+            accTaxon.getHigherClassification().clear();
         }
         return accTaxon;
+    }
+
+    /**
+     * @param taxon
+     * @param accTaxon
+     * @param ci
+     * @param taxonUuid
+     * @throws DRFChecklistException
+     */
+    private void addClassification(JSONObject taxon, Taxon accTaxon, ServiceProviderInfo ci, String taxonUuid) throws DRFChecklistException {
+
+        // need to fetch the full classification from the cdm REST api:
+        URI classificationUri = queryClient.buildURI(SERVER_PATH_PREFIX + ci.getId()
+                + "/portal/classification/" + ci.defaultClassificationId() + "/pathFrom/" + taxonUuid + ".json", null);
+
+        String responseBody = queryClient.get(classificationUri);
+
+        JSONArray pathToRoot  = null;
+        try {
+            // pathtoroot is a list of TaxonNode objects
+            pathToRoot = parseResponseBody(responseBody, JSONArray.class);
+        } catch (ParseException e1) {
+            throw new DRFChecklistException("Error parsing response from " + classificationUri.toString(), e1);
+        }
+
+        for(Object o: pathToRoot) {
+            JSONObject taxonNodeJson = (JSONObject)o;
+            HigherClassificationElement hce = new HigherClassificationElement();
+            hce.setScientificName(taxonNodeJson.get("titleCache").toString());
+            hce.setRank(taxonNodeJson.get("rankLabel").toString());
+            hce.setTaxonID(taxonNodeJson.get("uuid").toString()); // need to get the LSId instead!!!!
+            accTaxon.getHigherClassification().add(hce);
+        }
+
+        // remove the last since this is the taxon itself
+        accTaxon.getHigherClassification().remove(accTaxon.getHigherClassification().size() - 1);
+        // finally invert the order
+        Collections.reverse(accTaxon.getHigherClassification());
     }
 
     private void generateSynonyms(JSONArray relatedTaxa, Response tnrResponse) {
@@ -281,7 +327,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                 TaxonName taxonName = new TaxonName();
 
                 String resName = (String) synonymjs.get("name");
-                taxonName.setFullName(resName);
+                taxonName.setScientificName(resName);
                 NameParser ecatParser = new NameParser();
                 String nameCanonical = ecatParser.parseToCanonical(resName);
                 taxonName.setCanonicalName(nameCanonical);
@@ -323,14 +369,17 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         Query.Request request = queryList.get(0).getRequest();
 
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
+
             URI namesUri = queryClient.buildUriFromQueryList(queryList,
                     SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue.json",
                     "query",
                     "*", null);
-
-            String searchResponseBody = queryClient.get(namesUri);
-
-            buildTaxonIdMapsFromCatalogueServiceResponse(queryList, searchResponseBody);
+            try {
+                String searchResponseBody = queryClient.get(namesUri);
+                buildTaxonIdMapsFromCatalogueServiceResponse(queryList, searchResponseBody);
+            } catch (ParseException e) {
+               throw new DRFChecklistException("Error while parsing the response of " + namesUri, e);
+            }
 
             List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
 
@@ -340,7 +389,12 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                         "taxonUuid",
                         null);
                 String taxonResponseBody = queryClient.get(taxonUri);
-                updateQueriesWithResponse(taxonResponseBody, checklistInfo, request);
+                // buildTaxonIdMapsFromCatalogueServiceResponse(queryList, taxonResponseBody);
+                try {
+                    updateQueriesWithResponse(taxonResponseBody, checklistInfo, request, false);
+                } catch (ParseException e) {
+                    throw new DRFChecklistException("Error while parsing the response of " + namesUri, e);
+                }
             }
         }
     }
@@ -367,6 +421,16 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
     @Override
     public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
 
+        _findByIdentifier(tnrMsg, false);
+
+    }
+
+    /**
+     * @param tnrMsg
+     * @param addClassification TODO
+     * @throws DRFChecklistException
+     */
+    private void _findByIdentifier(TnrMsg tnrMsg, boolean addClassification) throws DRFChecklistException {
         List<Query> queryList = tnrMsg.getQuery();
 
         if(queryList.size() > 1){
@@ -381,9 +445,40 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
 
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
-            // taxon/findByIdentifier.json?identifier=1&includeEntity=1
+
+            queryForTaxonByID(queryList, findByIdentifierParameters, identifier, checklistInfo);
+
+            List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
+            if(taxonIdList.size() > 0) {
+                URI taxonUri = queryClient.buildUriFromQueryStringList(taxonIdList,
+                        SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue/taxon.json",
+                        "taxonUuid",
+                        null);
+                String taxonResponseBody = queryClient.get(taxonUri);
+                try {
+                    updateQueriesWithResponse(taxonResponseBody, checklistInfo, request, addClassification);
+                } catch (ParseException e) {
+                    throw new DRFChecklistException("Error while parsing the response of " + taxonUri, e);
+                }
+            }
+        } // end of per subchecklist loop
+    }
+
+    /**
+     * Populates the <code>taxonIdQueryMap</code> with the taxa that are found using the given id string
+     *
+     * @param queryList
+     * @param findByIdentifierParameters
+     * @param identifier
+     * @param checklistInfo
+     * @throws DRFChecklistException
+     */
+    private void queryForTaxonByID(List<Query> queryList, Map<String, String> findByIdentifierParameters,
+            String identifier, ServiceProviderInfo checklistInfo) throws DRFChecklistException {
+        URI namesUri = null;
+        try {
             if(IdentifierUtils.checkLSID(identifier)){
-                URI namesUri = queryClient.buildUriFromQueryList(queryList,
+                namesUri = queryClient.buildUriFromQueryList(queryList,
                         SERVER_PATH_PREFIX + checklistInfo.getId() + "/authority/metadata.do",
                         "lsid",
                         null,
@@ -392,7 +487,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                 String responseBody = queryClient.get(namesUri);
                 addTaxonToTaxonIdMap(queryList, responseBody);
             } else {
-                URI namesUri = queryClient.buildUriFromQueryList(queryList,
+                namesUri = queryClient.buildUriFromQueryList(queryList,
                         SERVER_PATH_PREFIX + checklistInfo.getId() + "/taxon/findByIdentifier.json",
                         "identifier",
                         null, // like search for identifiers not supported by this client
@@ -401,22 +496,97 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                 String responseBody = queryClient.get(namesUri);
                 addTaxaToTaxonIdMapFromIdentifierServiceResponse(queryList, responseBody);
             }
+        } catch (ParseException e) {
+            throw new DRFChecklistException("Error while parsing the response of " + namesUri, e);
+        }
+    }
 
-            List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void taxonomicChildren(TnrMsg tnrMsg) throws DRFChecklistException {
 
-            if(taxonIdList.size() > 0) {
-                URI taxonUri = queryClient.buildUriFromQueryStringList(taxonIdList,
-                        SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue/taxon.json",
-                        "taxonUuid",
-                        null);
-                String taxonResponseBody = queryClient.get(taxonUri);
-                updateQueriesWithResponse(taxonResponseBody, checklistInfo, request);
+        List<Query> queryList = tnrMsg.getQuery();
+
+        if(queryList.size() > 1){
+            throw new DRFChecklistException("Only single Querys are supported");
+        }
+
+        Query query = queryList.get(0);
+        Query.Request request = query.getRequest();
+        Map<String, String> findByIdentifierParameters = new HashMap<String,String>();
+        findByIdentifierParameters.put("includeEntity", "1");
+
+        String identifier = request.getQueryString();
+
+        for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
+            queryForTaxonByID(queryList, findByIdentifierParameters, identifier, checklistInfo);
+
+            // copy all found uuid into a new list, taxonIdQueryMap will be overwritten alter on again and needs to be cleared now
+            List<String> taxonIdList = new ArrayList<String>();
+            taxonIdList.addAll(taxonIdQueryMap.keySet());
+            taxonIdQueryMap.clear();
+
+            if(taxonIdList.size() == 1) {
+                // /portal/classification/{treeUuid}/childNodesOf/{taxonUuid}.json
+                    URI taxonChildren = queryClient.buildURI(SERVER_PATH_PREFIX + checklistInfo.getId()
+                            + "/portal/classification/" + checklistInfo.defaultClassificationId() + "/childNodesOf/" + taxonIdList.get(0) + ".json",
+                            null);
+                    String responseBody = queryClient.get(taxonChildren);
+
+                    if(responseBody == null || responseBody.isEmpty()){
+                        return;
+                    }
+
+                    try {
+                        JSONArray taxonNodesJson = parseResponseBody(responseBody, JSONArray.class);
+                        List<String> childtaxonIdList = new ArrayList<String>(taxonNodesJson.size());
+
+                        for(Object o : taxonNodesJson) {
+
+                            JSONObject tnodeJson = ((JSONObject)o);
+                            childtaxonIdList.add(tnodeJson.get("taxonUuid").toString());
+                            taxonIdQueryMap.put(tnodeJson.get("taxonUuid").toString(), query);
+                        }
+
+                        URI taxonUri = queryClient.buildUriFromQueryStringList(childtaxonIdList,
+                                SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue/taxon.json",
+                                "taxonUuid",
+                                null);
+                        String taxonResponseBody = queryClient.get(taxonUri);
+
+
+                        try {
+                            updateQueriesWithResponse(taxonResponseBody, checklistInfo, request, false);
+                        } catch (ParseException e) {
+                            throw new DRFChecklistException("Error while parsing the response of " + taxonUri, e);
+                        }
+
+                    } catch (ParseException e) {
+                        logger.error("Exception parsing the response on " + taxonChildren, e);
+                    }
+
+
+            } else if(taxonIdList.size() > 1) {
+                throw new DRFChecklistException("More than one taxa is mathiching the given id " + identifier + ", this should never happen.");
             }
+
         }
 
     }
 
-    private void updateQueriesWithResponse(String responseBody, ServiceProviderInfo ci, Query.Request request) throws DRFChecklistException {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void higherClassification(TnrMsg tnrMsg) throws DRFChecklistException {
+
+        _findByIdentifier(tnrMsg, true);
+
+    }
+
+    private void updateQueriesWithResponse(String responseBody, ServiceProviderInfo ci, Query.Request request, boolean addClassification) throws DRFChecklistException, ParseException {
 
         if(responseBody == null || responseBody.isEmpty()){
             return;
@@ -426,28 +596,32 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
         Iterator<JSONObject> itrTaxonMsgs = responseBodyJson.iterator();
 
-        int i = -1;
+
         while(itrTaxonMsgs.hasNext()) {
-            i++;
+
             JSONObject taxonInfo = itrTaxonMsgs.next();
             JSONObject taxonResponse = (JSONObject) taxonInfo.get("response");
-            JSONObject taxon = (JSONObject) taxonResponse.get("taxon");
+            if(taxonResponse == null) {
+                // an error occurred continue to the next
+                continue;
+            }
+            JSONObject jsonTaxon = (JSONObject) taxonResponse.get("taxon");
             JSONArray relatedTaxa = (JSONArray) taxonResponse.get("relatedTaxa");
 
             JSONObject taxonRequest = (JSONObject) taxonInfo.get("request");
             String taxonUuid = (String) taxonRequest.get("taxonUuid");
 
-            if(taxon != null) {
+            if(jsonTaxon != null) {
                 Response tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
 
                 String matchingName = taxonIdMatchStringMap.get(taxonUuid);
                 if(matchingName != null){
                     tnrResponse.setMatchingNameString(matchingName);
-                    tnrResponse.setMatchingNameType(matchingName.equals(taxon.get("name").toString()) ? NameType.TAXON : NameType.SYNONYM);
+                    tnrResponse.setMatchingNameType(matchingName.equals(jsonTaxon.get("name").toString()) ? NameType.TAXON : NameType.SYNONYM);
                 }
 
-                Taxon accName = generateAccName(taxon);
-                tnrResponse.setTaxon(accName);
+                Taxon taxon = generateTaxon(jsonTaxon, addClassification, request.isAddParentTaxon(), ci, taxonUuid);
+                tnrResponse.setTaxon(taxon);
 
                 if(request.isAddSynonymy()){
                     generateSynonyms(relatedTaxa, tnrResponse);
@@ -466,11 +640,20 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         return SEARCH_MODES ;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EnumSet<ClassificationAction> getClassificationActions() {
+        return CLASSIFICATION_ACTION;
+    }
+
     @Override
     public boolean isSupportedIdentifier(String value) {
         // return IdentifierUtils.checkLSID(value) || IdentifierUtils.checkUUID(value);
         return value != null;
     }
+
 
 
 

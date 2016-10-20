@@ -8,11 +8,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.RestClient;
-import org.cybertaxonomy.utis.tnr.msg.Classification;
+import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
 import org.cybertaxonomy.utis.tnr.msg.Query;
 import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Source;
@@ -24,13 +25,13 @@ import org.cybertaxonomy.utis.utils.JSONUtils;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
 
-    /**
-     *
-     */
+    private static final Logger logger = LoggerFactory.getLogger(GBIFBackboneClient.class);
+
     private static final HttpHost HTTP_HOST = new HttpHost("api.gbif.org",80);
     public static final String ID = "gbif";
     public static final String LABEL = "GBIF Checklist Bank";
@@ -41,6 +42,8 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
     public static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,ServiceProviderInfo.DEFAULT_SEARCH_MODE,URL,DATA_AGR_URL, VERSION);
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(SearchMode.scientificNameExact);
+
+    public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.noneOf(ClassificationAction.class);
 
     public GBIFBackboneClient() {
         super();
@@ -85,7 +88,6 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
             do {
                 uriBuilder.setParameter("offset", Integer.toString(offset));
                 uri = uriBuilder.build();
-                logger = LoggerFactory.getLogger(GBIFBackboneClient.class);
                 logger.debug("building Checklist Map");
                 String responseBody = queryClient.get(uri);
 
@@ -164,7 +166,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
                     Long key = (Long)res.get("key");
                     accTaxonId = key.toString();
 
-                    Taxon accName = generateAccName(res);
+                    Taxon accName = generateTaxon(res, false);
                     tnrResponse.setTaxon(accName);
 
                 } else
@@ -177,7 +179,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
                     String responseBody = queryClient.get(taxonUri);
 
                     JSONObject taxon = JSONUtils.parseJsonToObject(responseBody);
-                    Taxon accName = generateAccName(taxon);
+                    Taxon accName = generateTaxon(taxon, false);
                     tnrResponse.setTaxon(accName);
 
                 } else {
@@ -210,12 +212,12 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
         }
     }
 
-    private Taxon generateAccName(JSONObject taxon) {
+    private Taxon generateTaxon(JSONObject taxon, boolean addClassification) {
         Taxon accTaxon = new Taxon();
         TaxonName taxonName = new TaxonName();
 
         String resName = (String) taxon.get("scientificName");
-        taxonName.setFullName(resName);
+        taxonName.setScientificName(resName);
 
         taxonName.setCanonicalName((String) taxon.get("canonicalName"));
 
@@ -245,16 +247,27 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
         source.setUrl(sourceUrl);
         accTaxon.getSources().add(source);
 
-        Classification c = new Classification();
-        c.setKingdom((String) taxon.get("kingdom"));
-        c.setPhylum((String) taxon.get("phylum"));
-        c.setClazz((String) taxon.get("clazz"));
-        c.setOrder((String) taxon.get("order"));
-        c.setFamily((String) taxon.get("family"));
-        c.setGenus((String) taxon.get("genus"));
-        accTaxon.setClassification(c);
+        if(addClassification) {
+            String[] rankNames = new String[] {"genus", "family", "order", "clazz", "phylum", "kingdom"};
+            for(String rankName : rankNames) {
+                try {
+                String higherTaxonName = taxon.get(rankName).toString();
+                HigherClassificationElement hce = new HigherClassificationElement();
+                hce.setScientificName(higherTaxonName);
+                if(rankName.equals("clazz")) {
+                    rankName = "class";
+                }
+                hce.setRank(StringUtils.capitalize(rankName));
+                accTaxon.getHigherClassification().add(hce);
+                } catch(NullPointerException e) {
+                    // IGNORE, just try the next rank
+
+                }
+            }
+        }
 
         return accTaxon;
+
     }
 
     private void generateSynonyms(JSONObject pagedSynonyms, Response tnrResponse) {
@@ -268,7 +281,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
             TaxonName taxonName = new TaxonName();
 
             String resName = (String) synonymjs.get("scientificName");
-            taxonName.setFullName(resName);
+            taxonName.setScientificName(resName);
 
             taxonName.setCanonicalName((String) synonymjs.get("canonicalName"));
 
@@ -337,9 +350,17 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
         return SEARCH_MODES;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EnumSet<ClassificationAction> getClassificationActions() {
+        return CLASSIFICATION_ACTION;
+    }
+
     @Override
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
+        throw new DRFChecklistException("resolveVernacularNamesLike mode not supported by " + this.getClass().getSimpleName());
 
     }
 
@@ -350,9 +371,25 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
 
     @Override
     public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
+        throw new DRFChecklistException("findByIdentifier mode not supported by " + this.getClass().getSimpleName());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void taxonomicChildren(TnrMsg tnrMsg) throws DRFChecklistException {
+        throw new DRFChecklistException("taxonomicChildren mode not supported by " + this.getClass().getSimpleName());
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void higherClassification(TnrMsg tnrMsg) throws DRFChecklistException {
+        throw new DRFChecklistException("higherClassification mode not supported by " + this.getClass().getSimpleName());
+
+    }
 
 }

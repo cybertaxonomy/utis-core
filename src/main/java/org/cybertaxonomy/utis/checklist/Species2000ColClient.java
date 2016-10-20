@@ -34,6 +34,8 @@ import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.BiovelUtils;
 import org.cybertaxonomy.utis.utils.IdentifierUtils;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
@@ -42,9 +44,9 @@ import org.xml.sax.SAXException;
 
 public class Species2000ColClient extends BaseChecklistClient<RestClient> {
 
-    /**
-     *
-     */
+    private static final Logger logger = LoggerFactory.getLogger(Species2000ColClient.class);
+
+
     private static final HttpHost HTTP_HOST = new HttpHost("www.catalogueoflife.org",80);
     public static final String ID = "species2000col";
     public static final String LABEL = "Species2000 - Catalogue Of Life";
@@ -52,6 +54,8 @@ public class Species2000ColClient extends BaseChecklistClient<RestClient> {
     public static final String DATA_AGR_URL = "http://www.catalogueoflife.org/col/info/copyright";
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(SearchMode.scientificNameExact);
+
+    public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.noneOf(ClassificationAction.class);
 
 
     public Species2000ColClient() {
@@ -208,6 +212,14 @@ public class Species2000ColClient extends BaseChecklistClient<RestClient> {
         return SEARCH_MODES;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EnumSet<ClassificationAction> getClassificationActions() {
+        return CLASSIFICATION_ACTION;
+    }
+
     @Override
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
         // TODO Auto-generated method stub
@@ -225,7 +237,23 @@ public class Species2000ColClient extends BaseChecklistClient<RestClient> {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void taxonomicChildren(TnrMsg tnrMsg) throws DRFChecklistException {
+        throw new DRFChecklistException("taxonomicChildren mode not supported by " + this.getClass().getSimpleName());
 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void higherClassification(TnrMsg tnrMsg) throws DRFChecklistException {
+        throw new DRFChecklistException("higherClassification mode not supported by " + this.getClass().getSimpleName());
+
+    }
 }
 
 

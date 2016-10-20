@@ -4,7 +4,7 @@
   <groupId>org.cybertaxonomy</groupId>
   <artifactId>utis-core</artifactId>
   <packaging>jar</packaging>
-  <version>1.1.2</version>
+  <version>1.2.0</version>
   <name>UTIS-Core</name>
   <description>Unified Taxonomic Information Service core libraries</description>
   <url>http://maven.apache.org</url>
@@ -117,6 +117,7 @@
     <!-- ======================================================================= -->
     <!-- Dependencies needed for Apache Axix WSDL2Java (only during development) -->
     <!--
+    -->
     <dependency>
     <groupId>javax.xml</groupId>
     <artifactId>jaxrpc-api</artifactId>
@@ -137,17 +138,11 @@
     <artifactId>geronimo-activation_1.1_spec</artifactId>
     <version>1.1</version>
     </dependency>
-    -->
     <!-- ======================================================================= -->
     <dependency>
       <groupId>javax.mail</groupId>
       <artifactId>mail</artifactId>
       <version>1.4.7</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ibm.lsid</groupId>
-      <artifactId>lsid-client</artifactId>
-      <version>1.1.2</version>
     </dependency>
     <dependency>
         <groupId>com.tinkerpop.blueprints</groupId>
@@ -183,6 +178,12 @@
         <groupId>org.neo4j</groupId>
         <artifactId>neo4j-ha</artifactId>
         <version>${neo4j.version}</version>
+        <exclusions>
+            <exclusion>
+              <groupId>ch.qos.logback</groupId>
+              <artifactId>logback-classic</artifactId>
+            </exclusion>
+        </exclusions>
     </dependency>
     <!-- yourkit profiler api controller -->
     <!-- the 2015 version is not available via maven 
@@ -201,6 +202,28 @@
     </pluginRepository> </pluginRepositories> -->
 
   <build>
+  <resources>
+      <!-- ${basedir}/src/main/resources -->
+      <resource>
+        <!-- replace the project-version placeholder in the version.properties 
+          file. This property can then be used to retrieve the version number in the 
+          Bootloader -->
+        <targetPath>${project.build.directory}/classes</targetPath>
+        <filtering>true</filtering>
+        <directory>${basedir}/src/main/resources</directory>
+        <includes>
+          <include>version.properties</include>
+        </includes>
+      </resource>
+      <resource>
+        <!-- all other files in classes -->
+        <targetPath>${project.build.directory}/classes</targetPath>
+        <directory>${basedir}/src/main/resources</directory>
+        <excludes>
+          <exclude>version.properties</exclude>
+        </excludes>
+      </resource>
+    </resources>
     <extensions>
       <extension>
         <groupId>org.apache.maven.wagon</groupId>

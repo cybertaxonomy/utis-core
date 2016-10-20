@@ -9,6 +9,7 @@
 */
 package org.cybertaxonomy.utis.store;
 
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -25,6 +26,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.cybertaxonomy.utis.utils.VersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,25 +37,48 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class Store {
 
-    protected Logger logger = LoggerFactory.getLogger(Store.class);
+    protected static final Logger logger = LoggerFactory.getLogger(Store.class);
+
     private static final File tmpDir = new File(System.getProperty("java.io.tmpdir"));
     private static final File userHomeDir = new File(System.getProperty("user.home"));
-    private static final File utisHome = new File(userHomeDir, ".utis");
+    protected static File utisHome = null;
+
+    static {
+        if(System.getProperty("utis.home") != null){
+            utisHome = new File(System.getProperty("utis.home"));
+            logger.info("utis.home defined by system property: " + utisHome.getAbsolutePath());
+        } else {
+            // this is the folder for production mode
+            // /var/lib/utis must be created prior starting the application
+            utisHome = new File("/var/lib/utis");
+            logger.info("utis.home " + utisHome.getAbsolutePath());
+            if(!utisHome.canWrite()) {
+                logger.info("utis.home " + utisHome.getAbsolutePath() +  " is not writable, trying other location ...");
+                // this is the folder for development mode
+                // if the application is started inside a service as jetty
+                // this folder will most probably not be writable.
+                utisHome = new File(userHomeDir, ".utis");
+            }
+            logger.info("utis.home finally is " + utisHome.getAbsolutePath());
+        }
+    }
     protected File storeLocation = null;
 
     public Store() throws Exception {
-        storeLocation = new File(utisHome, storeName() + File.separator);
+        storeLocation = new File(utisHome, VersionInfo.majorMinorVersion() + File.separator + storeName() + File.separator);
         if( !storeLocation.exists()) {
             storeLocation.mkdirs();
-            logger.debug("new store location created");
+            logger.debug("new store location created at " + storeLocation.getAbsolutePath());
         }
         initStoreEngine();
     }
 
     /**
-     * @return
+     * @return the Major.Minor version number of the project version,
+     * or the full VERSION string if it is not containing a Major.Minor version number
      */
     protected abstract String storeName();
+
 
     /**
      * @param rdfFileUri

@@ -2,6 +2,7 @@ package org.cybertaxonomy.utis.checklist;
 
 
 import java.rmi.RemoteException;
+import java.util.Collections;
 import java.util.EnumSet;
 
 import javax.xml.rpc.ServiceException;
@@ -10,19 +11,23 @@ import org.apache.http.HttpHost;
 import org.cybertaxonomy.utis.checklist.worms.AphiaNameServiceLocator;
 import org.cybertaxonomy.utis.checklist.worms.AphiaNameServicePortType;
 import org.cybertaxonomy.utis.checklist.worms.AphiaRecord;
+import org.cybertaxonomy.utis.checklist.worms.Classification;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.SoapClient;
-import org.cybertaxonomy.utis.tnr.msg.Classification;
+import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Query;
 import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Source;
 import org.cybertaxonomy.utis.tnr.msg.Synonym;
 import org.cybertaxonomy.utis.tnr.msg.Taxon;
+import org.cybertaxonomy.utis.tnr.msg.Taxon.ParentTaxon;
 import org.cybertaxonomy.utis.tnr.msg.TaxonName;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.IdentifierUtils;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class WoRMSClient extends BaseChecklistClient<SoapClient> {
@@ -30,6 +35,12 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
     /**
      *
      */
+    private static final int DEFAULT_SERVICE_PAGE_SIZE = 50;
+
+
+    private static final Logger logger = LoggerFactory.getLogger(WoRMSClient.class);
+
+
     private static final HttpHost HTTP_HOST = new HttpHost("http://www.marinespecies.org",80);
     public static final String ID = "worms";
     public static final String LABEL = "WoRMS";
@@ -47,6 +58,11 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
     public static final EnumSet<SearchMode> SCIENTIFICNAME_SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
             SearchMode.scientificNameLike
+            );
+
+    public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.of(
+            ClassificationAction.higherClassification,
+            ClassificationAction.taxonomicChildren
             );
 
 
@@ -84,6 +100,14 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EnumSet<ClassificationAction> getClassificationActions() {
+        return CLASSIFICATION_ACTION;
+    }
+
+    /**
      * @return
      * @throws DRFChecklistException
      */
@@ -104,15 +128,16 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
     /**
      * @param aphianspt
      * @param record
+     * @param addClassification TODO
      * @return
      * @throws RemoteException
      */
-    private Response tnrResponseFromRecord(AphiaNameServicePortType aphianspt, AphiaRecord record, Query.Request request)
+    private Response tnrResponseFromRecord(AphiaNameServicePortType aphianspt, AphiaRecord record, Query.Request request, boolean addClassification)
             throws RemoteException {
 
         Response tnrResponse = TnrMsgUtils.tnrResponseFor(getServiceProviderInfo());
 
-        SearchMode searchMode = SearchMode.valueOf(request.getSearchMode());
+        UtisAction searchMode = TnrMsgUtils.utisActionFrom(request.getSearchMode());
 
         int accNameGUID = record.getValid_AphiaID();
         String matchingName = record.getScientificname();
@@ -122,7 +147,8 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
 
         // case when accepted name
         if(record.getAphiaID() == accNameGUID) {
-            Taxon accName = generateAccName(record);
+            Taxon accName = generateTaxon(record, addClassification, request.isAddParentTaxon());
+            logger.debug("    > " + accName.getTaxonName().getScientificName());
             tnrResponse.setTaxon(accName);
             if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                 tnrResponse.setMatchingNameType(NameType.TAXON);
@@ -130,7 +156,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         } else {
             // case when synonym
             AphiaRecord accNameRecord = aphianspt.getAphiaRecordByID(accNameGUID);
-            Taxon accName = generateAccName(accNameRecord);
+            Taxon accName = generateTaxon(accNameRecord, false, false);
             tnrResponse.setTaxon(accName);
             if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                 tnrResponse.setMatchingNameType(NameType.SYNONYM);
@@ -145,23 +171,23 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         return tnrResponse;
     }
 
-    private Taxon generateAccName(AphiaRecord taxonRecord) {
-        Taxon accName = new Taxon();
+    private Taxon generateTaxon(AphiaRecord taxonRecord, boolean addClassification, boolean addParentTaxon) {
+        Taxon taxon = new Taxon();
         TaxonName taxonName = new TaxonName();
 
         String resName = taxonRecord.getScientificname();
-        taxonName.setFullName(resName + " " + taxonRecord.getAuthority());
+        taxonName.setScientificName(resName + " " + taxonRecord.getAuthority());
 
         taxonName.setCanonicalName(resName);
 
         taxonName.setRank(taxonRecord.getRank());
         taxonName.setAuthorship(taxonRecord.getAuthority());
 
-        accName.setTaxonName(taxonName);
-        accName.setTaxonomicStatus(taxonRecord.getStatus());
+        taxon.setTaxonName(taxonName);
+        taxon.setTaxonomicStatus(taxonRecord.getStatus());
 
-        accName.setUrl(taxonRecord.getUrl());
-        accName.setIdentifier(taxonRecord.getLsid());
+        taxon.setUrl(taxonRecord.getUrl());
+        taxon.setIdentifier(taxonRecord.getLsid());
 
 
         //FIXME : To fill in
@@ -175,18 +201,52 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         source.setDatasetName(sourceDatasetName);
         source.setName(sourceName);
         source.setUrl(sourceUrl);
-        accName.getSources().add(source);
+        taxon.getSources().add(source);
 
-        Classification c = new Classification();
-        c.setKingdom(taxonRecord.getKingdom());
-        c.setPhylum(taxonRecord.getPhylum());
-        c.setClazz("");
-        c.setOrder(taxonRecord.getOrder());
-        c.setFamily(taxonRecord.getFamily());
-        c.setGenus(taxonRecord.getGenus());
-        accName.setClassification(c);
+        if(addClassification | addParentTaxon) {
+         // the classification information contained in the taxon is incomplete
+            // it is necessary to to a second request to obtain the full classification
+            try {
+                AphiaNameServicePortType aphianspt = getAphiaNameService();
+                Classification classification = aphianspt.getAphiaClassificationByID(taxonRecord.getAphiaID());
 
-        return accName;
+                while(classification != null && classification.getRank() != null) {
+                    HigherClassificationElement hce = new HigherClassificationElement();
+                    hce.setScientificName(classification.getScientificname());
+                    hce.setRank(classification.getRank());
+                    AphiaRecord taxonAtRankRecord = aphianspt.getAphiaRecordByID(classification.getAphiaID());
+                    hce.setTaxonID(taxonAtRankRecord.getLsid());
+                    taxon.getHigherClassification().add(hce);
+                    System.err.println(classification.getRank());
+                    classification = classification.getChild();
+                }
+
+            } catch (DRFChecklistException | RemoteException e) {
+                String msg = "Error while obtainig classification informtation for " + taxonRecord.getLsid();
+                logger.error(msg, e);
+            }
+
+            // remove last item since this is the taxon itself
+            taxon.getHigherClassification().remove(taxon.getHigherClassification().size() -1);
+            // revert order
+            Collections.reverse(taxon.getHigherClassification());
+
+        }
+
+        if(addParentTaxon) {
+            if(taxon.getHigherClassification().size() > 2) {
+                ParentTaxon parentTaxon = new ParentTaxon();
+                int parentTaxonPosition = 0;
+                parentTaxon.setScientificName(taxon.getHigherClassification().get(parentTaxonPosition).getScientificName());
+                parentTaxon.setIdentifier(taxon.getHigherClassification().get(parentTaxonPosition).getTaxonID());
+                taxon.setParentTaxon(parentTaxon);
+            }
+        }
+        if(!addClassification) {
+            taxon.getHigherClassification().clear();
+        }
+
+        return taxon;
     }
 
 
@@ -198,7 +258,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             TaxonName taxonName = new TaxonName();
 
             String resName = synRecord.getScientificname();
-            taxonName.setFullName(resName + " " + synRecord.getAuthority());
+            taxonName.setScientificName(resName + " " + synRecord.getAuthority());
 
             taxonName.setCanonicalName(resName);
 
@@ -242,7 +302,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
                 Integer nameAphiaID = aphianspt.getAphiaID(name, false);
                 logger.debug("nameAphiaID : " + nameAphiaID);
                 record = aphianspt.getAphiaRecordByID(nameAphiaID);
-                Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest());
+                Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
                 query.getResponse().add(tnrResponse);
             } catch(NullPointerException npe) {
                 //FIXME : Workaround for NPE thrown by the aphia stub due to a,
@@ -264,15 +324,23 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         AphiaNameServicePortType aphianspt = getAphiaNameService();
         boolean fuzzy = false;
 
+        boolean tryNextPage = true;
+        int pageIndex = 1;
+
         try {
-            AphiaRecord[] records = aphianspt.getAphiaRecords(name + "%", true, fuzzy, false, 1);
-            if(records != null){
-                for (AphiaRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest());
-                    query.getResponse().add(tnrResponse);
+            while (tryNextPage) {
+                AphiaRecord[] records = aphianspt.getAphiaRecords(name + "%", true, fuzzy, false, (pageIndex++ * DEFAULT_SERVICE_PAGE_SIZE) + 1);
+                if(records != null){
+                    logger.debug("page " + (pageIndex - 1) + " has " + records.length + " records");
+                    tryNextPage = records.length == DEFAULT_SERVICE_PAGE_SIZE;
+                    for (AphiaRecord record : records) {
+                        Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
+                        query.getResponse().add(tnrResponse);
+                    }
+                }  else {
+                    tryNextPage = false;
                 }
             }
-
         } catch (RemoteException e) {
             logger.error("Error in getGUID method in AphiaNameSerice", e);
             throw new DRFChecklistException("Error in getGUID method in AphiaNameSerice", e);
@@ -291,7 +359,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             AphiaRecord[] records = aphianspt.getAphiaRecordsByVernacular(name, false, 1);
             if(records != null){
                 for (AphiaRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest());
+                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
                     query.getResponse().add(tnrResponse);
                 }
             }
@@ -310,13 +378,22 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         String name = query.getRequest().getQueryString();
         AphiaNameServicePortType aphianspt = getAphiaNameService();
 
+        boolean tryNextPage = true;
+        int pageIndex = 1;
         try {
-            AphiaRecord[] records = aphianspt.getAphiaRecordsByVernacular(name, true, 1);
-            if(records != null){
-                for (AphiaRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest());
-                    query.getResponse().add(tnrResponse);
+            while(tryNextPage) {
+                AphiaRecord[] records = aphianspt.getAphiaRecordsByVernacular(name, true, (pageIndex++ * DEFAULT_SERVICE_PAGE_SIZE) + 1);
+                if(records != null){
+                    tryNextPage = records.length == DEFAULT_SERVICE_PAGE_SIZE;
+                    logger.debug("page " + (pageIndex - 1) + " has " + records.length + " records");
+                    for (AphiaRecord record : records) {
+                        Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
+                        query.getResponse().add(tnrResponse);
+                    }
+                } else {
+                    tryNextPage = false;
                 }
+
             }
 
         } catch (RemoteException e) {
@@ -328,6 +405,17 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
 
     @Override
     public void findByIdentifier(TnrMsg tnrMsg) throws DRFChecklistException {
+
+        _findByIdentifier(tnrMsg, false);
+
+    }
+
+    /**
+     * @param tnrMsg
+     * @param addClassification TODO
+     * @throws DRFChecklistException
+     */
+    private void _findByIdentifier(TnrMsg tnrMsg, boolean addClassification) throws DRFChecklistException {
         Query query = singleQueryFrom(tnrMsg);
         String name = query.getRequest().getQueryString();
         AphiaNameServicePortType aphianspt = getAphiaNameService();
@@ -336,7 +424,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             AphiaRecord record = null;
             try {
                 record = aphianspt.getAphiaRecordByExtID(name, "lsid");
-                Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest());
+                Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), addClassification);
                 query.getResponse().add(tnrResponse);
             } catch(NullPointerException npe) {
                 //FIXME : Workaround for NPE thrown by the aphia stub due to a,
@@ -344,9 +432,53 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
                 //        in the db
             }
         }  catch (RemoteException e) {
-            logger.error("Error in autogenerated getGUID method", e);
-            throw new DRFChecklistException("Error in getGUID method", e);
+            logger.error("Error in autogenerated getAphiaRecordByExtID method", e);
+            throw new DRFChecklistException("Error in getAphiaRecordByExtID method", e);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void taxonomicChildren(TnrMsg tnrMsg) throws DRFChecklistException {
+
+        Query query = singleQueryFrom(tnrMsg);
+        String name = query.getRequest().getQueryString();
+        AphiaNameServicePortType aphianspt = getAphiaNameService();
+
+        try {
+            AphiaRecord parentTaxonRecord = null;
+            try {
+                parentTaxonRecord = aphianspt.getAphiaRecordByExtID(name, "lsid");
+                AphiaRecord[] records = aphianspt.getAphiaChildrenByID(parentTaxonRecord.getAphiaID(), 1, false);
+                if(records != null){
+                    for (AphiaRecord record : records) {
+                        Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
+                        query.getResponse().add(tnrResponse);
+                    }
+                }
+            } catch(NullPointerException npe) {
+                //FIXME : Workaround for NPE thrown by the aphia stub due to a,
+                //        null aphia id (Integer), when the name is not present
+                //        in the db
+            }
+        }  catch (RemoteException e) {
+            String msg = "Error in autogenerated getAphiaRecordByExtID or getAphiaChildrenByID method";
+            logger.error(msg, e);
+            throw new DRFChecklistException(msg, e);
+        }
+
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void higherClassification(TnrMsg tnrMsg) throws DRFChecklistException {
+
+        _findByIdentifier(tnrMsg, true);
 
     }
 

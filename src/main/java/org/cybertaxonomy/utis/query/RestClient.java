@@ -20,15 +20,16 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 import org.cybertaxonomy.utis.checklist.SearchMode;
 import org.cybertaxonomy.utis.tnr.msg.Query;
 import org.cybertaxonomy.utis.tnr.msg.Query.Request;
+import org.cybertaxonomy.utis.utils.TnrMsgUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +64,7 @@ public class RestClient implements IQueryClient{
      * @throws DRFChecklistException
      */
     public String get(URI uri) throws DRFChecklistException {
-        HttpClient client = new DefaultHttpClient();
+        CloseableHttpClient client = HttpClientBuilder.create().build();
         HttpGet request = new HttpGet(uri);
 
         try {
@@ -77,14 +78,15 @@ public class RestClient implements IQueryClient{
 
             return responseBody;
 
-        } catch (ClientProtocolException e1) {
-            e1.printStackTrace();
-//            throw new DRFChecklistException(e1);
         } catch (IOException e) {
-            e.printStackTrace();
-            throw new DRFChecklistException(e);
+            throw new DRFChecklistException("Error on http get request for " + uri, e);
+        } finally {
+            try {
+                client.close();
+            } catch (Exception e) {
+                /* IGNORE */
+            }
         }
-        return null;
     }
 
     /**
@@ -109,7 +111,7 @@ public class RestClient implements IQueryClient{
         for(Query query : queryList) {
             Request tnrRequest = query.getRequest();
             String queryString = tnrRequest.getQueryString();
-            if(likeModes.contains(SearchMode.valueOf(tnrRequest.getSearchMode()))){
+            if(likeModes.contains(TnrMsgUtils.utisActionFrom(tnrRequest.getSearchMode()))){
                 queryString += likeModeWildcard;
             }
             queries.add(queryString);
@@ -144,19 +146,19 @@ public class RestClient implements IQueryClient{
             String endpointSuffix,
             String queryKey,
             Map<String, String> paramMap) {
-    
+
         RESTURIBuilder builder = new RESTURIBuilder(getHost().getHostName(),
                     getHost().getPort(),
                     endpointSuffix,
                     queryKey,
                     paramMap);
-    
+
         URI uri = null;
         Iterator<String> itrQuery = queryList.iterator();
         while(itrQuery.hasNext()) {
             builder.addQuery(itrQuery.next());
         }
-    
+
         try {
             uri = builder.build();
         } catch (URISyntaxException e) {
@@ -168,11 +170,11 @@ public class RestClient implements IQueryClient{
 
     public URI buildUriFromQueryString(String endpointUrl,
             Map<String, String> paramMap) {
-    
+
         RESTURIBuilder builder = new RESTURIBuilder(getHost().getHostName(), getHost().getPort(),endpointUrl, paramMap);
-    
+
         URI uri = null;
-    
+
         try {
             uri = builder.build();
         } catch (URISyntaxException e) {
@@ -186,17 +188,17 @@ public class RestClient implements IQueryClient{
             String endpointSuffix,
             String queryKey,
             Map<String, String> paramMap) {
-    
+
         RESTURIBuilder builder = new RESTURIBuilder(getHost().getHostName(),
                     getHost().getPort(),
                     endpointSuffix,
                     queryKey,
                     paramMap);
-    
+
         URI uri = null;
-    
+
         builder.addQuery(query);
-    
+
         try {
             uri = builder.build();
         } catch (URISyntaxException e) {
@@ -204,6 +206,31 @@ public class RestClient implements IQueryClient{
             //e.printStackTrace();
         }
         return uri;
+    }
+
+    public URI buildURI(String endpointSuffix, Map<String, String> query) {
+
+        URIBuilder uriBuilder = new URIBuilder();
+        uriBuilder.setScheme(getHost().getSchemeName());
+        uriBuilder.setHost(getHost().getHostName());
+        uriBuilder.setPort(getHost().getPort());
+        uriBuilder.setPath(endpointSuffix);
+
+        if(query != null) {
+            for(String key : query.keySet()) {
+                uriBuilder.addParameter(key, query.get(key));
+            }
+        }
+
+        URI uri = null;
+        try {
+            uri = uriBuilder.build();
+        } catch (URISyntaxException e) {
+            // TODO Auto-generated catch block
+            //e.printStackTrace();
+        }
+        return uri;
+
     }
 
 

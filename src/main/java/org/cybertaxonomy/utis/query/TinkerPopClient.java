@@ -13,7 +13,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 
-import org.cybertaxonomy.utis.checklist.EEA_BDC_Client.RdfSchema;
+import org.cybertaxonomy.utis.checklist.EUNIS_Client.RdfSchema;
 import org.cybertaxonomy.utis.store.Neo4jStore;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.AutoIndexer;

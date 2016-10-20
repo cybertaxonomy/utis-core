@@ -26,13 +26,15 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.lang3.StringUtils;
+import org.cybertaxonomy.utis.checklist.ClassificationAction;
 import org.cybertaxonomy.utis.checklist.SearchMode;
+import org.cybertaxonomy.utis.checklist.UtisAction;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.tnr.msg.Query;
-import org.cybertaxonomy.utis.tnr.msg.Response;
-import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.tnr.msg.Query.ClientStatus;
 import org.cybertaxonomy.utis.tnr.msg.Query.Request;
+import org.cybertaxonomy.utis.tnr.msg.Response;
+import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
@@ -147,25 +149,26 @@ public class TnrMsgUtils {
             return finalTnrMsgList;
         }
 
-        public static TnrMsg convertStringToTnrMsg(String name, SearchMode searchMode, boolean addSynonymy) {
+        public static TnrMsg convertStringToTnrMsg(String name, UtisAction action, boolean addSynonymy, boolean addParentTaxon) {
             TnrMsg tnrMsg = new TnrMsg();
             Query query = new Query();
             Request request = new Request();
 
             request.setQueryString(name);
-            request.setSearchMode(searchMode.toString());
+            request.setSearchMode(action.toString());
             request.setAddSynonymy(addSynonymy);
+            request.setAddParentTaxon(addParentTaxon);
             query.setRequest(request);
             tnrMsg.getQuery().add(query);
 
             return tnrMsg;
         }
 
-        public static List<TnrMsg> convertStringListToTnrMsgList(List<String> names, SearchMode searchMode, boolean addSynonymy) {
+        public static List<TnrMsg> convertStringListToTnrMsgList(List<String> names, SearchMode searchMode, boolean addSynonymy, boolean addParentTaxon) {
             List<TnrMsg> tnrMsgList = new ArrayList<TnrMsg>();
             Iterator<String> itrStringMsg = names.iterator();
             while(itrStringMsg.hasNext()) {
-                TnrMsg tnrMsg = convertStringToTnrMsg(itrStringMsg.next(), searchMode, addSynonymy);
+                TnrMsg tnrMsg = convertStringToTnrMsg(itrStringMsg.next(), searchMode, addSynonymy, addParentTaxon);
                 tnrMsgList.add(tnrMsg);
             }
             return tnrMsgList;
@@ -249,29 +252,48 @@ public class TnrMsgUtils {
                     throw new AssertionError("SearchMode missing in query : " + query.toString());
                 }
                 if(unique && lastSearchMode != null && !lastSearchMode.equals(searchMode)){
-                    throw new AssertionError("mixed searchModes in queries");
+                    throw new AssertionError("mixed supportedActions in queries");
                 }
             }
         }
 
-        public static SearchMode getSearchMode(TnrMsg tnrMsg){
+        public static UtisAction getUtisAction(TnrMsg tnrMsg){
 
             for(Query query :  tnrMsg.getQuery()){
-                String searchMode = query.getRequest().getSearchMode();
-                if(searchMode != null){
-                    return SearchMode.valueOf(searchMode);
-                }
+                String actionString = query.getRequest().getSearchMode();
+                return utisActionFrom(actionString);
             }
             return null;
         }
 
-        public static TnrMsg createRequest(SearchMode searchMode, String queryString, boolean addSynonymy) {
+        /**
+         * @param actionString
+         * @return
+         */
+        public static UtisAction utisActionFrom(String actionString) {
+            UtisAction action = null;
+            if(actionString != null){
+                try {
+                action = SearchMode.valueOf(actionString);
+                } catch (IllegalArgumentException e1) {
+                    action = ClassificationAction.valueOf(actionString);
+                }
+            }
+            return action;
+        }
+
+        public static TnrMsg createRequest(UtisAction utisAction, String queryString, boolean addSynonymy, boolean addParentTaxon) {
             TnrMsg msg = new TnrMsg();
             Query q = new Query();
             Request r = new Request();
             r.setQueryString(queryString);
-            r.setSearchMode(searchMode.name());
+            if(utisAction instanceof ClassificationAction) {
+                r.setSearchMode(((ClassificationAction)utisAction).name());
+            } else {
+                r.setSearchMode(((SearchMode)utisAction).name());
+            }
             r.setAddSynonymy(addSynonymy);
+            r.setAddParentTaxon(addParentTaxon);
             q.setRequest(r);
             msg.getQuery().add(q);
             return msg;

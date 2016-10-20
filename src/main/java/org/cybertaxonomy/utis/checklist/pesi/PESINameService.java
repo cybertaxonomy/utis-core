@@ -10,7 +10,7 @@ package org.cybertaxonomy.utis.checklist.pesi;
 public interface PESINameService extends javax.xml.rpc.Service {
     public java.lang.String getPESINameServicePortAddress();
 
-    public PESINameServicePortType getPESINameServicePort() throws javax.xml.rpc.ServiceException;
+    public org.cybertaxonomy.utis.checklist.pesi.PESINameServicePortType getPESINameServicePort() throws javax.xml.rpc.ServiceException;
 
-    public PESINameServicePortType getPESINameServicePort(java.net.URL portAddress) throws javax.xml.rpc.ServiceException;
+    public org.cybertaxonomy.utis.checklist.pesi.PESINameServicePortType getPESINameServicePort(java.net.URL portAddress) throws javax.xml.rpc.ServiceException;
 }
