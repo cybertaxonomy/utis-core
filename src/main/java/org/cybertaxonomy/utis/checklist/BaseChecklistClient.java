@@ -22,6 +22,11 @@ public abstract class BaseChecklistClient<QC extends IQueryClient> extends Abstr
     protected final static String COPYRIGHT_URL_KEY = "copyright_url";
     protected final static String CHECKLIST_LIST = "checklist_list";
 
+    /**
+     * The maximum amount of records to be returned by a checklist client
+     */
+    protected static final String MAX_HITS = "500";
+
     public BaseChecklistClient() {
         super();
     }
