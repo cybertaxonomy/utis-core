@@ -17,12 +17,13 @@ import org.cybertaxonomy.utis.utils.BiovelUtils;
 import org.cybertaxonomy.utis.utils.JSONUtils;
 import org.cybertaxonomy.utis.utils.TnrMsgException;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PESIClientTest extends org.junit.Assert {
+public class PESIClientTest extends Assert {
 
     protected static final Logger logger = LoggerFactory.getLogger(PESIClientTest.class);
 

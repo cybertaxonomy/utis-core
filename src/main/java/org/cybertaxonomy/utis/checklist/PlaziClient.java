@@ -1,4 +1,3 @@
-// $Id$
 /**
 * Copyright (C) 2016 EDIT
 * European Distributed Institute of Taxonomy
@@ -13,6 +12,7 @@ import java.util.EnumSet;
 
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.TinkerPopClient;
+import org.cybertaxonomy.utis.store.LastModifiedProvider;
 import org.cybertaxonomy.utis.store.Neo4jStore;
 import org.cybertaxonomy.utis.store.Neo4jStoreManager;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
@@ -22,10 +22,10 @@ import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
  * @date Jun 17, 2016
  *
  */
-public class PLAZIClient extends BaseChecklistClient<TinkerPopClient> implements UpdatableStoreInfo {
+public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements UpdatableStoreInfo {
 
     public static final String ID = "plazi";
-    public static final String LABEL = "PLAZI Treatment Bank";
+    public static final String LABEL = "Plazi TreatmentBank";
     public static final String DOC_URL = "http://plazi.org/fusszeilen/info1/legal-disclaimer/";
     public static final String COPYRIGHT_URL = "https://creativecommons.org/publicdomain/zero/1.0/";
 
@@ -46,7 +46,9 @@ public class PLAZIClient extends BaseChecklistClient<TinkerPopClient> implements
 
     private static final String DOWNLOAD_BASE_URL = "http://localhost/download/";
 
-    private static final String TREATMENT_EXPORT_RDF_FILE_URL = DOWNLOAD_BASE_URL + "8A7687E6FFB3FFF6FF1A094FFE236AB9.rdf.gz";
+    private static final String TREATMENT_EXPORT_RDF_FILE_URL = "http://tb.plazi.org/GgServer/xml.rss.xml";
+
+    private LastModifiedProvider lastModifiedProvider = null;
 
     /**
      * {@inheritDoc}
@@ -185,6 +187,26 @@ public class PLAZIClient extends BaseChecklistClient<TinkerPopClient> implements
     @Override
     public int pollIntervalMinutes() {
         return CHECK_UPDATE_MINUTES;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean doIncrementalUpdates(){
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public LastModifiedProvider getLastModifiedProvider() {
+        if(lastModifiedProvider == null){
+            lastModifiedProvider = new PlaziLastModifiedProvider(this);
+        }
+        return lastModifiedProvider;
     }
 
 }

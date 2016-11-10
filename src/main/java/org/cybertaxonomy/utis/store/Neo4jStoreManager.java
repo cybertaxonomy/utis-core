@@ -29,6 +29,10 @@ public class Neo4jStoreManager {
                 neo4jStore = new Neo4jStore();
                 Neo4jStoreUpdater updater = new Neo4jStoreUpdater(neo4jStore, storeClient.getTestUrl());
                 updater.addResources(storeClient.updatableResources());
+                updater.setIncrementalUpdate(storeClient.doIncrementalUpdates());
+                updater.setLastModifiedProvider(storeClient.getLastModifiedProvider());
+
+                // updater is prepared, start watching
                 updater.watch(storeClient.pollIntervalMinutes());
             } catch (Exception e1) {
                 throw new RuntimeException("Creation of Neo4jStore failed",  e1);

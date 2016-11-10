@@ -20,12 +20,8 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.cybertaxonomy.utis.utils.HttpClient;
 import org.cybertaxonomy.utis.utils.VersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +31,10 @@ import org.slf4j.LoggerFactory;
  * @date Oct 20, 2015
  *
  */
-public abstract class Store {
+public abstract class Store extends HttpClient {
 
     protected static final Logger logger = LoggerFactory.getLogger(Store.class);
 
-    private static final File tmpDir = new File(System.getProperty("java.io.tmpdir"));
     private static final File userHomeDir = new File(System.getProperty("user.home"));
     protected static File utisHome = null;
 
@@ -86,25 +81,15 @@ public abstract class Store {
     */
     protected File downloadAndExtract(String rdfFileUri) {
            File expandedFile = null;
-           CloseableHttpClient httpClient = HttpClients.createDefault();
-           CloseableHttpResponse response;
            try {
                // 1. download and store in local filesystem in TMP
-               logger.debug("downloading rdf file from " + rdfFileUri);
-               HttpGet httpGet = new HttpGet(rdfFileUri);
-               response = httpClient.execute(httpGet);
-               String archiveFileName = FilenameUtils.getName(httpGet.getURI().getRawPath());
-               File archiveFile = new File(tmpDir, archiveFileName);
-               FileOutputStream fout = new FileOutputStream(archiveFile);
-               IOUtils.copy(response.getEntity().getContent(), new FileOutputStream(archiveFile));
-               fout.close();
-               logger.debug(archiveFile.length() + " bytes downloaded to " + archiveFile.getCanonicalPath());
+               File archiveFile = toTempFile(rdfFileUri);
 
                // 2. extract the archive
                FileInputStream fin = new FileInputStream(archiveFile);
                InputStream ain = null;
 
-               if(GzipUtils.isCompressedFilename(archiveFileName)) {
+               if(GzipUtils.isCompressedFilename(archiveFile.getName())) {
                    logger.debug("Extracting GZIP file " + archiveFile.getCanonicalPath());
                    ain = new GzipCompressorInputStream(fin);
                } else {
@@ -112,8 +97,8 @@ public abstract class Store {
                    //ArchiveInputStream ain = new ArchiveStreamFactory().createArchiveInputStream(ArchiveStreamFactory.ZIP, fin);
                }
 
-               expandedFile = new File(tmpDir, GzipUtils.getUncompressedFilename(archiveFileName));
-               fout = new FileOutputStream(expandedFile);
+               expandedFile = new File(tmpDir, GzipUtils.getUncompressedFilename(archiveFile.getName()));
+               FileOutputStream fout = new FileOutputStream(expandedFile);
                IOUtils.copy(ain, fout);
                fout.close();
                fin.close();

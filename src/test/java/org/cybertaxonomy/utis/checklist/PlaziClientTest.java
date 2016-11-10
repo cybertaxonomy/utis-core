@@ -6,15 +6,15 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PLAZI_ClientTest extends Assert {
+public class PlaziClientTest extends Assert {
 
-    protected static final Logger logger = LoggerFactory.getLogger(PLAZI_ClientTest.class);
+    protected static final Logger logger = LoggerFactory.getLogger(PlaziClientTest.class);
 
-    static PLAZIClient client;
+    static PlaziClient client;
 
     @BeforeClass
     public static void  setup() {
-        client =  new PLAZIClient();
+        client =  new PlaziClient();
         client.setChecklistInfo(client.buildServiceProviderInfo());
     }
 

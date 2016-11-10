@@ -23,6 +23,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,8 +39,25 @@ public class Neo4jStoreUpdater {
     private final URI testUrl;
     private final Neo4jStore store;
     private long interval_ms;
+    private boolean incrementalUpdate = false;
 
     private String[] resources = new String[0];
+
+    private LastModifiedProvider lastModifiedProvider;
+
+    /**
+     * @return the lastModifiedProvider
+     */
+    public LastModifiedProvider getLastModifiedProvider() {
+        return lastModifiedProvider;
+    }
+
+    /**
+     * @param lastModifiedProvider the lastModifiedProvider to set
+     */
+    public void setLastModifiedProvider(LastModifiedProvider lastModifiedProvider) {
+        this.lastModifiedProvider = lastModifiedProvider;
+    }
 
     public Neo4jStoreUpdater(Neo4jStore store, String testUrl) throws URISyntaxException {
         this.testUrl = new URI(testUrl);
@@ -53,25 +71,34 @@ public class Neo4jStoreUpdater {
     private Date getRemoteLastModified() {
 
         Date lastModified = null;
-        CloseableHttpClient client = HttpClientBuilder.create().build();
-        HttpHead request = new HttpHead(testUrl);
-        try {
-            HttpResponse response = client.execute(request);
-            Header lastModifiedH = response.getFirstHeader("Last-Modified");
-            lastModified = DateUtil.parseDate(lastModifiedH.getValue());
-            logger.debug("Last-Modified: " + lastModifiedH.getValue());
-
-        } catch (ClientProtocolException e) {
-            logger.error("ClientProtocolException, if this problem persists it will block from updating neo4jStore", e);
-        } catch (DateParseException e) {
-            logger.error("Could not parse Last-Modified value from HTTP response, if this problem persists it will block from updating neo4jStore");
-        } catch (IOException e) {
-            logger.error("IOException, if this problem persists it will block from updating the neo4jStore", e);
-        } finally {
+        if(lastModifiedProvider != null){
             try {
-                client.close();
+                return lastModifiedProvider.getLastModified();
+            } catch (DRFChecklistException e) {
+                logger.error("Error in LastModifiedProvider, if this problem persists it will block from updating neo4jStore", e);
+            }
+        } else {
+
+            CloseableHttpClient client = HttpClientBuilder.create().build();
+            HttpHead request = new HttpHead(testUrl);
+            try {
+                HttpResponse response = client.execute(request);
+                Header lastModifiedH = response.getFirstHeader("Last-Modified");
+                lastModified = DateUtil.parseDate(lastModifiedH.getValue());
+                logger.debug("Last-Modified: " + lastModifiedH.getValue());
+
+            } catch (ClientProtocolException e) {
+                logger.error("ClientProtocolException, if this problem persists it will block from updating neo4jStore", e);
+            } catch (DateParseException e) {
+                logger.error("Could not parse Last-Modified value from HTTP response, if this problem persists it will block from updating neo4jStore");
             } catch (IOException e) {
-                // IGNORE //
+                logger.error("IOException, if this problem persists it will block from updating the neo4jStore", e);
+            } finally {
+                try {
+                    client.close();
+                } catch (IOException e) {
+                    // IGNORE //
+                }
             }
         }
         return lastModified;
@@ -163,6 +190,20 @@ public class Neo4jStoreUpdater {
         if(lastModified != null) {
             updateStore(lastModified);
         }
+    }
+
+    /**
+     * @return the incrementalUpdate
+     */
+    public boolean isIncrementalUpdate() {
+        return incrementalUpdate;
+    }
+
+    /**
+     * @param incrementalUpdate the incrementalUpdate to set
+     */
+    public void setIncrementalUpdate(boolean incrementalUpdate) {
+        this.incrementalUpdate = incrementalUpdate;
     }
 
 }

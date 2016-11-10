@@ -10,6 +10,7 @@ import java.util.List;
 import org.apache.lucene.queryParser.QueryParser;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.TinkerPopClient;
+import org.cybertaxonomy.utis.store.LastModifiedProvider;
 import org.cybertaxonomy.utis.store.Neo4jStore;
 import org.cybertaxonomy.utis.store.Neo4jStoreManager;
 import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
@@ -154,6 +155,14 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
     @Override
     public int pollIntervalMinutes() {
         return CHECK_UPDATE_MINUTES;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean doIncrementalUpdates(){
+        return false;
     }
 
     /**
@@ -643,6 +652,14 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
     @Override
     public boolean isSupportedIdentifier(String value) {
         return IdentifierUtils.checkURI(value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public LastModifiedProvider getLastModifiedProvider() {
+        return null;
     }
 
 
