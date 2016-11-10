@@ -39,23 +39,13 @@ public class Neo4jStore extends Store{
     private Neo4j2Graph graph;
     private Sail sail;
     private SailRepository sailRepo;
-    private final static String DEFAULT_STORE_NAME = "neo4j";
-    private String storeName = DEFAULT_STORE_NAME;
+    private final static String STORE_TYPE = "neo4j";
 
     private Date lastModified = null;
 
 
-    /**
-     * @throws Exception
-     */
-    public Neo4jStore() throws Exception {
-        super();
-        this.storeName = "neo4j";
-    }
-
     public Neo4jStore(String storeName) throws Exception {
-        super();
-        this.storeName = storeName;
+        super(storeName);
     }
 
 
@@ -137,14 +127,6 @@ public class Neo4jStore extends Store{
         return countEdges() + " edges, " + countVertexes() + " vertexes";
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String storeName() {
-        return storeName != null ? storeName : DEFAULT_STORE_NAME;
-    }
-
     public Graph graph() {
         return graph;
     }
@@ -206,6 +188,14 @@ public class Neo4jStore extends Store{
 
     private File updateLogFile() {
         return new File(storeLocation, "UPDATE.log");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String storeType() {
+        return STORE_TYPE;
     }
 
 

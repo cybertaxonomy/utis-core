@@ -20,7 +20,7 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.http.client.ClientProtocolException;
+import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 import org.cybertaxonomy.utis.utils.HttpClient;
 import org.cybertaxonomy.utis.utils.VersionInfo;
 import org.slf4j.Logger;
@@ -36,7 +36,11 @@ public abstract class Store extends HttpClient {
     protected static final Logger logger = LoggerFactory.getLogger(Store.class);
 
     private static final File userHomeDir = new File(System.getProperty("user.home"));
+
     protected static File utisHome = null;
+
+    private String storeName;
+
 
     static {
         if(System.getProperty("utis.home") != null){
@@ -59,8 +63,9 @@ public abstract class Store extends HttpClient {
     }
     protected File storeLocation = null;
 
-    public Store() throws Exception {
-        storeLocation = new File(utisHome, VersionInfo.majorMinorVersion() + File.separator + storeName() + File.separator);
+    public Store(String storeName) throws Exception {
+        this.storeName = storeName;
+        storeLocation = new File(utisHome, VersionInfo.majorMinorVersion() + File.separator + storeType() + File.separator + storeName() + File.separator);
         if( !storeLocation.exists()) {
             storeLocation.mkdirs();
             logger.debug("new store location created at " + storeLocation.getAbsolutePath());
@@ -69,48 +74,53 @@ public abstract class Store extends HttpClient {
     }
 
     /**
-     * @return the Major.Minor version number of the project version,
-     * or the full VERSION string if it is not containing a Major.Minor version number
+     *
      */
-    protected abstract String storeName();
+    protected String storeName() {
+        return storeName;
+    }
+
+    protected abstract String storeType();
 
 
     /**
      * @param rdfFileUri
+     * @throws DRFChecklistException
     *
     */
-    protected File downloadAndExtract(String rdfFileUri) {
-           File expandedFile = null;
-           try {
-               // 1. download and store in local filesystem in TMP
-               File archiveFile = toTempFile(rdfFileUri);
+    protected File downloadAndExtract(String rdfFileUri) throws IOException {
 
-               // 2. extract the archive
-               FileInputStream fin = new FileInputStream(archiveFile);
+           File dataFile;
+
+           // 1. download and store in local filesystem in TMP
+           dataFile = toTempFile(rdfFileUri);
+
+           // 2. extract the archive if needed
+           if(dataFile != null){
+               File expandedFile = null;
+               FileInputStream fin = new FileInputStream(dataFile);
                InputStream ain = null;
 
-               if(GzipUtils.isCompressedFilename(archiveFile.getName())) {
-                   logger.debug("Extracting GZIP file " + archiveFile.getCanonicalPath());
+               if(GzipUtils.isCompressedFilename(dataFile.getName())) {
+                   logger.debug("Extracting GZIP file " + dataFile.getCanonicalPath());
                    ain = new GzipCompressorInputStream(fin);
                } else {
                    // TO UNZIP
                    //ArchiveInputStream ain = new ArchiveStreamFactory().createArchiveInputStream(ArchiveStreamFactory.ZIP, fin);
                }
 
-               expandedFile = new File(tmpDir, GzipUtils.getUncompressedFilename(archiveFile.getName()));
-               FileOutputStream fout = new FileOutputStream(expandedFile);
-               IOUtils.copy(ain, fout);
-               fout.close();
-               fin.close();
-               logger.debug("Extracted to " + expandedFile.getCanonicalPath());
-           } catch (ClientProtocolException e) {
-               // TODO Auto-generated catch block
-               e.printStackTrace();
-           } catch (IOException e) {
-               // TODO Auto-generated catch block
-               e.printStackTrace();
+               if(ain != null){
+                   expandedFile = new File(tmpDir, GzipUtils.getUncompressedFilename(dataFile.getName()));
+                   FileOutputStream fout = new FileOutputStream(expandedFile);
+                   IOUtils.copy(ain, fout);
+                   fout.close();
+                   fin.close();
+                   logger.debug("Extracted to " + expandedFile.getCanonicalPath());
+                   dataFile = expandedFile;
+               }
            }
-           return expandedFile;
+
+           return dataFile;
        }
 
     /**

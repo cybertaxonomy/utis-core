@@ -662,5 +662,13 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getInstanceName() {
+        return ID;
+    }
+
 
 }

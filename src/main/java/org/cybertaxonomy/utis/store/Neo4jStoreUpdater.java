@@ -144,8 +144,6 @@ public class Neo4jStoreUpdater {
             updateThread.setName(Neo4jStoreUpdater.class.getSimpleName());
             updateThread.start();
         }
-
-
     }
 
 

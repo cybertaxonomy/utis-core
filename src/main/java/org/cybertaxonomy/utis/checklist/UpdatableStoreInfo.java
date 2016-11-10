@@ -41,5 +41,11 @@ public interface UpdatableStoreInfo {
      */
     public LastModifiedProvider getLastModifiedProvider();
 
+    /**
+     *
+     * @return
+     */
+    public String getInstanceName();
+
 
 }

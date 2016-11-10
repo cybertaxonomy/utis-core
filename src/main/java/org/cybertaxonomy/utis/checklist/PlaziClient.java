@@ -209,4 +209,10 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
         return lastModifiedProvider;
     }
 
+
+    @Override
+    public String getInstanceName(){
+        return ID;
+    }
+
 }
