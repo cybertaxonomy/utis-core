@@ -15,6 +15,7 @@ import org.cybertaxonomy.utis.query.TinkerPopClient;
 import org.cybertaxonomy.utis.store.LastModifiedProvider;
 import org.cybertaxonomy.utis.store.Neo4jStore;
 import org.cybertaxonomy.utis.store.Neo4jStoreManager;
+import org.cybertaxonomy.utis.store.ResourceProvider;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 
 /**
@@ -46,9 +47,9 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
 
     private static final String DOWNLOAD_BASE_URL = "http://localhost/download/";
 
-    private static final String TREATMENT_EXPORT_RDF_FILE_URL = "http://tb.plazi.org/GgServer/xml.rss.xml";
+    public static final String TREATMENTBANK_RSS_FEED = "http://tb.plazi.org/GgServer/xml.rss.xml";
 
-    private LastModifiedProvider lastModifiedProvider = null;
+    private PlaziResourceProvider resourceProvider = null;
 
     /**
      * {@inheritDoc}
@@ -170,15 +171,7 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
     @Override
     public String getTestUrl() {
 
-        return TREATMENT_EXPORT_RDF_FILE_URL;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String[] updatableResources() {
-        return new String[] {TREATMENT_EXPORT_RDF_FILE_URL};
+        return TREATMENTBANK_RSS_FEED;
     }
 
     /**
@@ -203,16 +196,27 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
      */
     @Override
     public LastModifiedProvider getLastModifiedProvider() {
-        if(lastModifiedProvider == null){
-            lastModifiedProvider = new PlaziLastModifiedProvider(this);
+        if(resourceProvider == null){
+            resourceProvider = new PlaziResourceProvider(this);
         }
-        return lastModifiedProvider;
+        return resourceProvider;
     }
 
 
     @Override
     public String getInstanceName(){
         return ID;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResourceProvider getResourceProvider() {
+        if(resourceProvider == null){
+            resourceProvider = new PlaziResourceProvider(this);
+        }
+        return resourceProvider;
     }
 
 }

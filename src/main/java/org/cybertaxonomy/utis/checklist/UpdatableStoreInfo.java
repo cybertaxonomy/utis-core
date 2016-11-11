@@ -9,6 +9,7 @@
 package org.cybertaxonomy.utis.checklist;
 
 import org.cybertaxonomy.utis.store.LastModifiedProvider;
+import org.cybertaxonomy.utis.store.ResourceProvider;
 
 /**
  * @author a.kohlbecker
@@ -18,8 +19,6 @@ import org.cybertaxonomy.utis.store.LastModifiedProvider;
 public interface UpdatableStoreInfo {
 
     public String getTestUrl();
-
-    public String[] updatableResources();
 
     public int pollIntervalMinutes();
 
@@ -40,6 +39,8 @@ public interface UpdatableStoreInfo {
      * @return
      */
     public LastModifiedProvider getLastModifiedProvider();
+
+    public ResourceProvider getResourceProvider();
 
     /**
      *

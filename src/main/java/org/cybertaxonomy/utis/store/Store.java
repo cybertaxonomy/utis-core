@@ -15,6 +15,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.util.List;
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
@@ -88,12 +90,12 @@ public abstract class Store extends HttpClient {
      * @throws DRFChecklistException
     *
     */
-    protected File downloadAndExtract(String rdfFileUri) throws IOException {
+    protected File downloadAndExtract(URI rdfFileUri) throws IOException {
 
            File dataFile;
 
            // 1. download and store in local filesystem in TMP
-           dataFile = toTempFile(rdfFileUri);
+           dataFile = toTempFile(rdfFileUri.toString());
 
            // 2. extract the archive if needed
            if(dataFile != null){
@@ -129,11 +131,11 @@ public abstract class Store extends HttpClient {
      *  the location of the file to load the rdf triples from
      * @throws Exception
      */
-    public void loadIntoStore(String ... rdfFileUri) throws Exception {
+    public void loadIntoStore(List<URI> rdfFileUris) throws Exception {
         stopStoreEngine();
         clear();
         initStoreEngine();
-        for (String uri : rdfFileUri) {
+        for (URI uri : rdfFileUris) {
             File localF = downloadAndExtract(uri);
             load(localF);
         }

@@ -28,9 +28,9 @@ public class Neo4jStoreManager {
             try {
                 neo4jStore = new Neo4jStore(storeInfo.getInstanceName());
                 Neo4jStoreUpdater updater = new Neo4jStoreUpdater(neo4jStore, storeInfo.getTestUrl());
-                updater.addResources(storeInfo.updatableResources());
                 updater.setIncrementalUpdate(storeInfo.doIncrementalUpdates());
                 updater.setLastModifiedProvider(storeInfo.getLastModifiedProvider());
+                updater.setResourceProvider(storeInfo.getResourceProvider());
 
                 // updater is prepared, start watching
                 updater.watch(storeInfo.pollIntervalMinutes());

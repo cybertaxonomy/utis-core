@@ -8,7 +8,9 @@
 */
 package org.cybertaxonomy.utis.store;
 
+import java.net.URI;
 import java.util.Date;
+import java.util.List;
 
 import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 
@@ -17,12 +19,14 @@ import org.cybertaxonomy.utis.checklist.DRFChecklistException;
  * @date Nov 9, 2016
  *
  */
-public interface LastModifiedProvider {
+public interface ResourceProvider {
 
     /**
+     * @param lastUpdated The date time when the data store was last updated with the resources from the provider
+     *
      * @return
      * @throws DRFChecklistException
      */
-    public Date getLastModified() throws DRFChecklistException;
+    public List<URI> getResources(Date lastUpdated) throws DRFChecklistException;
 
 }

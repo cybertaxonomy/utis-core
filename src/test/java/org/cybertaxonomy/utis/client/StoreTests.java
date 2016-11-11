@@ -10,6 +10,7 @@
 package org.cybertaxonomy.utis.client;
 
 import org.cybertaxonomy.utis.store.Neo4jStore;
+import org.cybertaxonomy.utis.store.StaticArchiveResourceProvider;
 import org.junit.Test;
 
 /**
@@ -33,7 +34,8 @@ public class StoreTests {
     public void neo4jStore_RdfGzipFile_test() throws Exception {
 
         Neo4jStore graphStore = new Neo4jStore("neo4j_test");
-        graphStore.loadIntoStore(RDF_FILE_URL);
+        StaticArchiveResourceProvider resourceProvider = new StaticArchiveResourceProvider(RDF_FILE_URL);
+        graphStore.loadIntoStore(resourceProvider.getResources(null));
     }
 
 }

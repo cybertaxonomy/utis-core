@@ -12,8 +12,8 @@ package org.cybertaxonomy.utis.store;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.httpclient.util.DateParseException;
 import org.apache.commons.httpclient.util.DateUtil;
@@ -41,9 +41,9 @@ public class Neo4jStoreUpdater {
     private long interval_ms;
     private boolean incrementalUpdate = false;
 
-    private String[] resources = new String[0];
-
     private LastModifiedProvider lastModifiedProvider;
+
+    private ResourceProvider resourceProvider;
 
     /**
      * @return the lastModifiedProvider
@@ -57,6 +57,14 @@ public class Neo4jStoreUpdater {
      */
     public void setLastModifiedProvider(LastModifiedProvider lastModifiedProvider) {
         this.lastModifiedProvider = lastModifiedProvider;
+    }
+
+    /**
+     * @param resourceProvider
+     */
+    public void setResourceProvider(ResourceProvider resourceProvider) {
+        this.resourceProvider = resourceProvider;
+
     }
 
     public Neo4jStoreUpdater(Neo4jStore store, String testUrl) throws URISyntaxException {
@@ -115,10 +123,6 @@ public class Neo4jStoreUpdater {
         return null;
     }
 
-    public void addResources(String ... resources) throws URISyntaxException {
-       this.resources = resources;
-    }
-
     public void watch(int intervalMinutes) {
 
         if(isRunningAsTest()) {
@@ -168,12 +172,11 @@ public class Neo4jStoreUpdater {
         logger.info("Starting store update");
 
         try {
+            List<URI> resources = resourceProvider.getResources(store.getLastModified());
             store.loadIntoStore(resources);
             store.setLastModified(lastModified);
         } catch (Exception e) {
-            throw new RuntimeException("Loading "
-                    + Arrays.toString(resources) +
-                    " into Neo4jStore failed",  e);
+            throw new RuntimeException("Loading resources into Neo4jStore failed", e);
         }
 
 

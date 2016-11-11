@@ -41,7 +41,8 @@ public class Neo4jStore extends Store{
     private SailRepository sailRepo;
     private final static String STORE_TYPE = "neo4j";
 
-    private Date lastModified = null;
+    // January 1, 1970, 00:00:00 GMT as starting time
+    private Date lastModified = new Date(0);
 
 
     public Neo4jStore(String storeName) throws Exception {

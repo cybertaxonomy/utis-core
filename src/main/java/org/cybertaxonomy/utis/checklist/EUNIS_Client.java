@@ -2,6 +2,7 @@ package org.cybertaxonomy.utis.checklist;
 
 import java.io.PrintStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -13,6 +14,8 @@ import org.cybertaxonomy.utis.query.TinkerPopClient;
 import org.cybertaxonomy.utis.store.LastModifiedProvider;
 import org.cybertaxonomy.utis.store.Neo4jStore;
 import org.cybertaxonomy.utis.store.Neo4jStoreManager;
+import org.cybertaxonomy.utis.store.ResourceProvider;
+import org.cybertaxonomy.utis.store.StaticArchiveResourceProvider;
 import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Query;
@@ -165,13 +168,6 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String[] updatableResources() {
-        return new String[] {SPECIES_RDF_FILE_URL, TAXONOMY_RDF_FILE_URL, LEGALREFS_RDF_FILE_URL, REFERENCES_RDF_FILE_URL};
-    }
 
     @Override
     public void initQueryClient() {
@@ -668,6 +664,18 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
     @Override
     public String getInstanceName() {
         return ID;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResourceProvider getResourceProvider() {
+        try {
+            return new StaticArchiveResourceProvider(new String[] {SPECIES_RDF_FILE_URL, TAXONOMY_RDF_FILE_URL, LEGALREFS_RDF_FILE_URL, REFERENCES_RDF_FILE_URL});
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
