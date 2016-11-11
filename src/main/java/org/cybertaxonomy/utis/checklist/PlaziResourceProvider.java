@@ -137,7 +137,7 @@ public class PlaziResourceProvider extends HttpClient implements ResourceProvide
         }
 
         try {
-            rssFeedFile = toTempFile(storeInfo.getTestUrl());
+            rssFeedFile = toTempFile(storeInfo.getTestUrl(), null);
         } catch (IOException e) {
             throw new DRFChecklistException("Error fetching the lastModified Test file, this blocks updating the store", e);
         }

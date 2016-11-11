@@ -95,7 +95,7 @@ public abstract class Store extends HttpClient {
            File dataFile;
 
            // 1. download and store in local filesystem in TMP
-           dataFile = toTempFile(rdfFileUri.toString());
+           dataFile = toTempFile(rdfFileUri.toString(), dataFilePrefix());
 
            // 2. extract the archive if needed
            if(dataFile != null){
@@ -126,6 +126,11 @@ public abstract class Store extends HttpClient {
        }
 
     /**
+     * @return
+     */
+    protected abstract String dataFilePrefix();
+
+    /**
      *
      * @param rdfFileUri
      *  the location of the file to load the rdf triples from
@@ -135,9 +140,12 @@ public abstract class Store extends HttpClient {
         stopStoreEngine();
         clear();
         initStoreEngine();
+        int i = 1;
         for (URI uri : rdfFileUris) {
+            logger.info("importing resource " + i++ + " of " + rdfFileUris.size());
             File localF = downloadAndExtract(uri);
             load(localF);
+            localF.delete();
         }
     }
 

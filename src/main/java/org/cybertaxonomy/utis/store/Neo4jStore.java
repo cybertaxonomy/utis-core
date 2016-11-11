@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.apache.commons.httpclient.util.DateParseException;
 import org.apache.commons.httpclient.util.DateUtil;
@@ -42,7 +43,7 @@ public class Neo4jStore extends Store{
     private final static String STORE_TYPE = "neo4j";
 
     // January 1, 1970, 00:00:00 GMT as starting time
-    private Date lastModified = new Date(0);
+    private Date lastModified = new GregorianCalendar(2016, 10, 10).getTime(); // new Date(0);
 
 
     public Neo4jStore(String storeName) throws Exception {
@@ -197,6 +198,15 @@ public class Neo4jStore extends Store{
     @Override
     protected String storeType() {
         return STORE_TYPE;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String dataFilePrefix() {
+        return "rdf";
     }
 
 

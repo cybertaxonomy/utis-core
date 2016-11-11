@@ -43,24 +43,33 @@ public class HttpClient {
 
     /**
      * @param fileUri
+     * @param prefix TODO
      * @return
      * @throws IOException
      * @throws FileNotFoundException
      */
-    protected File toTempFile(String fileUri) throws IOException {
+    protected File toTempFile(String fileUri, String prefix) throws IOException {
 
         CloseableHttpClient httpClient = HttpClients.createDefault();
         CloseableHttpResponse response;
         try {
             logger.debug("downloading rdf file from " + fileUri);
             HttpGet httpGet = new HttpGet(fileUri);
+            long startTime = System.currentTimeMillis();
             response = httpClient.execute(httpGet);
+
             String archiveFileName = FilenameUtils.getName(httpGet.getURI().getRawPath());
+            String existingPrefix = FilenameUtils.getPrefix(archiveFileName);
+            if(prefix != null && (existingPrefix == null || !existingPrefix.equals(prefix))) {
+                archiveFileName += '.' +  prefix;
+            }
             File archiveFile = new File(tmpDir, archiveFileName);
+
             FileOutputStream fout = new FileOutputStream(archiveFile);
             IOUtils.copy(response.getEntity().getContent(), new FileOutputStream(archiveFile));
             fout.close();
-            logger.debug(archiveFile.length() + " bytes downloaded to " + archiveFile.getCanonicalPath());
+            long seconds = Math.round((double)(System.currentTimeMillis() - startTime) / 1000);
+            logger.debug(archiveFile.length() + " bytes downloaded in " + seconds + " seconds to " + archiveFile.getCanonicalPath());
             return archiveFile;
         } catch (ClientProtocolException e) {
             throw e;
