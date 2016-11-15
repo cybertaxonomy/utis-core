@@ -15,6 +15,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ public class PlaziResourceProvider extends HttpClient implements ResourceProvide
 
     protected Logger logger = LoggerFactory.getLogger(PlaziResourceProvider.class);
 
-    private UpdatableStoreInfo storeInfo;
+    private PlaziClient plaziClient;
 
     private File rssFeedFile = null;
 
@@ -77,9 +78,10 @@ public class PlaziResourceProvider extends HttpClient implements ResourceProvide
      */
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
-    public PlaziResourceProvider(UpdatableStoreInfo storeInfo) {
+    public PlaziResourceProvider(PlaziClient storeInfo) {
 
-        this.storeInfo = storeInfo;
+        this.plaziClient = storeInfo;
+
         // set timezone as GMT to conform to the timezone used for the store timestamps
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
@@ -94,30 +96,32 @@ public class PlaziResourceProvider extends HttpClient implements ResourceProvide
 
         File archiveFile = fetchRSSFile();
 
-        BufferedReader br = null;
-        try {
-            br = new BufferedReader(new FileReader(archiveFile));
-            String line;
-            Date lastModified = null;
-            while ((line = br.readLine()) != null) {
-                Matcher m = lastBuildDatePattern.matcher(line);
-                if (m.find()) {
-                    lastModified = dateFormat.parse(m.group(1));
+        if(archiveFile != null){
+            BufferedReader br = null;
+            try {
+                br = new BufferedReader(new FileReader(archiveFile));
+                String line;
+                Date lastModified = null;
+                while ((line = br.readLine()) != null) {
+                    Matcher m = lastBuildDatePattern.matcher(line);
+                    if (m.find()) {
+                        lastModified = dateFormat.parse(m.group(1));
+                    }
+                    if(lastModified != null){
+                        logger.debug("lastModified:" + DateUtil.formatDate(lastModified));
+                        return lastModified;
+                    }
                 }
-                if(lastModified != null){
-                    logger.debug("lastModified:" + DateUtil.formatDate(lastModified));
-                    return lastModified;
+            } catch (IOException | ParseException e) {
+                throw new DRFChecklistException(
+                        "Error reading the fetched lastModified Test file, this blocks updating the store", e);
+            } finally {
+                if (br != null) {
+                    try {
+                        br.close();
+                    } catch (Exception e) {
+                        /* IGNORE */}
                 }
-            }
-        } catch (IOException | ParseException e) {
-            throw new DRFChecklistException(
-                    "Error reading the fetched lastModified Test file, this blocks updating the store", e);
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (Exception e) {
-                    /* IGNORE */}
             }
         }
         return null;
@@ -127,7 +131,7 @@ public class PlaziResourceProvider extends HttpClient implements ResourceProvide
      * @return
      * @throws DRFChecklistException
      */
-    protected File fetchRSSFile() throws DRFChecklistException {
+    protected File fetchRSSFile() {
 
         if(rssFeedFile != null && rssFeedFile.canRead()){
             // re-use the local copy if not outdated
@@ -137,10 +141,11 @@ public class PlaziResourceProvider extends HttpClient implements ResourceProvide
         }
 
         try {
-            rssFeedFile = toTempFile(storeInfo.getTestUrl(), null);
-        } catch (IOException e) {
-            throw new DRFChecklistException("Error fetching the lastModified Test file, this blocks updating the store", e);
+            rssFeedFile = toTempFile(plaziClient.getTestUrl(), null);
+        } catch (IOException | URISyntaxException e) {
+            logger.error("Error fetching rss File", e);
         }
+
         return rssFeedFile;
     }
 
@@ -159,10 +164,15 @@ public class PlaziResourceProvider extends HttpClient implements ResourceProvide
     @Override
     public List<URI> getResources(Date lastUpdated) throws DRFChecklistException {
 
-        File rssFile = fetchRSSFile();
 
         List<URI> resources = new ArrayList<>();
 
+        File rssFile = fetchRSSFile();
+
+        if(rssFile == null){
+            // an error occurred in fetchRSSFile
+            return resources;
+        }
         FileInputStream in;
         boolean inItem = false;
         boolean inPubDate = false;
@@ -205,13 +215,18 @@ public class PlaziResourceProvider extends HttpClient implements ResourceProvide
                 if (event == XMLStreamConstants.END_ELEMENT) {
                     if(parser.getLocalName().equals(XML_ELEMENT_ITEM)){
                         if(pubDate != null && location != null){
-                            if(lastUpdated.before(pubDate)){
+
+                            String taxonConceptID = plaziClient.checkTreatmentIdentifier(location.replace("http://tb.plazi.org/GgServer/xml", "http://treatment.plazi.org/id"));
+                            if(taxonConceptID == null){
+                                logger.info("Adding resource " + location + " for import.");
                                 try {
                                     location = location.replace("/GgServer/xml/", "/GgServer/cdmRdf/");
                                     resources.add(URI.create(location));
                                 } catch (IllegalArgumentException e) {
                                     logger.error("Plazi - Location string is not a proper URI: " + location);
                                 }
+                            } else {
+                               logger.info("Resource " + location + " already exists.");
                             }
                         }
                         inItem = false;

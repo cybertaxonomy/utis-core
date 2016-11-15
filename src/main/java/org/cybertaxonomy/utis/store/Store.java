@@ -16,6 +16,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -87,10 +88,11 @@ public abstract class Store extends HttpClient {
 
     /**
      * @param rdfFileUri
+     * @throws URISyntaxException
      * @throws DRFChecklistException
     *
     */
-    protected File downloadAndExtract(URI rdfFileUri) throws IOException {
+    protected File downloadAndExtract(URI rdfFileUri) throws IOException, URISyntaxException {
 
            File dataFile;
 
@@ -143,9 +145,13 @@ public abstract class Store extends HttpClient {
         int i = 1;
         for (URI uri : rdfFileUris) {
             logger.info("importing resource " + i++ + " of " + rdfFileUris.size());
-            File localF = downloadAndExtract(uri);
-            load(localF);
-            localF.delete();
+            try {
+                File localF = downloadAndExtract(uri);
+                load(localF);
+                localF.delete();
+            } catch (Exception e) {
+                logger.error("Error while loading " + uri + " into store.");
+            }
         }
     }
 

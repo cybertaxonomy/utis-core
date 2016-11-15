@@ -22,6 +22,18 @@ public class Neo4jStoreManager {
 
     private final static Map<Class<? extends UpdatableStoreInfo>, Neo4jStore> storemap = new HashMap<Class<? extends UpdatableStoreInfo>, Neo4jStore>();
 
+    /**
+     * Flag to disable the automatic store update for special testing purposes.
+     * If the testmode is enabled the store will be cleared.
+     *
+     */
+    public static boolean testMode = false;
+
+    /**
+     * Only used when <code>testMode = true</code>
+     */
+    public static Neo4jStoreUpdater lastStoreUpdater = null;
+
     public static Neo4jStore provideStoreFor(UpdatableStoreInfo storeInfo) {
         if(!storemap.containsKey(storeInfo.getClass())) {
             Neo4jStore neo4jStore;
@@ -33,7 +45,15 @@ public class Neo4jStoreManager {
                 updater.setResourceProvider(storeInfo.getResourceProvider());
 
                 // updater is prepared, start watching
-                updater.watch(storeInfo.pollIntervalMinutes());
+                if(testMode){
+                    neo4jStore.stopStoreEngine();
+                    neo4jStore.clear();
+                    neo4jStore.initStoreEngine();
+                    lastStoreUpdater = updater;
+                } else {
+                    updater.watch(storeInfo.pollIntervalMinutes());
+                }
+
             } catch (Exception e1) {
                 throw new RuntimeException("Creation of Neo4jStore failed",  e1);
             }

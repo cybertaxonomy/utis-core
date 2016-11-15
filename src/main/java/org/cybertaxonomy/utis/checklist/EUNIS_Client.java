@@ -77,7 +77,7 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
             ClassificationAction.higherClassification
             );
 
-    public static enum RdfSchema {
+    public static enum RdfSchema implements IRdfSchema {
 
         /*
          *     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -110,16 +110,19 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
             this.schemaUri = schemaUri;
         }
 
+        @Override
         public String schemaUri() {
 
             return schemaUri;
         }
 
+        @Override
         public String abbreviation() {
 
             return abbreviation;
         }
 
+        @Override
         public String property(String name) {
             return schemaUri + name;
         }

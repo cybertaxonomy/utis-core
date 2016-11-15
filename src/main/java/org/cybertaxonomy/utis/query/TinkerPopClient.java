@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.NoSuchElementException;
 
 import org.cybertaxonomy.utis.checklist.EUNIS_Client.RdfSchema;
+import org.cybertaxonomy.utis.checklist.IRdfSchema;
 import org.cybertaxonomy.utis.store.Neo4jStore;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.AutoIndexer;
@@ -150,7 +151,7 @@ public class TinkerPopClient implements IQueryClient {
      * @param localName
      * @return
      */
-    public String relatedVertexValue(Vertex v, RdfSchema nameSpace, String localName) {
+    public String relatedVertexValue(Vertex v, IRdfSchema nameSpace, String localName) {
         String txt = null;
         String edgeLabel = nameSpace.property(localName);
         try {

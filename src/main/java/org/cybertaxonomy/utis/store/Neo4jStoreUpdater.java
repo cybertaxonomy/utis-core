@@ -165,16 +165,17 @@ public class Neo4jStoreUpdater {
     }
 
     /**
-     * @param neo4jStore
+     *
+     * @param newLastModified The new last modified time stamp to set for the store
      */
-    public void updateStore(Date lastModified) {
+    public void updateStore(Date newLastModified) {
 
         logger.info("Starting store update");
 
         try {
             List<URI> resources = resourceProvider.getResources(store.getLastModified());
             store.loadIntoStore(resources);
-            store.setLastModified(lastModified);
+            store.setLastModified(newLastModified);
         } catch (Exception e) {
             throw new RuntimeException("Loading resources into Neo4jStore failed", e);
         }
@@ -186,7 +187,7 @@ public class Neo4jStoreUpdater {
     /**
      *
      */
-    private void updateIfNeeded() {
+    public void updateIfNeeded() {
         Date lastModified = checkNewerVersion();
         if(lastModified != null) {
             updateStore(lastModified);

@@ -15,7 +15,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.commons.httpclient.util.DateUtil;
-import org.cybertaxonomy.utis.store.LastModifiedProvider;
+import org.cybertaxonomy.utis.store.Neo4jStoreManager;
 import org.cybertaxonomy.utis.store.ResourceProvider;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,60 +41,17 @@ public class PlaziResourceProviderTest extends Assert {
     }
 
     @Test
-    public void testGetResources() throws DRFChecklistException {
-        UpdatableStoreInfo storeInfo = new UpdatableStoreInfo() {
+    public void testGetResources_remote() throws DRFChecklistException {
 
-            private PlaziResourceProvider resourceProvider = null;
-
-            @Override
-            public int pollIntervalMinutes() {
-                return 1;
-            }
-
-            @Override
-            public String getTestUrl() {
-                return PlaziClient.TREATMENTBANK_RSS_FEED;
-            }
-
-            @Override
-            public ResourceProvider getResourceProvider() {
-                if(resourceProvider == null){
-                    resourceProvider = new PlaziResourceProvider(this);
-                }
-                return resourceProvider;
-            }
-
-            @Override
-            public LastModifiedProvider getLastModifiedProvider() {
-                if(resourceProvider == null){
-                    resourceProvider = new PlaziResourceProvider(this);
-                }
-                return resourceProvider;
-            }
-
-            @Override
-            public String getInstanceName() {
-                return PlaziClient.ID;
-            }
-
-            @Override
-            public boolean doIncrementalUpdates() {
-                return true;
-            }
-        };
-
-        ResourceProvider resourceProvider = storeInfo.getResourceProvider();
+        Neo4jStoreManager.testMode = true;
+        PlaziClient plaziClient = new PlaziClient();
+        ResourceProvider resourceProvider = plaziClient.getResourceProvider();
 
         List<URI> resource = resourceProvider.getResources(new GregorianCalendar(1900, 1, 1).getTime());
         assertNotNull(resource);
         logger.debug(resource.size()+ " resources");
         assertTrue(resource.size() > 170000);
-
-        resource = resourceProvider.getResources(new GregorianCalendar(2016, 1, 1).getTime());
-        assertNotNull(resource);
-        logger.debug(resource.size()+ " resources");
-        assertTrue(resource.size() < 170000);
-
     }
+
 
 }
