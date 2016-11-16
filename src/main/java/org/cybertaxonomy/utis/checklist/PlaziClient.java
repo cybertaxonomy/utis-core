@@ -18,12 +18,23 @@ import org.cybertaxonomy.utis.store.LastModifiedProvider;
 import org.cybertaxonomy.utis.store.Neo4jStore;
 import org.cybertaxonomy.utis.store.Neo4jStoreManager;
 import org.cybertaxonomy.utis.store.ResourceProvider;
+import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Query;
+import org.cybertaxonomy.utis.tnr.msg.Query.Request;
+import org.cybertaxonomy.utis.tnr.msg.Response;
+import org.cybertaxonomy.utis.tnr.msg.Source;
+import org.cybertaxonomy.utis.tnr.msg.Taxon;
+import org.cybertaxonomy.utis.tnr.msg.TaxonName;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
+import org.cybertaxonomy.utis.utils.TnrMsgUtils;
+import org.gbif.api.vocabulary.TaxonomicStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.oupls.sail.GraphSail;
+import com.tinkerpop.gremlin.java.GremlinPipeline;
 
 /**
  * @author a.kohlbecker
@@ -53,8 +64,6 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
             );
 
     public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.noneOf(ClassificationAction.class);
-
-    private static final String DOWNLOAD_BASE_URL = "http://localhost/download/";
 
     public static final String TREATMENTBANK_RSS_FEED = "http://tb.plazi.org/GgServer/xml.rss.xml";
 
@@ -162,14 +171,14 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
         Query query = singleQueryFrom(tnrMsg);
         String queryString = query.getRequest().getQueryString();
 
+
         // by using the Neo4j index directly it is possible to
         // take full advantage of the underlying Lucene search engine
         queryString = QueryParser.escape(queryString);
         ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
         if(hitVs.size() > 0) {
-            //FIXME implement tnrResponseFromResource:
-            //Response response = tnrResponseFromResource(hitVs.get(0), query.getRequest(), null, null, checklistInfo, addClassification);
-            //query.getResponse().add(response);
+            Response response = tnrResponseFromResource(hitVs.get(0), query.getRequest(), null, null, checklistInfo, addClassification);
+            query.getResponse().add(response);
         } else if(hitVs.size() > 1) {
             throw new DRFChecklistException("More than one node with the id '" + queryString + "' found");
         }
@@ -203,6 +212,96 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
         }
         return null;
 
+    }
+
+    /**
+     * @param request
+     * @param matchNode
+     * @param matchType
+     * @param ci
+     * @param addClassification TODO
+     * @param model
+     * @param taxonR
+     * @return
+     */
+    private Response tnrResponseFromResource(Vertex taxonV, Request request, Vertex matchNode, NameType matchType, ServiceProviderInfo ci, boolean addClassification) {
+
+        Response tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
+
+        GremlinPipeline<Graph, Vertex> pipe = new GremlinPipeline<Graph, Vertex>(taxonV);
+
+        if(matchNode != null) {
+            String matchingName = matchNode.getProperty(GraphSail.VALUE).toString();
+            tnrResponse.setMatchingNameString(matchingName);
+            tnrResponse.setMatchingNameType(matchType);
+        }
+
+
+        Taxon taxon = createTaxon(taxonV, addClassification, request.isAddParentTaxon());
+        tnrResponse.setTaxon(taxon);
+        if(matchNode == null) {
+            tnrResponse.setMatchingNameType(NameType.TAXON);
+            String matchingName = taxon.getTaxonName().getCanonicalName();
+            tnrResponse.setMatchingNameString(matchingName);
+        }
+
+
+        logger.debug("processing  accepted taxon " + taxonV.getId() + " DONE");
+        return tnrResponse;
+    }
+
+    /**
+     * @param taxonV
+     * @param addClassification
+     * @param addParentTaxon
+     * @return
+     */
+    private Taxon createTaxon(Vertex taxonV, boolean addClassification, boolean addParentTaxon) {
+
+        Taxon taxon = new Taxon();
+
+        TaxonName taxonName = createTaxonName(taxonV);
+
+        // Taxon
+        taxon.setTaxonName(taxonName);
+        taxon.setUrl(taxonV.getProperty(GraphSail.VALUE).toString());
+        taxon.setIdentifier(taxon.getUrl());
+
+        //TODO accordingTo
+
+        taxon.setTaxonomicStatus(TaxonomicStatus.ACCEPTED.name());
+
+        // source
+        Source source = new Source();
+
+        GremlinPipeline<Graph, Vertex> publishedInPipe = new GremlinPipeline<Graph, Vertex>(taxonV);
+        Vertex publishedIn = publishedInPipe.inE(RdfSchema.TRT.property("definesTaxonConcept")).outV().outE(RdfSchema.TRT.property("publishedIn")).inV().next();
+
+        String plaziID = queryClient.relatedVertexValue(taxonV, RdfSchema.TRT, "definesTaxonConcept");
+        String doi = publishedIn.getProperty(GraphSail.VALUE).toString().replace("http://dx.doi.org/", "");
+        source.setIdentifier(plaziID);
+        source.setUrl(doi);
+
+        source.setDatasetName("Plazi TreatmentBase");
+        source.setTitle(queryClient.relatedVertexValue(publishedIn, RdfSchema.DC, "title"));
+
+        taxon.getSources().add(source);
+
+        return taxon;
+    }
+
+    /**
+     * @param taxonV
+     * @return
+     */
+    private TaxonName createTaxonName(Vertex v) {
+        TaxonName taxonName = new TaxonName();
+        // TaxonName
+        taxonName.setScientificName(queryClient.relatedVertexValue(v, RdfSchema.DWC, "scientificName"));
+        taxonName.setCanonicalName(queryClient.relatedVertexValue(v, RdfSchema.DWC, "authority")); // FIXME ?
+        taxonName.setRank(queryClient.relatedVertexValue(v, RdfSchema.DWC, "rank"));
+        //FIXME add status: taxonName.setStatus(queryClient.relatedVertexValue(v, RdfSchema.DWC, "status"));
+        return taxonName;
     }
 
     /**
@@ -245,7 +344,7 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
      */
     @Override
     public boolean isSupportedIdentifier(String value) {
-        return false;
+        return value.startsWith("http://taxon-concept.plazi.org/id/");
     }
 
     /**
