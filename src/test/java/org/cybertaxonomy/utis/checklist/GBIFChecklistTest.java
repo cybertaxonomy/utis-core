@@ -11,14 +11,12 @@ import org.cybertaxonomy.utis.input.DRFCSVInputParser;
 import org.cybertaxonomy.utis.input.DRFInputException;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.BiovelUtils;
-import org.cybertaxonomy.utis.utils.JSONUtils;
 import org.cybertaxonomy.utis.utils.TnrMsgException;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore // TODO client not officially supported in utis + test is causing problems: please check
+//@Ignore // TODO client not officially supported in utis + test is causing problems: please check
 public class GBIFChecklistTest {
 
     private static DRFCSVInputParser parser;
@@ -46,12 +44,6 @@ public class GBIFChecklistTest {
     }
 
     @Test
-    public void convertChecklistInfoToJson() throws DRFChecklistException {
-        String checklistInfoJson = JSONUtils.convertObjectToJson(ci);
-        System.out.println("Json : " + checklistInfoJson);
-    }
-
-    @Test
     public void buildServiceProviderInfo() throws DRFChecklistException {
         GBIFBackboneClient gbc =  new GBIFBackboneClient();
         ServiceProviderInfo spiInfo = gbc.buildServiceProviderInfo();
@@ -61,8 +53,6 @@ public class GBIFChecklistTest {
             ServiceProviderInfo spi = spiItr.next();
             System.out.println("Dataset : " + spi.getLabel() );
         }
-        String checklistInfoJson = JSONUtils.convertObjectToJson(spiInfo);
-        System.out.println("Json : " + checklistInfoJson);
 
     }
 
@@ -74,7 +64,7 @@ public class GBIFChecklistTest {
         List<String> chosenKeyList = new ArrayList<String>();
         chosenKeyList.add("7ddf754f-d193-4cc9-b351-99906754a03b");
 
-        GBIFBackboneClient gbc =  new GBIFBackboneClient(JSONUtils.convertObjectToJson(ci));
+        GBIFBackboneClient gbc =  new GBIFBackboneClient(ci);
         Iterator<TnrMsg> tnrMsgItr = tnrMsgs.iterator();
         while(tnrMsgItr.hasNext()) {
             TnrMsg tnrMsg = tnrMsgItr.next();
@@ -93,7 +83,7 @@ public class GBIFChecklistTest {
         List<String> chosenKeyList = new ArrayList<String>();
         chosenKeyList.add("7ddf754f-d193-4cc9-b351-99906754a03b");
 
-        GBIFBackboneClient gbc =  new GBIFBackboneClient(JSONUtils.convertObjectToJson(ci));
+        GBIFBackboneClient gbc =  new GBIFBackboneClient(ci);
         Iterator<TnrMsg> tnrMsgItr = tnrMsgs.iterator();
         while(tnrMsgItr.hasNext()) {
             TnrMsg tnrMsg = tnrMsgItr.next();
