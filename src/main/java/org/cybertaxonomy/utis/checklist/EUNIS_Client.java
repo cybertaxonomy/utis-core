@@ -529,8 +529,8 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
                 logger.trace("updateQueriesWithResponse() : printing propertyKeys to System.err");
                 printPropertyKeys(v, System.err);
             }
-            if(v.getProperty("kind").equals("url")) {
-                logger.error("vertex of type 'url' expected, but was " + v.getProperty("type").equals("url"));
+            if(!v.getProperty("kind").equals("uri")) {
+                logger.error("vertex of type 'uri' expected, but was " + v.getProperty("type").toString());
                 continue;
             }
             Vertex matchNode = null;
@@ -680,6 +680,5 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
             throw new RuntimeException(e);
         }
     }
-
 
 }
