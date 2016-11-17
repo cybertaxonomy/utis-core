@@ -10,7 +10,9 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.cybertaxonomy.utis.store.Neo4jStoreManager;
+import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
 import org.cybertaxonomy.utis.tnr.msg.Response;
+import org.cybertaxonomy.utis.tnr.msg.Taxon;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.TnrMsgException;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
@@ -27,6 +29,7 @@ public class PlaziClientTest extends Assert {
     public static PlaziClient client = null;
 
     private static File tmpRss = null;
+
 
     @BeforeClass
     public static void initStore() throws IOException{
@@ -74,7 +77,11 @@ public class PlaziClientTest extends Assert {
         String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
         System.out.println(outputXML);
         assertTrue(tnrMsg.getQuery().get(0).getResponse().size() == 1);
-        tnrMsg.getQuery().get(0).getResponse().get(0).getTaxon().getTaxonName().getScientificName().equals("Clothoda tocantinensis");
+        Taxon taxon = tnrMsg.getQuery().get(0).getResponse().get(0).getTaxon();
+        assertEquals("Clothoda tocantinensis", taxon.getTaxonName().getScientificName());
+        assertEquals("Clothoda tocantinensis", taxon.getTaxonName().getCanonicalName());
+        assertEquals("Krolow, Tiago Kütter & Valadares, Ana Carolina B.", taxon.getTaxonName().getAuthorship());
+        assertEquals("Krolow, Tiago Kütter & Valadares, Ana Carolina B. (2016) First record of order Embioptera (Insecta) for the State of Tocantins, Brazil, with description of a new species of Clothoda Enderlein. Zootaxa 4193 (1), pp. 184-188: 185-186", taxon.getTaxonName().getNomenclaturalReference());
     }
 
     @Test
@@ -86,7 +93,7 @@ public class PlaziClientTest extends Assert {
         System.out.println(outputXML);
         assertEquals(1, tnrMsg.getQuery().get(0).getResponse().size());
         Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
-        assertEquals("Clothoda tocantinensis", response.getTaxon().getTaxonName().getScientificName());
+        assertEquals("Clothoda tocantinensis", response.getTaxon().getTaxonName().getCanonicalName());
     }
 
     @Test
@@ -98,31 +105,46 @@ public class PlaziClientTest extends Assert {
         System.out.println(outputXML);
         assertEquals(1, tnrMsg.getQuery().get(0).getResponse().size());
         Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
-        assertEquals("Clothoda tocantinensis", response.getTaxon().getTaxonName().getScientificName());
+        assertEquals("Clothoda tocantinensis", response.getTaxon().getTaxonName().getCanonicalName());
     }
 
-    // @Test // this test has problems
-    public void clientTest_dev() throws InterruptedException {
+    @Test
+    public void higherClassification_Test() throws DRFChecklistException, TnrMsgException {
 
-        Thread testRun = new Thread() {
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(ClassificationAction.higherClassification, "http://taxon-concept.plazi.org/id/AE4F6F58FFDBFFAFFF1D0EC5E367B2AF", false, false);
+        client.queryChecklist(tnrMsg);
 
-            @Override
-            public void run() {
-                boolean interrupted = false;
-                PlaziClient client = new PlaziClient();
-                while(!interrupted) {
-                    try {
-                        sleep(1000 * 60 * 3); // time limit for the test to run
-                    } catch (InterruptedException e) {
-                        logger.info("Test run has ended.");
-                        interrupted = true;
-                    }
-                }
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+
+        assertEquals(1, tnrMsg.getQuery().get(0).getResponse().size());
+        Response response = tnrMsg.getQuery().get(0).getResponse().get(0);
+        assertEquals("Trechisibus parvulus", response.getTaxon().getTaxonName().getCanonicalName());
+        List<HigherClassificationElement> hc = response.getTaxon().getHigherClassification();
+        assertNotNull(hc);
+        assertTrue(!hc.isEmpty());
+
+        assertEquals("Trechisibus", getHigherClassification("Genus", hc).getScientificName());
+        assertEquals("Carabidae", getHigherClassification("Family", hc).getScientificName());
+        assertEquals("Coleoptera", getHigherClassification("Order", hc).getScientificName());
+        assertEquals("Arthropoda", getHigherClassification("Phylum", hc).getScientificName());
+        assertEquals("Insecta", getHigherClassification("Class", hc).getScientificName());
+        assertEquals("Animalia", getHigherClassification("Kingdom", hc).getScientificName());
+    }
+
+
+    /**
+     * @param string
+     * @param hc
+     * @return
+     */
+    private HigherClassificationElement getHigherClassification(String string, List<HigherClassificationElement> hc) {
+        for(HigherClassificationElement hce : hc) {
+            if(hce.getRank().equals(string)) {
+                return hce;
             }
-        };
-
-        testRun.start();
-        testRun.join();
+        }
+        return null;
     }
 }
 

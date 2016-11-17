@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.queryParser.QueryParser;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 import org.cybertaxonomy.utis.query.TinkerPopClient;
@@ -19,6 +20,7 @@ import org.cybertaxonomy.utis.store.LastModifiedProvider;
 import org.cybertaxonomy.utis.store.Neo4jStore;
 import org.cybertaxonomy.utis.store.Neo4jStoreManager;
 import org.cybertaxonomy.utis.store.ResourceProvider;
+import org.cybertaxonomy.utis.tnr.msg.HigherClassificationElement;
 import org.cybertaxonomy.utis.tnr.msg.NameType;
 import org.cybertaxonomy.utis.tnr.msg.Query;
 import org.cybertaxonomy.utis.tnr.msg.Query.Request;
@@ -64,7 +66,9 @@ public class PlaziClient extends TinkerPopChecklistClient implements UpdatableSt
             SearchMode.findByIdentifier
             );
 
-    public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.noneOf(ClassificationAction.class);
+    public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.of(
+            ClassificationAction.higherClassification
+            );
 
     public static final String TREATMENTBANK_RSS_FEED = "http://tb.plazi.org/GgServer/xml.rss.xml";
 
@@ -112,9 +116,18 @@ public class PlaziClient extends TinkerPopChecklistClient implements UpdatableSt
         public String property(String name) {
             return schemaUri + name;
         }
-
     }
 
+
+    String[] dwcClassificationTerms =  new String[]{
+            "species",
+            "genus",
+            "family",
+            "order",
+            "class",
+            "phylum",
+            "kingdom",
+            };
     /**
      * {@inheritDoc}
      */
@@ -291,9 +304,7 @@ public class PlaziClient extends TinkerPopChecklistClient implements UpdatableSt
         taxon.setTaxonName(taxonName);
         taxon.setUrl(taxonV.getProperty(GraphSail.VALUE).toString());
         taxon.setIdentifier(taxon.getUrl());
-
-        //TODO accordingTo
-
+        // According is gotten from the sources, see below
         taxon.setTaxonomicStatus(TaxonomicStatus.ACCEPTED.name());
 
         // source
@@ -306,11 +317,24 @@ public class PlaziClient extends TinkerPopChecklistClient implements UpdatableSt
         String doi = publishedIn.getProperty(GraphSail.VALUE).toString().replace("http://dx.doi.org/", "");
         source.setIdentifier(plaziID);
         source.setUrl(doi);
-
         source.setDatasetName("Plazi TreatmentBase");
-        source.setTitle(queryClient.relatedVertexValue(publishedIn, RdfSchema.DC, "title"));
 
         taxon.getSources().add(source);
+
+        taxon.setAccordingTo(taxon.getSources().get(0).getTitle());
+
+        if (addClassification) {
+            for (String rank : dwcClassificationTerms) {
+                String higherTaxonName = queryClient.relatedVertexValue(taxonV, RdfSchema.DWC, rank);
+                if (higherTaxonName != null) {
+                    HigherClassificationElement hce = new HigherClassificationElement();
+                    hce.setRank(StringUtils.capitalize(rank));
+                    hce.setScientificName(higherTaxonName);
+                    taxon.getHigherClassification().add(hce);
+                }
+            }
+
+        }
 
         return taxon;
     }
@@ -319,13 +343,27 @@ public class PlaziClient extends TinkerPopChecklistClient implements UpdatableSt
      * @param taxonV
      * @return
      */
-    private TaxonName createTaxonName(Vertex v) {
+    private TaxonName createTaxonName(Vertex taxonV) {
         TaxonName taxonName = new TaxonName();
-        // TaxonName
-        taxonName.setScientificName(queryClient.relatedVertexValue(v, RdfSchema.DWC, "scientificName"));
-        taxonName.setCanonicalName(queryClient.relatedVertexValue(v, RdfSchema.DWC, "authority")); // FIXME ?
-        taxonName.setRank(queryClient.relatedVertexValue(v, RdfSchema.DWC, "rank"));
-        //FIXME add status: taxonName.setStatus(queryClient.relatedVertexValue(v, RdfSchema.DWC, "status"));
+
+
+        GremlinPipeline<Graph, Vertex> nomRefPipe = new GremlinPipeline<Graph, Vertex>(taxonV);
+        Vertex nomRefV = nomRefPipe.inE(RdfSchema.TRT.property("definesTaxonConcept")).outV().outE(RdfSchema.DC.property("description")).inV().next();
+
+//        GremlinPipeline<Graph, Vertex> fullScientificNamePipe = new GremlinPipeline<Graph, Vertex>(taxonV);
+//        Vertex fullScientificNameV = fullScientificNamePipe.inE(RdfSchema.TRT.property("definesTaxonConcept")).outV().outE(RdfSchema.DC.property("title")).inV().next();
+//        if(fullScientificNameV != null){
+//            taxonName.setScientificName(fullScientificNameV.getProperty(GraphSail.VALUE).toString());
+//        }
+
+        if(nomRefV != null){
+            taxonName.setNomenclaturalReference(nomRefV.getProperty(GraphSail.VALUE).toString());
+        }
+        taxonName.setScientificName(queryClient.relatedVertexValue(taxonV, RdfSchema.DWC, "scientificName"));
+        taxonName.setAuthorship(queryClient.relatedVertexValue(taxonV, RdfSchema.DWC, "scientificNameAuthorship"));
+        taxonName.setCanonicalName(taxonName.getScientificName().replace(taxonName.getAuthorship(), ""));
+        taxonName.setRank(queryClient.relatedVertexValue(taxonV, RdfSchema.DWC, "rank"));
+        //TODO add status: taxonName.setStatus(queryClient.relatedVertexValue(v, RdfSchema.DWC, "status"));
         return taxonName;
     }
 
@@ -343,8 +381,7 @@ public class PlaziClient extends TinkerPopChecklistClient implements UpdatableSt
      */
     @Override
     public void higherClassification(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
-
+        _findByIdentifier(tnrMsg, true);
     }
 
     /**
