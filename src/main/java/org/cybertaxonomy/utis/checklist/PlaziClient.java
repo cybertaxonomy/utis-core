@@ -10,6 +10,7 @@ package org.cybertaxonomy.utis.checklist;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 
 import org.apache.lucene.queryParser.QueryParser;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
@@ -41,7 +42,7 @@ import com.tinkerpop.gremlin.java.GremlinPipeline;
  * @date Jun 17, 2016
  *
  */
-public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements UpdatableStoreInfo {
+public class PlaziClient extends TinkerPopChecklistClient implements UpdatableStoreInfo {
 
     protected static final Logger logger = LoggerFactory.getLogger(PlaziClient.class);
 
@@ -57,7 +58,7 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
-//            SearchMode.scientificNameLike,
+            SearchMode.scientificNameLike,
 //            SearchMode.vernacularNameExact,
 //            SearchMode.vernacularNameLike,
             SearchMode.findByIdentifier
@@ -119,8 +120,33 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
      */
     @Override
     public void resolveScientificNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
 
+        ServiceProviderInfo checklistInfo = getServiceProviderInfo();
+
+        // selecting one request as representative, only
+        // the search mode and addSynonmy flag are important
+        // for the further usage of the request object
+        Query query = singleQueryFrom(tnrMsg);
+
+        String queryString = query.getRequest().getQueryString();
+        logger.debug("original queryString: "+ queryString);
+        queryString = QueryParser.escape(queryString);
+        queryString = queryString.replace(" ", "\\ ");
+        if(query.getRequest().getSearchMode().equals(SearchMode.scientificNameLike.name())) {
+            queryString += "*";
+        }
+        logger.debug("prepared queryString: "+ queryString);
+
+        GremlinPipeline<Graph, Vertex> pipe = null;
+
+        ArrayList<Vertex> hitVs = queryClient.vertexIndexQuery("value:" + queryString);
+        pipe = new GremlinPipeline<Graph, Vertex>(hitVs);
+
+        List<Vertex> vertices = new ArrayList<Vertex>();
+
+        pipe.inE(RdfSchema.CITO.property("cites")).outV().outE(RdfSchema.TRT.property("definesTaxonConcept")).inV().fill(vertices);
+
+        updateQueriesWithResponse(vertices, null, null, checklistInfo, query);
     }
 
     /**
@@ -128,8 +154,8 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
      */
     @Override
     public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
-
+        // delegate to resolveScientificNamesExact,
+        resolveScientificNamesExact(tnrMsg);
     }
 
     /**
@@ -137,8 +163,7 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
      */
     @Override
     public void resolveVernacularNamesExact(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
-
+        // UNSUPORTED
     }
 
     /**
@@ -146,8 +171,7 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
      */
     @Override
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
-        // TODO Auto-generated method stub
-
+        // UNSUPORTED
     }
 
     /**
@@ -189,7 +213,7 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
      * Checks if the given <code>identifier</code> already is in the database and if it is connected to a taxon concept.
      *
      * @param String identifier
-     * @return
+     * @return the persistent identifier for the according taxon concept
      *
      * @throws DRFChecklistException
      */
@@ -224,7 +248,8 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
      * @param taxonR
      * @return
      */
-    private Response tnrResponseFromResource(Vertex taxonV, Request request, Vertex matchNode, NameType matchType, ServiceProviderInfo ci, boolean addClassification) {
+    @Override
+    protected Response tnrResponseFromResource(Vertex taxonV, Request request, Vertex matchNode, NameType matchType, ServiceProviderInfo ci, boolean addClassification) {
 
         Response tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
 
@@ -374,9 +399,16 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
     }
 
 
+    /**
+     * WARNING! Only use this method for testing purposes.
+     *
+     * @param url
+     */
     public void setTestUrl(String url) {
+        if(resourceProvider != null){
+            resourceProvider.expireRssFile();
+        }
         this.testUrl = url;
-
     }
 
     /**
@@ -435,6 +467,14 @@ public class PlaziClient extends BaseChecklistClient<TinkerPopClient> implements
             resourceProvider = new PlaziResourceProvider(this);
         }
         return resourceProvider;
+    }
+
+    /**
+     * only for testing
+     * @return
+     */
+    protected TinkerPopClient queryClient() {
+        return queryClient;
     }
 
 }

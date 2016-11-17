@@ -43,7 +43,7 @@ public class PlaziResourceProviderTest extends Assert {
     @Test
     public void testGetResources_remote() throws DRFChecklistException {
 
-        Neo4jStoreManager.testMode = true;
+        Neo4jStoreManager.dontWatch = true;
         PlaziClient plaziClient = new PlaziClient();
         ResourceProvider resourceProvider = plaziClient.getResourceProvider();
 

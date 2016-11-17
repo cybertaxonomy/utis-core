@@ -23,6 +23,7 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 import org.cybertaxonomy.utis.utils.HttpClient;
 import org.cybertaxonomy.utis.utils.VersionInfo;
@@ -97,7 +98,7 @@ public abstract class Store extends HttpClient {
            File dataFile;
 
            // 1. download and store in local filesystem in TMP
-           dataFile = toTempFile(rdfFileUri.toString(), dataFilePrefix());
+           dataFile = toTempFile(rdfFileUri.toString());
 
            // 2. extract the archive if needed
            if(dataFile != null){
@@ -124,23 +125,37 @@ public abstract class Store extends HttpClient {
                }
            }
 
+           //check datafile extension
+           if(!FilenameUtils.isExtension(dataFile.getName(), dataFileExtension())) {
+               String newFileName = dataFile.getAbsolutePath() + "." + dataFileExtension();
+               File newFile = new File(newFileName);
+               if(dataFile.renameTo(newFile)) {
+                   dataFile = newFile;
+               } else {
+                   logger.error("Cannot rename datafile to " + newFileName);
+               }
+           }
+
            return dataFile;
        }
 
     /**
      * @return
      */
-    protected abstract String dataFilePrefix();
+    protected abstract String dataFileExtension();
 
     /**
      *
+     * @param clearStore TODO
      * @param rdfFileUri
      *  the location of the file to load the rdf triples from
      * @throws Exception
      */
-    public void loadIntoStore(List<URI> rdfFileUris) throws Exception {
+    public void loadIntoStore(List<URI> rdfFileUris, boolean clearStore) throws Exception {
         stopStoreEngine();
-        clear();
+        if(clearStore){
+            clear();
+        }
         initStoreEngine();
         int i = 1;
         for (URI uri : rdfFileUris) {
@@ -150,7 +165,7 @@ public abstract class Store extends HttpClient {
                 load(localF);
                 localF.delete();
             } catch (Exception e) {
-                logger.error("Error while loading " + uri + " into store.");
+                logger.error("Error while loading " + uri + " into store.", e);
             }
         }
     }

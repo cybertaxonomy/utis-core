@@ -41,6 +41,7 @@ public class Neo4jStoreUpdater {
     private long interval_ms;
     private boolean incrementalUpdate = false;
 
+
     private LastModifiedProvider lastModifiedProvider;
 
     private ResourceProvider resourceProvider;
@@ -125,30 +126,31 @@ public class Neo4jStoreUpdater {
 
     public void watch(int intervalMinutes) {
 
-        if(isRunningAsTest()) {
-            this.interval_ms = 1000;
+        if (isRunningAsTest()) {
+            updateIfNeeded();
         } else {
             this.interval_ms = 1000 * 60 * intervalMinutes;
-        }
-        Thread updateThread = new Thread() {
 
-            @Override
-            public void run() {
-                boolean interrupted = false;
-                while(!interrupted) {
-                    updateIfNeeded();
-                    try {
-                        sleep(interval_ms);
-                    } catch (InterruptedException e) {
-                        logger.info("Neo4jStoreUpdater has been interrupted");
-                        interrupted = true;
+            Thread updateThread = new Thread() {
+
+                @Override
+                public void run() {
+                    boolean interrupted = false;
+                    while (!interrupted) {
+                        updateIfNeeded();
+                        try {
+                            sleep(interval_ms);
+                        } catch (InterruptedException e) {
+                            logger.info("Neo4jStoreUpdater has been interrupted");
+                            interrupted = true;
+                        }
                     }
                 }
-            }
-        };
-        updateThread.setName(Neo4jStoreUpdater.class.getSimpleName());
-        updateThread.start();
+            };
+            updateThread.setName(Neo4jStoreUpdater.class.getSimpleName());
+            updateThread.start();
         }
+    }
 
 
 
@@ -175,7 +177,7 @@ public class Neo4jStoreUpdater {
 
         try {
             List<URI> resources = resourceProvider.getResources(store.getLastModified());
-            store.loadIntoStore(resources);
+            store.loadIntoStore(resources, !isIncrementalUpdate());
             store.setLastModified(newLastModified);
         } catch (Exception e) {
             throw new RuntimeException("Loading resources into Neo4jStore failed", e);

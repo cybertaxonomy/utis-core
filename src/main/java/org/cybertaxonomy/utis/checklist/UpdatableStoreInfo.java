@@ -48,5 +48,4 @@ public interface UpdatableStoreInfo {
      */
     public String getInstanceName();
 
-
 }

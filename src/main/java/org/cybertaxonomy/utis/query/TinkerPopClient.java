@@ -225,4 +225,10 @@ public class TinkerPopClient implements IQueryClient {
         System.err.println("We found " + i + " results");
         System.err.flush();
     }
+
+    public String sizeInfo() {
+        return graphStore.sizeInfo();
+    }
+
+
 }

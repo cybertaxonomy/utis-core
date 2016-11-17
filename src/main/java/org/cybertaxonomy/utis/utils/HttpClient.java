@@ -20,9 +20,6 @@ import java.net.URLConnection;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,30 +47,24 @@ public class HttpClient {
 
     /**
      * @param fileUri
-     * @param prefix TODO
      * @return
      * @throws IOException
      * @throws URISyntaxException
      * @throws FileNotFoundException
      */
-    protected File toTempFile(String fileUri, String prefix) throws IOException, URISyntaxException {
+    protected File toTempFile(String fileUri) throws IOException, URISyntaxException {
 
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        CloseableHttpResponse response;
         try {
-
             URI inURI = new URI(fileUri);
             String archiveFileName = FilenameUtils.getName(inURI.getRawPath());
-            String existingPrefix = FilenameUtils.getPrefix(archiveFileName);
-            if(prefix != null && (existingPrefix == null || !existingPrefix.equals(prefix))) {
-                archiveFileName += '.' +  prefix;
-            }
+
             File archiveFile = new File(tmpDir, archiveFileName);
 
             logger.debug("downloading rdf file from " + fileUri);
 
             long startTime = System.currentTimeMillis();
 
+            // TODO use org.apache.commons.io.FileUtils.copyURLToFile(URL source, File destination, int connectionTimeout, int readTimeout) ?
             URLConnection con = inURI.toURL().openConnection();
             con.setConnectTimeout(connectTimeout );
             con.setReadTimeout(readTimeout);
@@ -91,12 +82,6 @@ public class HttpClient {
             throw e;
         } catch (IOException e) {
             throw e;
-        } finally {
-            try {
-                httpClient.close();
-            } catch (IOException e) {
-                // IGNORE //
-            }
         }
 
     }

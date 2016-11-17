@@ -115,13 +115,22 @@ public class Neo4jStore extends Store{
         File luceneFolder = new File(storeLocation, "index" + File.separator + "lucene");
         File indexFolder = new File(luceneFolder, nodeAutoIndexName);
         int cnt = 0;
+        IndexReader reader = null;
         try {
-            IndexReader reader = IndexReader.open(FSDirectory.open(indexFolder));
+            reader = IndexReader.open(FSDirectory.open(indexFolder));
             cnt = reader.numDocs();
         } catch (CorruptIndexException e) {
             logger.warn("CorruptIndexException", e);
         } catch (IOException e) {
             logger.warn("Lucene index can not be read, this is ok as long there store location is empty. Original error: " + e.getMessage());
+        } finally {
+            if(reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    /* IGNORE */
+                }
+            }
         }
         return cnt;
     }
@@ -208,7 +217,7 @@ public class Neo4jStore extends Store{
      * {@inheritDoc}
      */
     @Override
-    protected String dataFilePrefix() {
+    protected String dataFileExtension() {
         return "rdf";
     }
 

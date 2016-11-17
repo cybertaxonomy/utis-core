@@ -141,12 +141,19 @@ public class PlaziResourceProvider extends HttpClient implements ResourceProvide
         }
 
         try {
-            rssFeedFile = toTempFile(plaziClient.getTestUrl(), null);
+            rssFeedFile = toTempFile(plaziClient.getTestUrl());
         } catch (IOException | URISyntaxException e) {
             logger.error("Error fetching rss File", e);
         }
 
         return rssFeedFile;
+    }
+
+    /**
+     * expires the cached rss file
+     */
+    public void expireRssFile(){
+        rssFeedFile = null;
     }
 
     protected Date parseLastBuildDate(String line) throws ParseException{

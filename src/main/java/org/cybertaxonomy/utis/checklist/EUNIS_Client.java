@@ -1,11 +1,9 @@
 package org.cybertaxonomy.utis.checklist;
 
-import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.lucene.queryParser.QueryParser;
@@ -32,21 +30,19 @@ import org.cybertaxonomy.utis.utils.IdentifierUtils;
 import org.cybertaxonomy.utis.utils.Profiler;
 import org.cybertaxonomy.utis.utils.TnrMsgUtils;
 import org.gbif.api.vocabulary.TaxonomicStatus;
-import org.neo4j.graphdb.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
-import com.tinkerpop.blueprints.impls.neo4j2.Neo4j2Vertex;
 import com.tinkerpop.blueprints.oupls.sail.GraphSail;
 import com.tinkerpop.gremlin.java.GremlinPipeline;
 import com.tinkerpop.pipes.util.FastNoSuchElementException;
 import com.tinkerpop.pipes.util.structures.Table;
 
-public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> implements UpdatableStoreInfo {
+public class EUNIS_Client extends TinkerPopChecklistClient implements UpdatableStoreInfo {
 
-    protected static final Logger logger = LoggerFactory.getLogger(BaseChecklistClient.class);
+    protected static final Logger logger = LoggerFactory.getLogger(EUNIS_Client.class);
 
     public static final String ID = "eunis";
     public static final String LABEL = "EUNIS (European Nature Information System) by the European Environment Agency (EEA)";
@@ -130,7 +126,6 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
     }
 
     public EUNIS_Client() {
-
         super();
     }
 
@@ -514,36 +509,6 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
 
     }
 
-    private void updateQueriesWithResponse(List<Vertex> taxonNodes, List<Vertex> matchNodes, NameType matchType, ServiceProviderInfo ci, Query query){
-
-        if (taxonNodes == null) {
-            return;
-        }
-
-        logger.debug("matching taxon nodes:");
-        int i = -1;
-        for (Vertex v : taxonNodes) {
-            i++;
-            logger.debug("  " + v.toString());
-            if(logger.isTraceEnabled()) {
-                logger.trace("updateQueriesWithResponse() : printing propertyKeys to System.err");
-                printPropertyKeys(v, System.err);
-            }
-            if(!v.getProperty("kind").equals("uri")) {
-                logger.error("vertex of type 'uri' expected, but was " + v.getProperty("type").toString());
-                continue;
-            }
-            Vertex matchNode = null;
-            if(matchNodes != null) {
-                matchNode = matchNodes.get(i);
-            }
-            Response tnrResponse = tnrResponseFromResource(v, query.getRequest(), matchNode, matchType, ci, false);
-            if(tnrResponse != null) {
-                query.getResponse().add(tnrResponse);
-            }
-        }
-    }
-
     /**
      * @param request
      * @param matchNode
@@ -554,7 +519,8 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
      * @param taxonR
      * @return
      */
-    private Response tnrResponseFromResource(Vertex taxonV, Request request, Vertex matchNode, NameType matchType, ServiceProviderInfo ci, boolean addClassification) {
+    @Override
+    protected Response tnrResponseFromResource(Vertex taxonV, Request request, Vertex matchNode, NameType matchType, ServiceProviderInfo ci, boolean addClassification) {
 
         Response tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
 
@@ -612,27 +578,6 @@ public class EUNIS_Client extends AggregateChecklistClient<TinkerPopClient> impl
 
         logger.debug("processing " + (isAccepted ? "accepted taxon" : "synonym or other")  + " " + taxonV.getId() + " DONE");
         return tnrResponse;
-    }
-
-    /**
-     * @param vertex
-     */
-    private void printEdges(Neo4j2Vertex vertex) {
-        Iterable<Relationship> rels = vertex.getRawVertex().getRelationships();
-        Iterator<Relationship> iterator = rels.iterator();
-        if(iterator.hasNext()) {
-            Relationship rel = iterator.next();
-            System.err.println(rel.toString() + ": " + rel.getStartNode().toString() + "-[" +  rel.getType() + "]-" + rel.getEndNode().toString());
-        }
-    }
-
-    private void printPropertyKeys(Vertex v, PrintStream ps) {
-        StringBuilder out = new StringBuilder();
-        out.append(v.toString());
-        for(String key : v.getPropertyKeys()) {
-            out.append(key).append(": ").append(v.getProperty(key)).append(" ");
-        }
-        ps.println(out.toString());
     }
 
     @Override

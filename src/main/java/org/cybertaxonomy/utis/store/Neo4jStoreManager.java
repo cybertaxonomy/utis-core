@@ -24,10 +24,14 @@ public class Neo4jStoreManager {
 
     /**
      * Flag to disable the automatic store update for special testing purposes.
-     * If the testmode is enabled the store will be cleared.
      *
      */
-    public static boolean testMode = false;
+    public static boolean dontWatch = false;
+
+    /**
+     * Testmode in which the store will be cleared initially
+     */
+    public static boolean clearStore = false;
 
     /**
      * Only used when <code>testMode = true</code>
@@ -44,11 +48,13 @@ public class Neo4jStoreManager {
                 updater.setLastModifiedProvider(storeInfo.getLastModifiedProvider());
                 updater.setResourceProvider(storeInfo.getResourceProvider());
 
-                // updater is prepared, start watching
-                if(testMode){
+                if(clearStore){
                     neo4jStore.stopStoreEngine();
                     neo4jStore.clear();
                     neo4jStore.initStoreEngine();
+                }
+                // updater is prepared, start watching
+                if(dontWatch){
                     lastStoreUpdater = updater;
                 } else {
                     updater.watch(storeInfo.pollIntervalMinutes());

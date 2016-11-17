@@ -35,7 +35,7 @@ public class StoreTests {
 
         Neo4jStore graphStore = new Neo4jStore("neo4j_test");
         StaticArchiveResourceProvider resourceProvider = new StaticArchiveResourceProvider(RDF_FILE_URL);
-        graphStore.loadIntoStore(resourceProvider.getResources(null));
+        graphStore.loadIntoStore(resourceProvider.getResources(null), true);
     }
 
 }
