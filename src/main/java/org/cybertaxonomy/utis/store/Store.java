@@ -17,7 +17,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
@@ -40,6 +43,8 @@ public abstract class Store extends HttpClient {
     protected static final Logger logger = LoggerFactory.getLogger(Store.class);
 
     private static final File userHomeDir = new File(System.getProperty("user.home"));
+
+    private static final int MAX_RETRIES = 3;
 
     protected static File utisHome = null;
 
@@ -158,14 +163,29 @@ public abstract class Store extends HttpClient {
         }
         initStoreEngine();
         int i = 1;
-        for (URI uri : rdfFileUris) {
+        LinkedList<URI> rdfFileUriQueue = new LinkedList<>();
+        rdfFileUriQueue.addAll(rdfFileUris);
+        Map<URI, Integer> errorRdfFileRetries = new HashMap<>();
+        while (!rdfFileUriQueue.isEmpty()) {
             logger.info("importing resource " + i++ + " of " + rdfFileUris.size());
+            URI uri = rdfFileUriQueue.removeFirst();
             try {
                 File localF = downloadAndExtract(uri);
                 load(localF);
                 localF.delete();
             } catch (Exception e) {
-                logger.error("Error while loading " + uri + " into store.", e);
+                Integer retryCount = errorRdfFileRetries.get(uri);
+                if (retryCount == null) {
+                    logger.error("Error while loading " + uri + " into store, re-enqueued for second attempt.");
+                    rdfFileUriQueue.addLast(uri); // come back to this one
+                    errorRdfFileRetries.put(uri, 0);
+                }else if(retryCount < MAX_RETRIES) {
+                    logger.error("Error while loading " + uri + " into store, re-enqueued for attempt " + (retryCount + 1) + "." );
+                    rdfFileUriQueue.addLast(uri); // come back to this one
+                    errorRdfFileRetries.put(uri, retryCount + 1);
+                } else {
+                    logger.error("Error while loading " + uri + " into store, giving up after " + MAX_RETRIES + " attempts.");
+                }
             }
         }
     }
