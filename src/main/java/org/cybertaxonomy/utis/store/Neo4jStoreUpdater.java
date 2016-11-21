@@ -173,8 +173,11 @@ public class Neo4jStoreUpdater {
      */
     public void updateStore(Date newLastModified) {
 
-        logger.info("Starting store update");
+        if(store.hasActiveImport()){
+            logger.warn("The store (" + store.storeLocation.getPath() + ") has an active import, skipping this update");
+        }
 
+        logger.info("Starting store update");
         try {
             List<URI> resources = resourceProvider.getResources(store.getLastModified());
             store.loadIntoStore(resources, !isIncrementalUpdate());
