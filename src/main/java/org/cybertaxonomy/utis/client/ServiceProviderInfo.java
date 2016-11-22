@@ -74,6 +74,24 @@ public class ServiceProviderInfo {
         this.supportedActions.addAll(searchModes);
     }
 
+    /**
+     * Copy constructor
+     *
+     * @param toClone
+     */
+    public ServiceProviderInfo(ServiceProviderInfo toClone) {
+        this.id = toClone.id;
+        this.label = toClone.label;
+        this.supportedActions = toClone.getSupportedActions();
+        this.documentationUrl = toClone.getDocumentationUrl();
+        this.copyrightUrl = toClone.getCopyrightUrl();
+        this.version = toClone.getVersion();
+        for(ServiceProviderInfo subInfo : toClone.getSubChecklists()){
+            this.subChecklists.add(new ServiceProviderInfo(subInfo));
+        }
+
+    }
+
     public String getId() {
         return id;
     }
