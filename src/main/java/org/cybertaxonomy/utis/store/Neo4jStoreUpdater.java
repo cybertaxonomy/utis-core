@@ -12,8 +12,8 @@ package org.cybertaxonomy.utis.store;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.httpclient.util.DateParseException;
 import org.apache.commons.httpclient.util.DateUtil;
@@ -23,6 +23,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,8 +39,34 @@ public class Neo4jStoreUpdater {
     private final URI testUrl;
     private final Neo4jStore store;
     private long interval_ms;
+    private boolean incrementalUpdate = false;
 
-    private String[] resources = new String[0];
+
+    private LastModifiedProvider lastModifiedProvider;
+
+    private ResourceProvider resourceProvider;
+
+    /**
+     * @return the lastModifiedProvider
+     */
+    public LastModifiedProvider getLastModifiedProvider() {
+        return lastModifiedProvider;
+    }
+
+    /**
+     * @param lastModifiedProvider the lastModifiedProvider to set
+     */
+    public void setLastModifiedProvider(LastModifiedProvider lastModifiedProvider) {
+        this.lastModifiedProvider = lastModifiedProvider;
+    }
+
+    /**
+     * @param resourceProvider
+     */
+    public void setResourceProvider(ResourceProvider resourceProvider) {
+        this.resourceProvider = resourceProvider;
+
+    }
 
     public Neo4jStoreUpdater(Neo4jStore store, String testUrl) throws URISyntaxException {
         this.testUrl = new URI(testUrl);
@@ -53,25 +80,34 @@ public class Neo4jStoreUpdater {
     private Date getRemoteLastModified() {
 
         Date lastModified = null;
-        CloseableHttpClient client = HttpClientBuilder.create().build();
-        HttpHead request = new HttpHead(testUrl);
-        try {
-            HttpResponse response = client.execute(request);
-            Header lastModifiedH = response.getFirstHeader("Last-Modified");
-            lastModified = DateUtil.parseDate(lastModifiedH.getValue());
-            logger.debug("Last-Modified: " + lastModifiedH.getValue());
-
-        } catch (ClientProtocolException e) {
-            logger.error("ClientProtocolException, if this problem persists it will block from updating neo4jStore", e);
-        } catch (DateParseException e) {
-            logger.error("Could not parse Last-Modified value from HTTP response, if this problem persists it will block from updating neo4jStore");
-        } catch (IOException e) {
-            logger.error("IOException, if this problem persists it will block from updating the neo4jStore", e);
-        } finally {
+        if(lastModifiedProvider != null){
             try {
-                client.close();
+                return lastModifiedProvider.getLastModified();
+            } catch (DRFChecklistException e) {
+                logger.error("Error in LastModifiedProvider, if this problem persists it will block from updating neo4jStore", e);
+            }
+        } else {
+
+            CloseableHttpClient client = HttpClientBuilder.create().build();
+            HttpHead request = new HttpHead(testUrl);
+            try {
+                HttpResponse response = client.execute(request);
+                Header lastModifiedH = response.getFirstHeader("Last-Modified");
+                lastModified = DateUtil.parseDate(lastModifiedH.getValue());
+                logger.debug("Last-Modified: " + lastModifiedH.getValue());
+
+            } catch (ClientProtocolException e) {
+                logger.error("ClientProtocolException, if this problem persists it will block from updating neo4jStore", e);
+            } catch (DateParseException e) {
+                logger.error("Could not parse Last-Modified value from HTTP response, if this problem persists it will block from updating neo4jStore");
             } catch (IOException e) {
-                // IGNORE //
+                logger.error("IOException, if this problem persists it will block from updating the neo4jStore", e);
+            } finally {
+                try {
+                    client.close();
+                } catch (IOException e) {
+                    // IGNORE //
+                }
             }
         }
         return lastModified;
@@ -88,22 +124,19 @@ public class Neo4jStoreUpdater {
         return null;
     }
 
-    public void addResources(String ... resources) throws URISyntaxException {
-       this.resources = resources;
-    }
-
     public void watch(int intervalMinutes) {
 
-        if(isRunningAsTest()) {
+        if (isRunningAsTest()) {
             updateIfNeeded();
         } else {
             this.interval_ms = 1000 * 60 * intervalMinutes;
+
             Thread updateThread = new Thread() {
 
                 @Override
                 public void run() {
                     boolean interrupted = false;
-                    while(!interrupted) {
+                    while (!interrupted) {
                         updateIfNeeded();
                         try {
                             sleep(interval_ms);
@@ -117,9 +150,8 @@ public class Neo4jStoreUpdater {
             updateThread.setName(Neo4jStoreUpdater.class.getSimpleName());
             updateThread.start();
         }
-
-
     }
+
 
 
     /**
@@ -136,19 +168,22 @@ public class Neo4jStoreUpdater {
     }
 
     /**
-     * @param neo4jStore
+     *
+     * @param newLastModified The new last modified time stamp to set for the store
      */
-    public void updateStore(Date lastModified) {
+    public void updateStore(Date newLastModified) {
+
+        if(store.hasActiveImport()){
+            logger.warn("The store (" + store.storeLocation.getPath() + ") has an active import, skipping this update");
+        }
 
         logger.info("Starting store update");
-
         try {
-            store.loadIntoStore(resources);
-            store.setLastModified(lastModified);
+            List<URI> resources = resourceProvider.getResources(store.getLastModified());
+            store.loadIntoStore(resources, !isIncrementalUpdate());
+            store.setLastModified(newLastModified);
         } catch (Exception e) {
-            throw new RuntimeException("Loading "
-                    + Arrays.toString(resources) +
-                    " into Neo4jStore failed",  e);
+            throw new RuntimeException("Loading resources into Neo4jStore failed", e);
         }
 
 
@@ -158,11 +193,25 @@ public class Neo4jStoreUpdater {
     /**
      *
      */
-    private void updateIfNeeded() {
+    public void updateIfNeeded() {
         Date lastModified = checkNewerVersion();
         if(lastModified != null) {
             updateStore(lastModified);
         }
+    }
+
+    /**
+     * @return the incrementalUpdate
+     */
+    public boolean isIncrementalUpdate() {
+        return incrementalUpdate;
+    }
+
+    /**
+     * @param incrementalUpdate the incrementalUpdate to set
+     */
+    public void setIncrementalUpdate(boolean incrementalUpdate) {
+        this.incrementalUpdate = incrementalUpdate;
     }
 
 }

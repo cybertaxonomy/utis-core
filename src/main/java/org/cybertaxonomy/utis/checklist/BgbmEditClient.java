@@ -50,6 +50,15 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
     private final Map<String,String> taxonIdMatchStringMap = new HashMap<String, String>();
 
+    private static Map<String, String> nameSearchParameters = new HashMap();
+
+    static {
+        nameSearchParameters.put("hits", MAX_HITS);
+        // 'name' parameter to be used in the case of scientific names
+        // without authorship strings or other markers (e.g. Abies alba).
+        nameSearchParameters.put("type", "name");
+    }
+
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(
             SearchMode.scientificNameExact,
             SearchMode.scientificNameLike,
@@ -373,7 +382,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
             URI namesUri = queryClient.buildUriFromQueryList(queryList,
                     SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue.json",
                     "query",
-                    "*", null);
+                    "*", nameSearchParameters );
             try {
                 String searchResponseBody = queryClient.get(namesUri);
                 buildTaxonIdMapsFromCatalogueServiceResponse(queryList, searchResponseBody);
@@ -384,11 +393,11 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
             List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
 
             if(taxonIdList.size() > 0) {
-                URI taxonUri = queryClient.buildUriFromQueryStringList(taxonIdList,
+                URI taxonUri = queryClient.buildUriFromQueryStringList(null,
                         SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue/taxon.json",
-                        "taxonUuid",
+                        null,
                         null);
-                String taxonResponseBody = queryClient.get(taxonUri);
+                String taxonResponseBody = queryClient.post(taxonUri, "taxonUuid", taxonIdList);
                 // buildTaxonIdMapsFromCatalogueServiceResponse(queryList, taxonResponseBody);
                 try {
                     updateQueriesWithResponse(taxonResponseBody, checklistInfo, request, false);

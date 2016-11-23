@@ -22,20 +22,50 @@ public class Neo4jStoreManager {
 
     private final static Map<Class<? extends UpdatableStoreInfo>, Neo4jStore> storemap = new HashMap<Class<? extends UpdatableStoreInfo>, Neo4jStore>();
 
-    public static Neo4jStore provideStoreFor(UpdatableStoreInfo storeClient) {
-        if(!storemap.containsKey(storeClient.getClass())) {
+    /**
+     * Flag to disable the automatic store update for special testing purposes.
+     *
+     */
+    public static boolean dontWatch = false;
+
+    /**
+     * Testmode in which the store will be cleared initially
+     */
+    public static boolean clearStore = false;
+
+    /**
+     * Only used when <code>testMode = true</code>
+     */
+    public static Neo4jStoreUpdater lastStoreUpdater = null;
+
+    public static Neo4jStore provideStoreFor(UpdatableStoreInfo storeInfo) {
+        if(!storemap.containsKey(storeInfo.getClass())) {
             Neo4jStore neo4jStore;
             try {
-                neo4jStore = new Neo4jStore();
-                Neo4jStoreUpdater updater = new Neo4jStoreUpdater(neo4jStore, storeClient.getTestUrl());
-                updater.addResources(storeClient.updatableResources());
-                updater.watch(storeClient.pollIntervalMinutes());
+                neo4jStore = new Neo4jStore(storeInfo.getInstanceName());
+                Neo4jStoreUpdater updater = new Neo4jStoreUpdater(neo4jStore, storeInfo.getTestUrl());
+                updater.setIncrementalUpdate(storeInfo.doIncrementalUpdates());
+                updater.setLastModifiedProvider(storeInfo.getLastModifiedProvider());
+                updater.setResourceProvider(storeInfo.getResourceProvider());
+
+                if(clearStore){
+                    neo4jStore.stopStoreEngine();
+                    neo4jStore.clear();
+                    neo4jStore.initStoreEngine();
+                }
+                // updater is prepared, start watching
+                if(dontWatch){
+                    lastStoreUpdater = updater;
+                } else {
+                    updater.watch(storeInfo.pollIntervalMinutes());
+                }
+
             } catch (Exception e1) {
                 throw new RuntimeException("Creation of Neo4jStore failed",  e1);
             }
-            storemap.put(storeClient.getClass(), neo4jStore);
+            storemap.put(storeInfo.getClass(), neo4jStore);
         }
-        return storemap.get(storeClient.getClass());
+        return storemap.get(storeInfo.getClass());
     }
 
 }

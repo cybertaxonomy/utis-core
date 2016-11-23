@@ -115,6 +115,19 @@ public class BgbmEditChecklistTest extends Assert {
     }
 
     @Test
+    public void scientificNameLikeTest() throws DRFChecklistException, TnrMsgException {
+
+        TnrMsg tnrMsg = TnrMsgUtils.createRequest(SearchMode.scientificNameLike, "Crepi", true, true);
+        client.queryChecklist(tnrMsg);
+
+        String outputXML = TnrMsgUtils.convertTnrMsgToXML(tnrMsg);
+        System.out.println(outputXML);
+
+        int resultSize = tnrMsg.getQuery().get(0).getResponse().size();
+        assertTrue("result set site only " + resultSize, resultSize > 450); // the actual result set size is 499 at the time being
+    }
+
+    @Test
     public void higherClassificationTest() throws DRFChecklistException, TnrMsgException {
 
         TnrMsg tnrMsg = TnrMsgUtils.createRequest(ClassificationAction.higherClassification, "urn:lsid:catalogueoflife.org:taxon:88fca8c1-bfda-11e4-811c-020044200006:col20150401", false, false);

@@ -20,10 +20,14 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 import org.cybertaxonomy.utis.checklist.SearchMode;
@@ -87,6 +91,60 @@ public class RestClient implements IQueryClient{
                 /* IGNORE */
             }
         }
+    }
+
+    /**
+     * Sends a GET request to the REST service specified by the <code>uri</code>
+     * parameter and returns the response body as <code>String</code>
+     *
+     * @param uri
+     *            the REST service uri to send a GET request to
+     * @param nameValuePairs
+     * @return the response body
+     * @throws DRFChecklistException
+     */
+    public String post(URI uri, List<? extends NameValuePair> nameValuePairs) throws DRFChecklistException {
+        CloseableHttpClient client = HttpClientBuilder.create().build();
+        HttpPost request = new HttpPost(uri);
+
+        try {
+
+            request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+            logger.debug(">> Request URI: " + request.getRequestLine().getUri());
+            logger.debug("      ~   Body: " + request.getEntity().toString());
+            HttpResponse response = client.execute(request);
+
+            String responseBody = EntityUtils.toString(response.getEntity(),Charset.forName("UTF-8"));
+            logger.debug("<< Response: " + response.getStatusLine());
+            logger.trace(responseBody);
+            logger.trace("==============");
+
+            return responseBody;
+
+        } catch (IOException e) {
+            throw new DRFChecklistException("Error on http get request for " + uri, e);
+        } finally {
+            try {
+                client.close();
+            } catch (Exception e) {
+                /* IGNORE */
+            }
+        }
+    }
+
+    /**
+     * @param uri
+     * @param key
+     * @param values
+     * @return
+     * @throws DRFChecklistException
+     */
+    public String post(URI uri, String key, List<String> values) throws DRFChecklistException {
+        List<BasicNameValuePair> pairs = new ArrayList<BasicNameValuePair>(values.size());
+        for(String item : values) {
+            pairs.add(new BasicNameValuePair(key, item));
+        }
+        return post(uri, pairs);
     }
 
     /**
@@ -154,11 +212,13 @@ public class RestClient implements IQueryClient{
                     paramMap);
 
         URI uri = null;
-        Iterator<String> itrQuery = queryList.iterator();
-        while(itrQuery.hasNext()) {
-            builder.addQuery(itrQuery.next());
-        }
+        if(queryList != null) {
+            Iterator<String> itrQuery = queryList.iterator();
+            while(itrQuery.hasNext()) {
+                builder.addQuery(itrQuery.next());
+            }
 
+        }
         try {
             uri = builder.build();
         } catch (URISyntaxException e) {

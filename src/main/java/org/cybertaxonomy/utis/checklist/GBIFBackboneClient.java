@@ -5,8 +5,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
@@ -39,7 +41,11 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
     public static final String DATA_AGR_URL = "http://data.gbif.org/tutorial/datauseagreement";
     private static final String MAX_PAGING_LIMIT = "1000";
     private static final String VERSION = "v1";
-    public static final ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,ServiceProviderInfo.DEFAULT_SEARCH_MODE,URL,DATA_AGR_URL, VERSION);
+    private static long lastChecklistInfoUpdate = 0;
+    private static final int checklistInfoUpdateInterval = 1000 * 60 * 60 * 24; // update once a day
+
+    private static ServiceProviderInfo CINFO = new ServiceProviderInfo(ID,LABEL,ServiceProviderInfo.DEFAULT_SEARCH_MODE,URL,DATA_AGR_URL, VERSION);
+
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(SearchMode.scientificNameExact);
 
@@ -72,52 +78,59 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {
-        ServiceProviderInfo checklistInfo = CINFO;
-        int offset = 0;
 
-        URIBuilder uriBuilder = new URIBuilder();
-        uriBuilder.setScheme("http");
-        uriBuilder.setHost(HTTP_HOST.getHostName());
-        uriBuilder.setPath("/" + checklistInfo.getVersion() + "/dataset/search");
-        uriBuilder.setParameter("type", "CHECKLIST");
-        uriBuilder.setParameter("limit", MAX_PAGING_LIMIT);
-        uriBuilder.setParameter("offset", "0");
-        URI uri;
-        boolean endOfRecords = false;
-        try {
-            do {
-                uriBuilder.setParameter("offset", Integer.toString(offset));
-                uri = uriBuilder.build();
-                logger.debug("building Checklist Map");
-                String responseBody = queryClient.get(uri);
+        if(CINFO == null || lastChecklistInfoUpdate + checklistInfoUpdateInterval < System.currentTimeMillis()){
 
-                JSONObject jsonResponse = JSONUtils.parseJsonToObject(responseBody);
-                JSONArray results = (JSONArray) jsonResponse.get("results");
-                Iterator<JSONObject> itrResults = results.iterator();
-                while(itrResults.hasNext()) {
-                    JSONObject result = itrResults.next();
-                    String key = (String)result.get("key");
-                    String title = (String)result.get("title");
+            ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,ServiceProviderInfo.DEFAULT_SEARCH_MODE,URL,DATA_AGR_URL, VERSION);
+            Set<String> subListKeySet = new HashSet<>();
 
-                    String url =  "http://uat.gbif.org/dataset/" + key;
-                    checklistInfo.addSubChecklist(new ServiceProviderInfo(key, title,  url, DATA_AGR_URL, getSearchModes()));
-                }
+            URIBuilder uriBuilder = new URIBuilder();
+            uriBuilder.setScheme("http");
+            uriBuilder.setHost(HTTP_HOST.getHostName());
+            uriBuilder.setPath("/" + checklistInfo.getVersion() + "/dataset/search");
+            uriBuilder.setParameter("type", "CHECKLIST");
+            uriBuilder.setParameter("limit", MAX_PAGING_LIMIT);
+            int offset = 0;
+            URI uri;
+            boolean endOfRecords = false;
+            try {
+                do {
+                    uriBuilder.setParameter("offset", Integer.toString(offset));
+                    uri = uriBuilder.build();
+                    logger.debug("building Checklist Map");
+                    String responseBody = queryClient.get(uri);
 
-                endOfRecords = (Boolean) jsonResponse.get("endOfRecords");
+                    JSONObject jsonResponse = JSONUtils.parseJsonToObject(responseBody);
+                    JSONArray results = (JSONArray) jsonResponse.get("results");
+                    Iterator<JSONObject> itrResults = results.iterator();
+                    while(itrResults.hasNext()) {
+                        JSONObject result = itrResults.next();
+                        String key = (String)result.get("key");
+                        if(subListKeySet.add(key)){
+                            String title = (String)result.get("title");
+                            String url =  "http://uat.gbif.org/dataset/" + key;
+                            checklistInfo.addSubChecklist(new ServiceProviderInfo(key, title,  url, DATA_AGR_URL, getSearchModes()));
+                        }
+                    }
 
-                offset = offset + Integer.parseInt(MAX_PAGING_LIMIT);
-            } while(!endOfRecords);
-        } catch (URISyntaxException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            // FIXME : We should process the exceptions and if we can't do nothing with them pass to the next level
-        } catch (DRFChecklistException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            // FIXME : We should process the exceptions and if we can't do nothing with them pass to the next level
+                    endOfRecords = (Boolean) jsonResponse.get("endOfRecords");
+
+                    offset = offset + Integer.parseInt(MAX_PAGING_LIMIT);
+                } while(!endOfRecords);
+            } catch (URISyntaxException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                // FIXME : We should process the exceptions and if we can't do nothing with them pass to the next level
+            } catch (DRFChecklistException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                // FIXME : We should process the exceptions and if we can't do nothing with them pass to the next level
+            }
+            CINFO = checklistInfo;
+            lastChecklistInfoUpdate = System.currentTimeMillis();
         }
 
-        return checklistInfo;
+        return CINFO;
     }
 
 

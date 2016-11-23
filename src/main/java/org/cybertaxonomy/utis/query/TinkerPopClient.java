@@ -13,7 +13,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 
-import org.cybertaxonomy.utis.checklist.EUNIS_Client.RdfSchema;
+import org.cybertaxonomy.utis.checklist.IRdfSchema;
 import org.cybertaxonomy.utis.store.Neo4jStore;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.index.AutoIndexer;
@@ -93,7 +93,7 @@ public class TinkerPopClient implements IQueryClient {
      * @param localName
      * @return
      */
-    public Vertex relatedVertex(Vertex v, RdfSchema nameSpace, String localName) {
+    public Vertex relatedVertex(Vertex v, IRdfSchema nameSpace, String localName) {
         Vertex relatedV = null;
         try {
             relatedV = v.getEdges(Direction.OUT, nameSpace.property(localName)).iterator().next().getVertex(Direction.IN);
@@ -117,7 +117,7 @@ public class TinkerPopClient implements IQueryClient {
      * @param localName
      * @return
      */
-    public String relatedVertexValue(GremlinPipeline<Graph, Vertex> pipe, RdfSchema nameSpace, String localName) {
+    public String relatedVertexValue(GremlinPipeline<Graph, Vertex> pipe, IRdfSchema nameSpace, String localName) {
         String txt = null;
         String edgeLabel = nameSpace.property(localName);
         try {
@@ -150,7 +150,7 @@ public class TinkerPopClient implements IQueryClient {
      * @param localName
      * @return
      */
-    public String relatedVertexValue(Vertex v, RdfSchema nameSpace, String localName) {
+    public String relatedVertexValue(Vertex v, IRdfSchema nameSpace, String localName) {
         String txt = null;
         String edgeLabel = nameSpace.property(localName);
         try {
@@ -175,7 +175,7 @@ public class TinkerPopClient implements IQueryClient {
      * @param localName
      * @return
      */
-    public URI vertexURI(Vertex v, RdfSchema nameSpace, String localName) {
+    public URI vertexURI(Vertex v, IRdfSchema nameSpace, String localName) {
         URI uri = null;
         try {
             if (v.getProperty(GraphSail.KIND).equals(GraphSail.URI)) {
@@ -225,4 +225,10 @@ public class TinkerPopClient implements IQueryClient {
         System.err.println("We found " + i + " results");
         System.err.flush();
     }
+
+    public String sizeInfo() {
+        return graphStore.sizeInfo();
+    }
+
+
 }

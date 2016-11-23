@@ -1,4 +1,3 @@
-// $Id$
 /**
 * Copyright (C) 2015 EDIT
 * European Distributed Institute of Taxonomy
@@ -39,23 +38,16 @@ public class Neo4jStore extends Store{
     private Neo4j2Graph graph;
     private Sail sail;
     private SailRepository sailRepo;
-    private final static String DEFAULT_STORE_NAME = "neo4j";
-    private String storeName = DEFAULT_STORE_NAME;
+    private final static String STORE_TYPE = "neo4j";
 
-    private Date lastModified = null;
+    // January 1, 1970, 00:00:00 GMT as starting time
+    private Date lastModified = new Date(0);
+    // private Date lastModified = new GregorianCalendar(2016, 10, 10).getTime(); // new Date(0);
 
 
-    /**
-     * @throws Exception
-     */
-    public Neo4jStore() throws Exception {
-        super();
-        this.storeName = "neo4j";
-    }
 
     public Neo4jStore(String storeName) throws Exception {
-        super();
-        this.storeName = storeName;
+        super(storeName);
     }
 
 
@@ -122,27 +114,28 @@ public class Neo4jStore extends Store{
         File luceneFolder = new File(storeLocation, "index" + File.separator + "lucene");
         File indexFolder = new File(luceneFolder, nodeAutoIndexName);
         int cnt = 0;
+        IndexReader reader = null;
         try {
-            IndexReader reader = IndexReader.open(FSDirectory.open(indexFolder));
+            reader = IndexReader.open(FSDirectory.open(indexFolder));
             cnt = reader.numDocs();
         } catch (CorruptIndexException e) {
             logger.warn("CorruptIndexException", e);
         } catch (IOException e) {
             logger.warn("Lucene index can not be read, this is ok as long there store location is empty. Original error: " + e.getMessage());
+        } finally {
+            if(reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    /* IGNORE */
+                }
+            }
         }
         return cnt;
     }
 
     public String sizeInfo() {
         return countEdges() + " edges, " + countVertexes() + " vertexes";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String storeName() {
-        return storeName != null ? storeName : DEFAULT_STORE_NAME;
     }
 
     public Graph graph() {
@@ -193,7 +186,9 @@ public class Neo4jStore extends Store{
         // getLastModified() reads the date from the file
         this.lastModified = getLastModified();
         // test if file has been written correctly
-        assert this.lastModified.equals(lastModified);
+        if(lastModified.compareTo(lastModified) != 0){
+            logger.error("Sote timestamps differ - please check!");
+        }
         logger.info(DateUtil.formatDate(lastModified) + " written to " + lastModifiedFile.getAbsolutePath());
     }
 
@@ -206,6 +201,23 @@ public class Neo4jStore extends Store{
 
     private File updateLogFile() {
         return new File(storeLocation, "UPDATE.log");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String storeType() {
+        return STORE_TYPE;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String dataFileExtension() {
+        return "rdf";
     }
 
 
