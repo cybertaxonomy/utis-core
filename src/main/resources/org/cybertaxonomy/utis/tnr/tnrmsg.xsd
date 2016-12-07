@@ -45,7 +45,7 @@
       <xsd:element name="scientificName">
         <xsd:annotation>
           <xsd:appinfo>
-            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty("The full scientific name, with authorship, publication date information and potentially further taxonomic information.")
+            <annox:annotate target="getter">@io.swagger.annotations.ApiModelProperty("The full scientific name, with authorship, publication date information and potentially further taxonomic information.")
             </annox:annotate>
           </xsd:appinfo>
         </xsd:annotation>
@@ -56,7 +56,7 @@
       <xsd:element name="canonicalName" minOccurs="1">
         <xsd:annotation>
           <xsd:appinfo>
-            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty("Canonical name string consisting of only nomenclatural information, i.e. no authorship or taxonomic hierarchy information with the exception of the necessary placements within Genus or Species.")
+            <annox:annotate target="getter">@io.swagger.annotations.ApiModelProperty("Canonical name string consisting of only nomenclatural information, i.e. no authorship or taxonomic hierarchy information with the exception of the necessary placements within Genus or Species.")
             </annox:annotate>
           </xsd:appinfo>
         </xsd:annotation>
@@ -81,7 +81,7 @@
         <xsd:annotation>
           <xsd:appinfo>
             <annox:annotate target="getter">
-                @com.wordnik.swagger.annotations.ApiModelProperty("A reference for the publication in which the scientificName was originally established under the rules of the associated nomenclaturalCode.")
+                @io.swagger.annotations.ApiModelProperty("A reference for the publication in which the scientificName was originally established under the rules of the associated nomenclaturalCode.")
             </annox:annotate>
           </xsd:appinfo>
         </xsd:annotation>
@@ -113,7 +113,7 @@
       <xsd:element name="title" type="xsd:string">
         <xsd:annotation>
           <xsd:appinfo>
-            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty("The full not atomized source string.")
+            <annox:annotate target="getter">@io.swagger.annotations.ApiModelProperty("The full not atomized source string.")
             </annox:annotate>
           </xsd:appinfo>
         </xsd:annotation>
@@ -147,7 +147,7 @@
           <xsd:annotation>
             <xsd:appinfo>
               <annox:annotate target="getter">
-                @com.wordnik.swagger.annotations.ApiModelProperty("The accepted taxon")
+                @io.swagger.annotations.ApiModelProperty("The accepted taxon")
               </annox:annotate>
             </xsd:appinfo>
           </xsd:annotation>
@@ -162,7 +162,7 @@
               <xsd:element name="url" type="xsd:anyURI">
               <xsd:annotation>
                   <xsd:appinfo>
-                    <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The URL pointing to the original name record of the checklist provider.")
+                    <annox:annotate target="getter">@io.swagger.annotations.ApiModelProperty( "The URL pointing to the original name record of the checklist provider.")
                     </annox:annotate>
                   </xsd:appinfo>
                 </xsd:annotation>
@@ -180,7 +180,7 @@
                 @com.fasterxml.jackson.annotation.JsonProperty("synonyms")
               </annox:annotate>
               <annox:annotate target="getter">
-                @com.wordnik.swagger.annotations.ApiModelProperty( "The list synonyms related to the accepted taxon")
+                @io.swagger.annotations.ApiModelProperty( "The list synonyms related to the accepted taxon")
               </annox:annotate>
             </xsd:appinfo>
           </xsd:annotation>
@@ -188,7 +188,7 @@
         <xsd:element name="vernacularNames" type="xsd:string" maxOccurs="unbounded" minOccurs="0">
         <xsd:annotation>
             <xsd:appinfo>
-              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "A common or vernacular name.")
+              <annox:annotate target="getter">@io.swagger.annotations.ApiModelProperty( "A common or vernacular name.")
               </annox:annotate>
             </xsd:appinfo>
           </xsd:annotation>
@@ -210,7 +210,7 @@
       <xsd:attribute name="matchingNameString" type="xsd:string">
         <xsd:annotation>
             <xsd:appinfo>
-              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "Refers to the name string of the accepted taxon, synonym or otherName which was matching the query string")
+              <annox:annotate target="getter">@io.swagger.annotations.ApiModelProperty( "Refers to the name string of the accepted taxon, synonym or otherName which was matching the query string")
               </annox:annotate>
             </xsd:appinfo>
           </xsd:annotation>
@@ -218,7 +218,7 @@
       <xsd:attribute name="matchingNameType" type="tns:nameType">
                 <xsd:annotation>
             <xsd:appinfo>
-              <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "Reports which of the names was matching the query string:  'taxon', 'synonym', 'vernacularName', or 'otherName'")
+              <annox:annotate target="getter">@io.swagger.annotations.ApiModelProperty( "Reports which of the names was matching the query string:  'taxon', 'synonym', 'vernacularName', or 'otherName'")
               </annox:annotate>
             </xsd:appinfo>
           </xsd:annotation>
@@ -269,7 +269,7 @@
               <xsd:annotation>
                   <xsd:appinfo>
                     <annox:annotate target="getter">
-                      @com.wordnik.swagger.annotations.ApiModelProperty("The query string to match a scientific name, vernacular name or identifier depending on the searchMode")
+                      @io.swagger.annotations.ApiModelProperty("The query string to match a scientific name, vernacular name or identifier depending on the searchMode")
                     </annox:annotate>
                   </xsd:appinfo>
                 </xsd:annotation>
@@ -278,7 +278,7 @@
               <xsd:annotation>
                   <xsd:appinfo>
                     <annox:annotate target="getter">
-                      @com.wordnik.swagger.annotations.ApiModelProperty("Specified the search mode to be used. Possible search modes are: scientificNameExact, scientificNameLike (begins with), vernacularNameExact, vernacularNameLike (contains), findByIdentifier, taxonomicChildren.")
+                      @io.swagger.annotations.ApiModelProperty("Specified the search mode to be used. Possible search modes are: scientificNameExact, scientificNameLike (begins with), vernacularNameExact, vernacularNameLike (contains), findByIdentifier, taxonomicChildren.")
                     </annox:annotate>
                   </xsd:appinfo>
                 </xsd:annotation>
@@ -287,7 +287,7 @@
               <xsd:annotation>
                   <xsd:appinfo>
                     <annox:annotate target="getter">
-                      @com.wordnik.swagger.annotations.ApiModelProperty("Indicates whether the synonymy of the accepted taxon should be included into the response. Turning this option on may lead to an increased response time.")
+                      @io.swagger.annotations.ApiModelProperty("Indicates whether the synonymy of the accepted taxon should be included into the response. Turning this option on may lead to an increased response time.")
                     </annox:annotate>
                   </xsd:appinfo>
                 </xsd:annotation>
@@ -296,7 +296,7 @@
               <xsd:annotation>
                   <xsd:appinfo>
                     <annox:annotate target="getter">
-                      @com.wordnik.swagger.annotations.ApiModelProperty("Indicates whether the direct higher taxon of the accepted taxon should be included into the response. Turning this option on may lead to an slight increase of the response time.")
+                      @io.swagger.annotations.ApiModelProperty("Indicates whether the direct higher taxon of the accepted taxon should be included into the response. Turning this option on may lead to an slight increase of the response time.")
                     </annox:annotate>
                   </xsd:appinfo>
                 </xsd:annotation>
@@ -317,7 +317,7 @@
                 <xsd:annotation>
                   <xsd:appinfo>
                     <annox:annotate target="getter">
-                      @com.wordnik.swagger.annotations.ApiModelProperty("Duration of the request processing in the specific checklist client in milliseconds.")
+                      @io.swagger.annotations.ApiModelProperty("Duration of the request processing in the specific checklist client in milliseconds.")
                     </annox:annotate>
                   </xsd:appinfo>
                 </xsd:annotation>
@@ -326,7 +326,7 @@
                 <xsd:annotation>
                   <xsd:appinfo>
                     <annox:annotate target="getter">
-                      @com.wordnik.swagger.annotations.ApiModelProperty( "Status of the request, possible values are 'ok', 'timeout', 'interrupted', 'unsupported search mode'.")
+                      @io.swagger.annotations.ApiModelProperty( "Status of the request, possible values are 'ok', 'timeout', 'interrupted', 'unsupported search mode'.")
                     </annox:annotate>
                   </xsd:appinfo>
                 </xsd:annotation>
@@ -354,7 +354,7 @@
       <xsd:element name="accordingTo" minOccurs="0">
         <xsd:annotation>
           <xsd:appinfo>
-            <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The reference to the source in which the specific taxon concept circumscription is defined or implied - traditionally signified by the Latin 'sensu' or 'sec.' (from secundum, meaning 'according to').")
+            <annox:annotate target="getter">@io.swagger.annotations.ApiModelProperty( "The reference to the source in which the specific taxon concept circumscription is defined or implied - traditionally signified by the Latin 'sensu' or 'sec.' (from secundum, meaning 'according to').")
             </annox:annotate>
           </xsd:appinfo>
         </xsd:annotation>
@@ -365,7 +365,7 @@
       <xsd:element name="url" type="xsd:anyURI">
         <xsd:annotation>
               <xsd:appinfo>
-                <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The URL pointing to the original record of the checklist provider.")
+                <annox:annotate target="getter">@io.swagger.annotations.ApiModelProperty( "The URL pointing to the original record of the checklist provider.")
                 </annox:annotate>
               </xsd:appinfo>
             </xsd:annotation>
@@ -373,7 +373,7 @@
       <xsd:element minOccurs="0" name="taxonomicStatus">
           <xsd:annotation>
               <xsd:appinfo>
-                <annox:annotate target="getter">@com.wordnik.swagger.annotations.ApiModelProperty( "The taxonomic status string like 'invalid', 'misapplied', 'homotypic synonym', 'accepted', 'synonym'. Corresponds to http://rs.tdwg.org/dwc/terms/taxonomicStatus")
+                <annox:annotate target="getter">@io.swagger.annotations.ApiModelProperty( "The taxonomic status string like 'invalid', 'misapplied', 'homotypic synonym', 'accepted', 'synonym'. Corresponds to http://rs.tdwg.org/dwc/terms/taxonomicStatus")
                 </annox:annotate>
               </xsd:appinfo>
           </xsd:annotation>
