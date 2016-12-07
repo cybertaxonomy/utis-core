@@ -4,7 +4,7 @@
   <groupId>org.cybertaxonomy</groupId>
   <artifactId>utis-core</artifactId>
   <packaging>jar</packaging>
-  <version>1.2.1</version>
+  <version>1.2.2</version>
   <name>UTIS-Core</name>
   <description>Unified Taxonomic Information Service core libraries</description>
   <url>http://maven.apache.org</url>
@@ -29,7 +29,7 @@
   </repositories>
 
   <properties>
-    <swagger-annotations.version>1.3.11</swagger-annotations.version>
+    <swagger-annotations.version>1.5.10</swagger-annotations.version>
     <jackson-annotations.version>2.2.3</jackson-annotations.version>
     <!--  
         NOTE: there is a tinkerpop version (2.7.1) 
@@ -65,7 +65,7 @@
       <version>${jackson-annotations.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.wordnik</groupId>
+      <groupId>io.swagger</groupId>
       <artifactId>swagger-annotations</artifactId>
       <version>${swagger-annotations.version}</version>
     </dependency>
@@ -340,7 +340,7 @@
             <version>${jackson-annotations.version}</version>
           </dependency>
           <dependency>
-              <groupId>com.wordnik</groupId>
+              <groupId>io.swagger</groupId>
               <artifactId>swagger-annotations</artifactId>
               <version>${swagger-annotations.version}</version>
           </dependency>
