@@ -12,7 +12,7 @@ import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 import org.cybertaxonomy.utis.checklist.SearchMode;
 import org.cybertaxonomy.utis.checklist.UtisAction;
 
-import com.wordnik.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiModelProperty;
 
 public class ServiceProviderInfo {
 
