@@ -42,8 +42,14 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
     public static final String LABEL = "Name catalogues served by the BGBM CDM Server";
     public static final String DOC_URL = "http://cybertaxonomy.eu/cdmlib/rest-api-name-catalogue.html";
     public static final String COPYRIGHT_URL = "http://cybertaxonomy.eu/cdmlib/license.html";
-    private static final String SERVER_PATH_PREFIX = "/";
-    private static final HttpHost HTTP_HOST = new HttpHost("api.cybertaxonomy.org", 80); // new HttpHost("test.e-taxonomy.eu", 80);
+
+    // edit-production
+    // private static final String SERVER_PATH_PREFIX = "/";
+    // private static final HttpHost HTTP_HOST = new HttpHost("api.cybertaxonomy.org", 80);
+
+    // edit-test
+    private static final String SERVER_PATH_PREFIX = "/cdmserver";
+    private static final HttpHost HTTP_HOST = new HttpHost("test.e-taxonomy.eu", 80);
 
 
     private final Map<String,Query> taxonIdQueryMap = new HashMap<String,Query>();
@@ -96,7 +102,9 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
     @Override
     public ServiceProviderInfo buildServiceProviderInfo() {
+
         ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,DOC_URL,COPYRIGHT_URL, getSearchModes());
+
         ServiceProviderInfo col = new ServiceProviderInfo("col",
                 "Catalogue Of Life (EDIT - name catalogue end point)",
                 "http://cybertaxonomy.eu/cdmlib/rest-api-name-catalogue.html",
@@ -105,6 +113,16 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         col.getSupportedActions().addAll(SEARCH_MODES);
         col.getSupportedActions().addAll(CLASSIFICATION_ACTION);
         checklistInfo.addSubChecklist(col);
+
+        ServiceProviderInfo euromed = new ServiceProviderInfo("euromed",
+                "Euro+Med",
+                "http://cybertaxonomy.eu/cdmlib/rest-api-name-catalogue.html",
+                "© Botanic Garden and Botanical Museum Berlin-Dahlem 2006", ServiceProviderInfo.DEFAULT_SEARCH_MODE);
+        euromed.setDefaultClassificationId("314a68f9-8449-495a-91c2-92fde8bcf344");
+        euromed.getSupportedActions().addAll(SEARCH_MODES);
+        euromed.getSupportedActions().addAll(CLASSIFICATION_ACTION);
+        checklistInfo.addSubChecklist(euromed);
+
         return checklistInfo;
     }
 
