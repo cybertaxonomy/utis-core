@@ -44,12 +44,18 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
     public static final String COPYRIGHT_URL = "http://cybertaxonomy.eu/cdmlib/license.html";
 
     // edit-production
-    // private static final String SERVER_PATH_PREFIX = "/";
-    // private static final HttpHost HTTP_HOST = new HttpHost("api.cybertaxonomy.org", 80);
+    //private static final String SERVER_PATH_PREFIX = "/";
+    //private static final HttpHost HTTP_HOST = new HttpHost("api.cybertaxonomy.org", 80);
 
     // edit-test
-    private static final String SERVER_PATH_PREFIX = "/cdmserver";
-    private static final HttpHost HTTP_HOST = new HttpHost("test.e-taxonomy.eu", 80);
+    //private static final String SERVER_PATH_PREFIX = "/cdmserver/";
+    //private static final HttpHost HTTP_HOST = new HttpHost("test.e-taxonomy.eu", 80);
+
+    // localhost
+    private static final String SERVER_PATH_PREFIX = "/";
+    private static final HttpHost HTTP_HOST = new HttpHost("localhost", 8080);
+
+
 
 
     private final Map<String,Query> taxonIdQueryMap = new HashMap<String,Query>();
