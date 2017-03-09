@@ -119,6 +119,10 @@ public class RestClient implements IQueryClient{
             logger.trace(responseBody);
             logger.trace("==============");
 
+            if(response.getStatusLine().getStatusCode() > 400){
+                throw new IOException(response.getStatusLine().toString() + "\n" + responseBody);
+            }
+
             return responseBody;
 
         } catch (IOException e) {
