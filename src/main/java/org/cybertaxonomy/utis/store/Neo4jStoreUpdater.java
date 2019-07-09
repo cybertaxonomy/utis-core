@@ -153,6 +153,11 @@ public class Neo4jStoreUpdater {
                 };
                 updateThread.setName(Neo4jStoreUpdater.class.getSimpleName());
                 updateThread.start();
+            } else {
+                logger.info("**********************************************");
+                logger.info(" store updating disabled by system sproperty");
+
+                logger.info("**********************************************");
             }
         }
     }
