@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Neo4jStoreUpdater {
 
-    private static final String SKIP_STORE_UPDATING = "SkipStoreUpdating";
+    private static final String SKIP_STORE_UPDATING = "skipStoreUpdating";
 
     protected Logger logger = LoggerFactory.getLogger(Neo4jStoreUpdater.class);
 
