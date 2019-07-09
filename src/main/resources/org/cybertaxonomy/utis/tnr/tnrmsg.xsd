@@ -301,6 +301,24 @@
                   </xsd:appinfo>
                 </xsd:annotation>
               </xsd:element>
+              <xsd:element name="pageSize" type="xsd:integer">
+              <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">
+                      @io.swagger.annotations.ApiModelProperty("The size of the result page returned by each of the check lists. This only affects the search mode scientificNameLike and vernacularNameLike other search modes are expected to return only one record per check lists.")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+              <xsd:element name="pageIndex" type="xsd:integer">
+              <xsd:annotation>
+                  <xsd:appinfo>
+                    <annox:annotate target="getter">
+                      @io.swagger.annotations.ApiModelProperty("The 0-based index of the result page returned by each of the check lists. This only affects the search mode scientificNameLike and vernacularNameLike other search modes are expected to return only one record per check lists.")
+                    </annox:annotate>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
             </xsd:sequence>
           </xsd:complexType>
         </xsd:element>

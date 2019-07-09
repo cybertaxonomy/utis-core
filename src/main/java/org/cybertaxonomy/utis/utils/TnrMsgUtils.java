@@ -3,6 +3,7 @@ package org.cybertaxonomy.utis.utils;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -149,7 +150,7 @@ public class TnrMsgUtils {
             return finalTnrMsgList;
         }
 
-        public static TnrMsg convertStringToTnrMsg(String name, UtisAction action, boolean addSynonymy, boolean addParentTaxon) {
+        public static TnrMsg convertStringToTnrMsg(String name, UtisAction action, boolean addSynonymy, boolean addParentTaxon, Integer pageIndex, Integer pageSize) {
             TnrMsg tnrMsg = new TnrMsg();
             Query query = new Query();
             Request request = new Request();
@@ -158,6 +159,12 @@ public class TnrMsgUtils {
             request.setSearchMode(action.toString());
             request.setAddSynonymy(addSynonymy);
             request.setAddParentTaxon(addParentTaxon);
+            if(pageIndex != null){
+                request.setPageIndex(BigInteger.valueOf(pageIndex));
+            }
+            if(pageSize != null){
+                request.setPageSize(BigInteger.valueOf(pageSize));
+            }
             query.setRequest(request);
             tnrMsg.getQuery().add(query);
 
@@ -168,7 +175,7 @@ public class TnrMsgUtils {
             List<TnrMsg> tnrMsgList = new ArrayList<TnrMsg>();
             Iterator<String> itrStringMsg = names.iterator();
             while(itrStringMsg.hasNext()) {
-                TnrMsg tnrMsg = convertStringToTnrMsg(itrStringMsg.next(), searchMode, addSynonymy, addParentTaxon);
+                TnrMsg tnrMsg = convertStringToTnrMsg(itrStringMsg.next(), searchMode, addSynonymy, addParentTaxon, null, null);
                 tnrMsgList.add(tnrMsg);
             }
             return tnrMsgList;
