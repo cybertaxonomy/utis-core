@@ -325,7 +325,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
         PESINameServicePortType pesinspt = getPESINameService(pesins);
 
         try {
-            PESIRecord[] records = pesinspt.getPESIRecords(name, false);
+            int offset = 1;
+            PESIRecord[] records = pesinspt.getPESIRecords(name, false, offset);
             if(records != null){
                 for (PESIRecord record : records) {
                     Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest(), false);
@@ -349,7 +350,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
         PESINameServicePortType pesinspt = getPESINameService(pesins);
 
         try {
-            PESIRecord[] records = pesinspt.getPESIRecords(name, true);
+            int offset = 1;
+            PESIRecord[] records = pesinspt.getPESIRecords(name, true, offset);
             if(records != null){
                 for (PESIRecord record : records) {
                     Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest(), false);
@@ -373,7 +375,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
         PESINameServicePortType pesinspt = getPESINameService(pesins);
 
         try {
-            PESIRecord[] records = pesinspt.getPESIRecordsByVernacular(name);
+            int offset = 1;
+            PESIRecord[] records = pesinspt.getPESIRecordsByVernacular(name, offset);
             if(records != null){
                 for (PESIRecord record : records) {
                     Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest(), false);
@@ -397,7 +400,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
         PESINameServicePortType pesinspt = getPESINameService(pesins);
 
         try {
-            PESIRecord[] records = pesinspt.getPESIRecordsByVernacular("%" + name + "%");
+            int offset = 1;
+            PESIRecord[] records = pesinspt.getPESIRecordsByVernacular("%" + name + "%", offset);
             if(records != null){
                 for (PESIRecord record : records) {
                     Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest(), false);
@@ -498,7 +502,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
             }
 
             if(request.isAddSynonymy()) {
-                PESIRecord[] records = pesinspt.getPESISynonymsByGUID(taxonGUID);
+                int offset = 1;
+                PESIRecord[] records = pesinspt.getPESISynonymsByGUID(taxonGUID, offset);
                 if(records != null && records.length > 0) {
                     generateSynonyms(records,tnrResponse);
                 }

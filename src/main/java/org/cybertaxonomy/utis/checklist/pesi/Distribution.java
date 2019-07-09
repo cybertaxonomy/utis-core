@@ -14,7 +14,7 @@ public class Distribution  implements java.io.Serializable {
 
     private java.lang.String TDWG_level4;
 
-    private int MRGID;
+    private java.lang.String locationID;
 
     public Distribution() {
     }
@@ -23,11 +23,11 @@ public class Distribution  implements java.io.Serializable {
            java.lang.String locality,
            java.lang.String occurrenceStatus,
            java.lang.String TDWG_level4,
-           int MRGID) {
+           java.lang.String locationID) {
            this.locality = locality;
            this.occurrenceStatus = occurrenceStatus;
            this.TDWG_level4 = TDWG_level4;
-           this.MRGID = MRGID;
+           this.locationID = locationID;
     }
 
 
@@ -92,22 +92,22 @@ public class Distribution  implements java.io.Serializable {
 
 
     /**
-     * Gets the MRGID value for this Distribution.
+     * Gets the locationID value for this Distribution.
      * 
-     * @return MRGID
+     * @return locationID
      */
-    public int getMRGID() {
-        return MRGID;
+    public java.lang.String getLocationID() {
+        return locationID;
     }
 
 
     /**
-     * Sets the MRGID value for this Distribution.
+     * Sets the locationID value for this Distribution.
      * 
-     * @param MRGID
+     * @param locationID
      */
-    public void setMRGID(int MRGID) {
-        this.MRGID = MRGID;
+    public void setLocationID(java.lang.String locationID) {
+        this.locationID = locationID;
     }
 
     private java.lang.Object __equalsCalc = null;
@@ -131,7 +131,9 @@ public class Distribution  implements java.io.Serializable {
             ((this.TDWG_level4==null && other.getTDWG_level4()==null) || 
              (this.TDWG_level4!=null &&
               this.TDWG_level4.equals(other.getTDWG_level4()))) &&
-            this.MRGID == other.getMRGID();
+            ((this.locationID==null && other.getLocationID()==null) || 
+             (this.locationID!=null &&
+              this.locationID.equals(other.getLocationID())));
         __equalsCalc = null;
         return _equals;
     }
@@ -152,7 +154,9 @@ public class Distribution  implements java.io.Serializable {
         if (getTDWG_level4() != null) {
             _hashCode += getTDWG_level4().hashCode();
         }
-        _hashCode += getMRGID();
+        if (getLocationID() != null) {
+            _hashCode += getLocationID().hashCode();
+        }
         __hashCodeCalc = false;
         return _hashCode;
     }
@@ -182,9 +186,9 @@ public class Distribution  implements java.io.Serializable {
         elemField.setNillable(false);
         typeDesc.addFieldDesc(elemField);
         elemField = new org.apache.axis.description.ElementDesc();
-        elemField.setFieldName("MRGID");
-        elemField.setXmlName(new javax.xml.namespace.QName("", "MRGID"));
-        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
+        elemField.setFieldName("locationID");
+        elemField.setXmlName(new javax.xml.namespace.QName("", "locationID"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
         elemField.setNillable(false);
         typeDesc.addFieldDesc(elemField);
     }

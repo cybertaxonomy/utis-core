@@ -22,9 +22,8 @@ public class PESINameServiceLocator extends org.apache.axis.client.Service imple
     }
 
     // Use to get a proxy class for PESINameServicePort
-    private java.lang.String PESINameServicePort_address = "http://www.eu-nomen.eu/portal/soap.php\\?wsdl/soap.php";
+    private java.lang.String PESINameServicePort_address = "http://www.eu-nomen.eu/portal/soap.php";
 
-    @Override
     public java.lang.String getPESINameServicePortAddress() {
         return PESINameServicePort_address;
     }
@@ -40,7 +39,6 @@ public class PESINameServiceLocator extends org.apache.axis.client.Service imple
         PESINameServicePortWSDDServiceName = name;
     }
 
-    @Override
     public org.cybertaxonomy.utis.checklist.pesi.PESINameServicePortType getPESINameServicePort() throws javax.xml.rpc.ServiceException {
        java.net.URL endpoint;
         try {
@@ -52,7 +50,6 @@ public class PESINameServiceLocator extends org.apache.axis.client.Service imple
         return getPESINameServicePort(endpoint);
     }
 
-    @Override
     public org.cybertaxonomy.utis.checklist.pesi.PESINameServicePortType getPESINameServicePort(java.net.URL portAddress) throws javax.xml.rpc.ServiceException {
         try {
             org.cybertaxonomy.utis.checklist.pesi.PESINameServiceBindingStub _stub = new org.cybertaxonomy.utis.checklist.pesi.PESINameServiceBindingStub(portAddress, this);
@@ -73,7 +70,6 @@ public class PESINameServiceLocator extends org.apache.axis.client.Service imple
      * If this service has no port for the given interface,
      * then ServiceException is thrown.
      */
-    @Override
     public java.rmi.Remote getPort(Class serviceEndpointInterface) throws javax.xml.rpc.ServiceException {
         try {
             if (org.cybertaxonomy.utis.checklist.pesi.PESINameServicePortType.class.isAssignableFrom(serviceEndpointInterface)) {
@@ -93,7 +89,6 @@ public class PESINameServiceLocator extends org.apache.axis.client.Service imple
      * If this service has no port for the given interface,
      * then ServiceException is thrown.
      */
-    @Override
     public java.rmi.Remote getPort(javax.xml.namespace.QName portName, Class serviceEndpointInterface) throws javax.xml.rpc.ServiceException {
         if (portName == null) {
             return getPort(serviceEndpointInterface);
@@ -109,14 +104,12 @@ public class PESINameServiceLocator extends org.apache.axis.client.Service imple
         }
     }
 
-    @Override
     public javax.xml.namespace.QName getServiceName() {
         return new javax.xml.namespace.QName("http://PESI/v0.5", "PESINameService");
     }
 
     private java.util.HashSet ports = null;
 
-    @Override
     public java.util.Iterator getPorts() {
         if (ports == null) {
             ports = new java.util.HashSet();
@@ -129,11 +122,11 @@ public class PESINameServiceLocator extends org.apache.axis.client.Service imple
     * Set the endpoint address for the specified port name.
     */
     public void setEndpointAddress(java.lang.String portName, java.lang.String address) throws javax.xml.rpc.ServiceException {
-
+        
 if ("PESINameServicePort".equals(portName)) {
             setPESINameServicePortEndpointAddress(address);
         }
-        else
+        else 
 { // Unknown Port Name
             throw new javax.xml.rpc.ServiceException(" Cannot set Endpoint Address for Unknown Port" + portName);
         }

@@ -41,6 +41,8 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
         oper.addParameter(param);
         param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("", "like"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("", "offset"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, false, false);
+        oper.addParameter(param);
         oper.setReturnType(new javax.xml.namespace.QName("http://PESI/v0.5", "PESIRecords"));
         oper.setReturnClass(org.cybertaxonomy.utis.checklist.pesi.PESIRecord[].class);
         oper.setReturnQName(new javax.xml.namespace.QName("", "return"));
@@ -74,6 +76,8 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
         oper.setName("getPESIRecordsByVernacular");
         param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("", "vernacular"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         oper.addParameter(param);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("", "offset"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, false, false);
+        oper.addParameter(param);
         oper.setReturnType(new javax.xml.namespace.QName("http://PESI/v0.5", "PESIRecords"));
         oper.setReturnClass(org.cybertaxonomy.utis.checklist.pesi.PESIRecord[].class);
         oper.setReturnQName(new javax.xml.namespace.QName("", "return"));
@@ -84,6 +88,8 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("getPESIVernacularsByGUID");
         param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("", "GUID"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        oper.addParameter(param);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("", "offset"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, false, false);
         oper.addParameter(param);
         oper.setReturnType(new javax.xml.namespace.QName("http://PESI/v0.5", "Vernaculars"));
         oper.setReturnClass(org.cybertaxonomy.utis.checklist.pesi.Vernacular[].class);
@@ -118,6 +124,8 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
         oper.setName("getPESISynonymsByGUID");
         param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("", "GUID"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         oper.addParameter(param);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("", "offset"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, false, false);
+        oper.addParameter(param);
         oper.setReturnType(new javax.xml.namespace.QName("http://PESI/v0.5", "PESIRecords"));
         oper.setReturnClass(org.cybertaxonomy.utis.checklist.pesi.PESIRecord[].class);
         oper.setReturnQName(new javax.xml.namespace.QName("", "return"));
@@ -128,6 +136,8 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("getPESIDistributionsByGUID");
         param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("", "GUID"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        oper.addParameter(param);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("", "offset"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, false, false);
         oper.addParameter(param);
         oper.setReturnType(new javax.xml.namespace.QName("http://PESI/v0.5", "Distributions"));
         oper.setReturnClass(org.cybertaxonomy.utis.checklist.pesi.Distribution[].class);
@@ -363,7 +373,7 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
 }
     }
 
-    public org.cybertaxonomy.utis.checklist.pesi.PESIRecord[] getPESIRecords(java.lang.String scientificname, boolean like) throws java.rmi.RemoteException {
+    public org.cybertaxonomy.utis.checklist.pesi.PESIRecord[] getPESIRecords(java.lang.String scientificname, boolean like, int offset) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
@@ -376,7 +386,7 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
 
         setRequestHeaders(_call);
         setAttachments(_call);
- try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {scientificname, new java.lang.Boolean(like)});
+ try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {scientificname, new java.lang.Boolean(like), new java.lang.Integer(offset)});
 
         if (_resp instanceof java.rmi.RemoteException) {
             throw (java.rmi.RemoteException)_resp;
@@ -456,7 +466,7 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
 }
     }
 
-    public org.cybertaxonomy.utis.checklist.pesi.PESIRecord[] getPESIRecordsByVernacular(java.lang.String vernacular) throws java.rmi.RemoteException {
+    public org.cybertaxonomy.utis.checklist.pesi.PESIRecord[] getPESIRecordsByVernacular(java.lang.String vernacular, int offset) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
@@ -469,7 +479,7 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
 
         setRequestHeaders(_call);
         setAttachments(_call);
- try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {vernacular});
+ try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {vernacular, new java.lang.Integer(offset)});
 
         if (_resp instanceof java.rmi.RemoteException) {
             throw (java.rmi.RemoteException)_resp;
@@ -487,7 +497,7 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
 }
     }
 
-    public org.cybertaxonomy.utis.checklist.pesi.Vernacular[] getPESIVernacularsByGUID(java.lang.String GUID) throws java.rmi.RemoteException {
+    public org.cybertaxonomy.utis.checklist.pesi.Vernacular[] getPESIVernacularsByGUID(java.lang.String GUID, int offset) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
@@ -500,7 +510,7 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
 
         setRequestHeaders(_call);
         setAttachments(_call);
- try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {GUID});
+ try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {GUID, new java.lang.Integer(offset)});
 
         if (_resp instanceof java.rmi.RemoteException) {
             throw (java.rmi.RemoteException)_resp;
@@ -580,7 +590,7 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
 }
     }
 
-    public org.cybertaxonomy.utis.checklist.pesi.PESIRecord[] getPESISynonymsByGUID(java.lang.String GUID) throws java.rmi.RemoteException {
+    public org.cybertaxonomy.utis.checklist.pesi.PESIRecord[] getPESISynonymsByGUID(java.lang.String GUID, int offset) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
@@ -593,7 +603,7 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
 
         setRequestHeaders(_call);
         setAttachments(_call);
- try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {GUID});
+ try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {GUID, new java.lang.Integer(offset)});
 
         if (_resp instanceof java.rmi.RemoteException) {
             throw (java.rmi.RemoteException)_resp;
@@ -611,7 +621,7 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
 }
     }
 
-    public org.cybertaxonomy.utis.checklist.pesi.Distribution[] getPESIDistributionsByGUID(java.lang.String GUID) throws java.rmi.RemoteException {
+    public org.cybertaxonomy.utis.checklist.pesi.Distribution[] getPESIDistributionsByGUID(java.lang.String GUID, int offset) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
@@ -624,7 +634,7 @@ public class PESINameServiceBindingStub extends org.apache.axis.client.Stub impl
 
         setRequestHeaders(_call);
         setAttachments(_call);
- try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {GUID});
+ try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {GUID, new java.lang.Integer(offset)});
 
         if (_resp instanceof java.rmi.RemoteException) {
             throw (java.rmi.RemoteException)_resp;
