@@ -94,10 +94,11 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
             URI uri;
             boolean endOfRecords = false;
             try {
+                logger.info("building Checklist Map from ...");
                 do {
                     uriBuilder.setParameter("offset", Integer.toString(offset));
                     uri = uriBuilder.build();
-                    logger.debug("building Checklist Map");
+                    logger.debug(" ... from "+ uri);
                     String responseBody = queryClient.get(uri);
 
                     JSONObject jsonResponse = JSONUtils.parseJsonToObject(responseBody);
@@ -117,6 +118,7 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
 
                     offset = offset + Integer.parseInt(MAX_PAGING_LIMIT);
                 } while(!endOfRecords);
+                logger.info("building Checklist Map DONE.");
             } catch (URISyntaxException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
