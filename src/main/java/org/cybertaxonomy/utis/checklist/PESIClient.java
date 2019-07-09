@@ -4,7 +4,9 @@ package org.cybertaxonomy.utis.checklist;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -141,7 +143,10 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
      * @return
      * @throws DRFChecklistException
      */
-    private PESINameServicePortType getPESINameService(PESINameServiceLocator pesins) throws DRFChecklistException {
+    private PESINameServicePortType getPESINameService() throws DRFChecklistException {
+
+        PESINameServiceLocator pesins = new PESINameServiceLocator();
+
         PESINameServicePortType pesinspt;
         try {
             pesinspt = pesins.getPESINameServicePort();
@@ -282,9 +287,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
          * 3. = Uri to the name in source = uri to the synonym
          */
         String secReference = null;
-        PESINameServiceLocator pesins = new PESINameServiceLocator();
         try {
-            PESINameServicePortType pesinspt = getPESINameService(pesins);
+            PESINameServicePortType pesinspt = getPESINameService();
 
             org.cybertaxonomy.utis.checklist.pesi.Source[] pesiSources = pesinspt.getPESISourcesByGUID(guid);
             if(logger.isDebugEnabled()) {
@@ -321,8 +325,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
         Query query = singleQueryFrom(tnrMsg);
         String name = query.getRequest().getQueryString();
 
-        PESINameServiceLocator pesins = new PESINameServiceLocator();
-        PESINameServicePortType pesinspt = getPESINameService(pesins);
+        PESINameServicePortType pesinspt = getPESINameService();
 
         try {
             int offset = 1;
@@ -343,26 +346,7 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
 
     @Override
     public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
-        Query query = singleQueryFrom(tnrMsg);
-        String name = query.getRequest().getQueryString();
-
-        PESINameServiceLocator pesins = new PESINameServiceLocator();
-        PESINameServicePortType pesinspt = getPESINameService(pesins);
-
-        try {
-            int offset = 1;
-            PESIRecord[] records = pesinspt.getPESIRecords(name, true, offset);
-            if(records != null){
-                for (PESIRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest(), false);
-                    query.getResponse().add(tnrResponse);
-                }
-            }
-        }  catch (RemoteException e) {
-            logger.error("Error in getPESIRecords method in PESINameService", e);
-            throw new DRFChecklistException("Error in getPESIRecords method in PESINameService");
-        }
-
+        resolveWithPager(tnrMsg, SearchMode.scientificNameLike);
     }
 
     @Override
@@ -370,9 +354,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
 
         Query query = singleQueryFrom(tnrMsg);
         String name = query.getRequest().getQueryString();
-        PESINameServiceLocator pesins = new PESINameServiceLocator();
 
-        PESINameServicePortType pesinspt = getPESINameService(pesins);
+        PESINameServicePortType pesinspt = getPESINameService();
 
         try {
             int offset = 1;
@@ -393,26 +376,67 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
     @Override
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
 
+        resolveWithPager(tnrMsg, SearchMode.vernacularNameLike);
+    }
+
+    /**
+     * @param tnrMsg
+     * @throws DRFChecklistException
+     */
+    private void resolveWithPager(TnrMsg tnrMsg, SearchMode searchMode) throws DRFChecklistException {
         Query query = singleQueryFrom(tnrMsg);
         String name = query.getRequest().getQueryString();
-        PESINameServiceLocator pesins = new PESINameServiceLocator();
 
-        PESINameServicePortType pesinspt = getPESINameService(pesins);
+        PESINameServicePortType aphianspt = getPESINameService();
+
+        Integer pageIndex = query.getRequest().getPageIndex().intValue();
+        Integer pageSize = query.getRequest().getPageSize().intValue();
+        boolean tryNextPage = true;
+        int offset = (pageIndex * pageSize) + 1;
 
         try {
-            int offset = 1;
-            PESIRecord[] records = pesinspt.getPESIRecordsByVernacular("%" + name + "%", offset);
-            if(records != null){
-                for (PESIRecord record : records) {
-                    Response tnrResponse = tnrResponseFromRecord(pesinspt, record, query.getRequest(), false);
-                    query.getResponse().add(tnrResponse);
+
+            // collect PESI records for the requested page
+            List<PESIRecord> recordsForPage = new ArrayList<>(pageSize);
+            PESIRecord[] records;
+            while (tryNextPage) {
+                switch(searchMode){
+                case scientificNameLike:
+                    records = aphianspt.getPESIRecords(name + "%", true, offset);
+                    break;
+                case vernacularNameLike:
+                    records = aphianspt.getPESIRecordsByVernacular(name, offset);
+                    break;
+                case findByIdentifier:
+                case scientificNameExact:
+                case vernacularNameExact:
+                default:
+                    throw new RuntimeException("Ivalid search mode used within this method");
+
+                }
+                if(records != null){
+                    logger.debug("page at offset " + offset + " has " + records.length + " records");
+                    for (PESIRecord record : records) {
+                        if(recordsForPage.size() < pageSize){
+                            recordsForPage.add(record);
+                        }
+                    }
+                    offset = offset + records.length;
+                    tryNextPage = recordsForPage.size() < pageSize;
+                }  else {
+                    tryNextPage = false;
                 }
             }
-        }  catch (RemoteException e) {
-            logger.error("Error in getPESIRecordsByVernacular method in PESINameService", e);
-            throw new DRFChecklistException("Error in getPESIRecordsByVernacular method in PESINameService");
-        }
 
+            // make response objects
+            for (PESIRecord record : recordsForPage) {
+                Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
+                query.getResponse().add(tnrResponse);
+            }
+        } catch (RemoteException e) {
+            logger.error("Error in getGUID method in AphiaNameSerice", e);
+            throw new DRFChecklistException("Error in getGUID method in AphiaNameSerice", e);
+        }
     }
 
     @Override
@@ -429,9 +453,8 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
     private void _findByIdentifier(TnrMsg tnrMsg, boolean addClassification) throws DRFChecklistException {
         Query query = singleQueryFrom(tnrMsg);
         String name = query.getRequest().getQueryString();
-        PESINameServiceLocator pesins = new PESINameServiceLocator();
 
-        PESINameServicePortType pesinspt = getPESINameService(pesins);
+        PESINameServicePortType pesinspt = getPESINameService();
 
         try {
             PESIRecord record = pesinspt.getPESIRecordByGUID(name);

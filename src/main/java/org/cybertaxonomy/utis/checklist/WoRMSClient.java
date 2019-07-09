@@ -34,11 +34,6 @@ import org.slf4j.LoggerFactory;
 
 public class WoRMSClient extends BaseChecklistClient<SoapClient> {
 
-
-    @Deprecated
-    private static final int DEFAULT_SERVICE_PAGE_SIZE = 50;
-
-
     private static final Logger logger = LoggerFactory.getLogger(WoRMSClient.class);
 
 
@@ -363,9 +358,6 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             List<AphiaRecord> recordsForPage = new ArrayList<>(pageSize);
             AphiaRecord[] records;
             while (tryNextPage) {
-                // FIXME calculating the offset this way is not ok when we are dropping invalid records
-                // we either must accept all records and walk all pages or we include invalid records in the response
-                // to make the client adapter faster
                 switch(searchMode){
                 case scientificNameLike:
                     records = aphianspt.getAphiaRecords(name + "%", true, fuzzy, false, offset);
