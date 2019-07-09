@@ -2,8 +2,10 @@ package org.cybertaxonomy.utis.checklist;
 
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 
 import javax.xml.rpc.ServiceException;
 
@@ -32,9 +34,8 @@ import org.slf4j.LoggerFactory;
 
 public class WoRMSClient extends BaseChecklistClient<SoapClient> {
 
-    /**
-     *
-     */
+
+    @Deprecated
     private static final int DEFAULT_SERVICE_PAGE_SIZE = 50;
 
 
@@ -144,12 +145,6 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
             tnrResponse.setMatchingNameString(matchingName);
         }
-        if(record.getStatus().equals("quarantined") || record.getStatus().equals("deleted")){
-            // quarantined:  hidden from public interface after decision from an editor
-            // deleted:  AphiaID should NOT be used anymore, please replace it by the valid_AphiaID
-            logger.debug("    > ignoring " + record.getAphiaID() + " with status " + record.getStatus() );
-            return null;
-        }
 
         // case when accepted name
         if(record.getValid_AphiaID() == nameGUID) {
@@ -180,6 +175,19 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             generateSynonyms(synonyms, tnrResponse);
         }
         return tnrResponse;
+    }
+
+    /**
+     * A valid record has not one of the status:
+     *
+     * quarantined:  hidden from public interface after decision from an editor
+     * deleted:  AphiaID should NOT be used anymore, please replace it by the valid_AphiaID
+     *
+     * @param record
+     * @return
+     */
+    private boolean isValidRecord(AphiaRecord record) {
+        return !( record.getStatus().equals("quarantined") || record.getStatus().equals("deleted"));
     }
 
     private Taxon generateTaxon(AphiaRecord taxonRecord, boolean addClassification, boolean addParentTaxon) {
@@ -314,9 +322,8 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
                 logger.debug("nameAphiaID : " + nameAphiaID);
                 record = aphianspt.getAphiaRecordByID(nameAphiaID);
                 Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
-                if(tnrResponse != null){
-                    query.getResponse().add(tnrResponse);
-                }
+                query.getResponse().add(tnrResponse);
+
             } catch(NullPointerException npe) {
                 //FIXME : Workaround for NPE thrown by the aphia stub due to a,
                 //        null aphia id (Integer), when the name is not present
@@ -332,37 +339,70 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
     @Override
     public void resolveScientificNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
 
+        resolveWithPager(tnrMsg, SearchMode.scientificNameLike);
+    }
+
+    /**
+     * @param tnrMsg
+     * @throws DRFChecklistException
+     */
+    private void resolveWithPager(TnrMsg tnrMsg, SearchMode searchMode) throws DRFChecklistException {
         Query query = singleQueryFrom(tnrMsg);
         String name = query.getRequest().getQueryString();
         AphiaNameServicePortType aphianspt = getAphiaNameService();
         boolean fuzzy = false;
 
+        Integer pageIndex = query.getRequest().getPageIndex().intValue();
+        Integer pageSize = query.getRequest().getPageSize().intValue();
         boolean tryNextPage = true;
-        int pageIndex = 0;
+        int offset = (pageIndex * pageSize) + 1;
 
         try {
+
+            // collect aphia records for the requested page
+            List<AphiaRecord> recordsForPage = new ArrayList<>(pageSize);
+            AphiaRecord[] records;
             while (tryNextPage) {
-                int offset = (pageIndex * DEFAULT_SERVICE_PAGE_SIZE) + 1;
-                AphiaRecord[] records = aphianspt.getAphiaRecords(name + "%", true, fuzzy, false, offset);
+                // FIXME calculating the offset this way is not ok when we are dropping invalid records
+                // we either must accept all records and walk all pages or we include invalid records in the response
+                // to make the client adapter faster
+                switch(searchMode){
+                case scientificNameLike:
+                    records = aphianspt.getAphiaRecords(name + "%", true, fuzzy, false, offset);
+                    break;
+                case vernacularNameLike:
+                    records = aphianspt.getAphiaRecordsByVernacular(name, true, offset);
+                    break;
+                case findByIdentifier:
+                case scientificNameExact:
+                case vernacularNameExact:
+                default:
+                    throw new RuntimeException("Ivalid search mode used within this method");
+
+                }
                 if(records != null){
-                    logger.debug("page " + (pageIndex) + " has " + records.length + " records");
-                    tryNextPage = records.length == DEFAULT_SERVICE_PAGE_SIZE;
+                    logger.debug("page at offset " + offset + " has " + records.length + " records");
                     for (AphiaRecord record : records) {
-                        Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
-                        if(tnrResponse != null){
-                            query.getResponse().add(tnrResponse);
+                        if(recordsForPage.size() < pageSize){
+                            recordsForPage.add(record);
                         }
                     }
+                    offset = offset + records.length;
+                    tryNextPage = recordsForPage.size() < pageSize;
                 }  else {
                     tryNextPage = false;
                 }
-                pageIndex++;
+            }
+
+            // make response objects
+            for (AphiaRecord record : recordsForPage) {
+                Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
+                query.getResponse().add(tnrResponse);
             }
         } catch (RemoteException e) {
             logger.error("Error in getGUID method in AphiaNameSerice", e);
             throw new DRFChecklistException("Error in getGUID method in AphiaNameSerice", e);
         }
-
     }
 
     @Override
@@ -377,9 +417,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             if(records != null){
                 for (AphiaRecord record : records) {
                     Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
-                    if(tnrResponse != null){
-                        query.getResponse().add(tnrResponse);
-                    }
+                    query.getResponse().add(tnrResponse);
                 }
             }
 
@@ -393,34 +431,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
     @Override
     public void resolveVernacularNamesLike(TnrMsg tnrMsg) throws DRFChecklistException {
 
-        Query query = singleQueryFrom(tnrMsg);
-        String name = query.getRequest().getQueryString();
-        AphiaNameServicePortType aphianspt = getAphiaNameService();
-
-        boolean tryNextPage = true;
-        int pageIndex = 1;
-        try {
-            while(tryNextPage) {
-                AphiaRecord[] records = aphianspt.getAphiaRecordsByVernacular(name, true, (pageIndex++ * DEFAULT_SERVICE_PAGE_SIZE) + 1);
-                if(records != null){
-                    tryNextPage = records.length == DEFAULT_SERVICE_PAGE_SIZE;
-                    logger.debug("page " + (pageIndex - 1) + " has " + records.length + " records");
-                    for (AphiaRecord record : records) {
-                        Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
-                        if(tnrResponse != null){
-                            query.getResponse().add(tnrResponse);
-                        }
-                    }
-                } else {
-                    tryNextPage = false;
-                }
-
-            }
-
-        } catch (RemoteException e) {
-            logger.error("Error in getAphiaRecordsByVernacular() AphiaNameSerice", e);
-            throw new DRFChecklistException("Error in getGUID method in AphiaNameSerice", e);
-        }
+        resolveWithPager(tnrMsg, SearchMode.vernacularNameLike);
 
     }
 
@@ -476,9 +487,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
                 if(records != null){
                     for (AphiaRecord record : records) {
                         Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
-                        if(tnrResponse != null){
-                            query.getResponse().add(tnrResponse);
-                        }
+                        query.getResponse().add(tnrResponse);
                     }
                 }
             } catch(NullPointerException npe) {
