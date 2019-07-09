@@ -20,7 +20,6 @@ import org.cybertaxonomy.utis.tnr.msg.Response;
 import org.cybertaxonomy.utis.tnr.msg.Source;
 import org.cybertaxonomy.utis.tnr.msg.Synonym;
 import org.cybertaxonomy.utis.tnr.msg.Taxon;
-import org.cybertaxonomy.utis.tnr.msg.Taxon.ParentTaxon;
 import org.cybertaxonomy.utis.tnr.msg.TaxonName;
 import org.cybertaxonomy.utis.tnr.msg.TnrMsg;
 import org.cybertaxonomy.utis.utils.IdentifierUtils;
@@ -34,26 +33,26 @@ import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
+public class PhycobankClient extends AggregateChecklistClient<RestClient> {
 
-    private static final Logger logger = LoggerFactory.getLogger(BgbmEditClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(PhycobankClient.class);
 
-    public static final String ID = "bgbm-cdm-server";
-    public static final String LABEL = "Name catalogues served by the BGBM CDM Server";
+    public static final String ID = "bgbm-phycobank";
+    public static final String LABEL = "Phycobank";
     public static final String DOC_URL = "http://cybertaxonomy.eu/cdmlib/rest-api-name-catalogue.html";
     public static final String COPYRIGHT_URL = "http://cybertaxonomy.eu/cdmlib/license.html";
 
-    // edit-production
-    private static final String SERVER_PATH_PREFIX = "/";
-    private static final HttpHost HTTP_HOST = new HttpHost("api.cybertaxonomy.org", 80);
+    // phycobank-production
+    //private static final String SERVER_PATH_PREFIX = "/";
+    //private static final HttpHost HTTP_HOST = new HttpHost("api.phycobank.org", 80);
 
     // edit-test
     // private static final String SERVER_PATH_PREFIX = "/cdmserver/";
     // private static final HttpHost HTTP_HOST = new HttpHost("test.e-taxonomy.eu", 80);
 
     // localhost
-//    private static final String SERVER_PATH_PREFIX = "/";
-//    private static final HttpHost HTTP_HOST = new HttpHost("localhost", 8080);
+    private static final String SERVER_PATH_PREFIX = "/";
+    private static final HttpHost HTTP_HOST = new HttpHost("localhost", 8080);
 
 
 
@@ -77,16 +76,13 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
             SearchMode.findByIdentifier
             );
 
-    public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.of(
-            ClassificationAction.higherClassification,
-            ClassificationAction.taxonomicChildren
-            );
+    public static final EnumSet<ClassificationAction> CLASSIFICATION_ACTION = EnumSet.noneOf(ClassificationAction.class);
 
-    public BgbmEditClient() {
+    public PhycobankClient() {
         super();
     }
 
-    public BgbmEditClient(String checklistInfoJson) throws DRFChecklistException {
+    public PhycobankClient(String checklistInfoJson) throws DRFChecklistException {
         super(checklistInfoJson);
     }
 
@@ -111,23 +107,14 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
 
         ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,DOC_URL,COPYRIGHT_URL, getSearchModes());
 
-        ServiceProviderInfo col = new ServiceProviderInfo("col",
-                "Catalogue Of Life (EDIT - name catalogue end point)",
+        ServiceProviderInfo phycobank = new ServiceProviderInfo("phycobank",
+                "Phycobank (EDIT - name catalogue end point)",
                 "http://cybertaxonomy.eu/cdmlib/rest-api-name-catalogue.html",
                 "http://www.catalogueoflife.org/col/info/copyright", ServiceProviderInfo.DEFAULT_SEARCH_MODE);
-        col.setDefaultClassificationId("29d4011f-a6dd-4081-beb8-559ba6b84a6b");
-        col.getSupportedActions().addAll(SEARCH_MODES);
-        col.getSupportedActions().addAll(CLASSIFICATION_ACTION);
-        checklistInfo.addSubChecklist(col);
-
-        ServiceProviderInfo euromed = new ServiceProviderInfo("euromed",
-                "Euro+Med",
-                "http://cybertaxonomy.eu/cdmlib/rest-api-name-catalogue.html",
-                "© Botanic Garden and Botanical Museum Berlin-Dahlem 2006", ServiceProviderInfo.DEFAULT_SEARCH_MODE);
-        euromed.setDefaultClassificationId("314a68f9-8449-495a-91c2-92fde8bcf344");
-        euromed.getSupportedActions().addAll(SEARCH_MODES);
-        euromed.getSupportedActions().addAll(CLASSIFICATION_ACTION);
-        checklistInfo.addSubChecklist(euromed);
+        //phycobank.setDefaultClassificationId("----- NA ----"); // no suitable default classification in phycobank
+        phycobank.getSupportedActions().addAll(SEARCH_MODES);
+        phycobank.getSupportedActions().addAll(CLASSIFICATION_ACTION);
+        checklistInfo.addSubChecklist(phycobank);
 
         return checklistInfo;
     }
@@ -291,7 +278,9 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         source.setUrl(sourceUrl);
         accTaxon.getSources().add(source);
 
+        /* addClassification || addParentTaxon are not supported by phycobank
         if(addClassification || addParentTaxon) {
+
             addClassification(taxon, accTaxon, ci, taxonUuid);
         }
         if(addParentTaxon) {
@@ -303,6 +292,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                 accTaxon.setParentTaxon(parentTaxon);
             }
         }
+        */
         if(!addClassification) {
             accTaxon.getHigherClassification().clear();
         }

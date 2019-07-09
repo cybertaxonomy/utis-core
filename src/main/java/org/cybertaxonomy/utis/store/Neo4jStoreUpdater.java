@@ -34,6 +34,8 @@ import org.slf4j.LoggerFactory;
  */
 public class Neo4jStoreUpdater {
 
+    private static final String SKIP_STORE_UPDATING = "SkipStoreUpdating";
+
     protected Logger logger = LoggerFactory.getLogger(Neo4jStoreUpdater.class);
 
     private final URI testUrl;
@@ -129,26 +131,29 @@ public class Neo4jStoreUpdater {
         if (isRunningAsTest()) {
             updateIfNeeded();
         } else {
-            this.interval_ms = 1000 * 60 * intervalMinutes;
 
-            Thread updateThread = new Thread() {
+            if(System.getProperty(SKIP_STORE_UPDATING) == null){
 
-                @Override
-                public void run() {
-                    boolean interrupted = false;
-                    while (!interrupted) {
-                        updateIfNeeded();
-                        try {
-                            sleep(interval_ms);
-                        } catch (InterruptedException e) {
-                            logger.info("Neo4jStoreUpdater has been interrupted");
-                            interrupted = true;
+                this.interval_ms = 1000 * 60 * intervalMinutes;
+                Thread updateThread = new Thread() {
+
+                    @Override
+                    public void run() {
+                        boolean interrupted = false;
+                        while (!interrupted) {
+                            updateIfNeeded();
+                            try {
+                                sleep(interval_ms);
+                            } catch (InterruptedException e) {
+                                logger.info("Neo4jStoreUpdater has been interrupted");
+                                interrupted = true;
+                            }
                         }
                     }
-                }
-            };
-            updateThread.setName(Neo4jStoreUpdater.class.getSimpleName());
-            updateThread.start();
+                };
+                updateThread.setName(Neo4jStoreUpdater.class.getSimpleName());
+                updateThread.start();
+            }
         }
     }
 
