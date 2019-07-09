@@ -10,8 +10,8 @@ package org.cybertaxonomy.utis.checklist.worms;
 public class AphiaNameServiceLocator extends org.apache.axis.client.Service implements org.cybertaxonomy.utis.checklist.worms.AphiaNameService {
 
 /**
- * The data is licensed under a Creative Commons 'BY' 3.0 License,
- * see http://creativecommons.org/licenses/by/3.0/deed.en. For more information,
+ * The data is licensed under a Creative Commons 'BY' 4.0 License,
+ * see http://creativecommons.org/licenses/by/4.0/deed.en. For more information,
  * please visit http://www.marinespecies.org/aphia.php?p=webservice.
  */
 

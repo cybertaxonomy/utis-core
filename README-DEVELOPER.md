@@ -23,8 +23,13 @@ between:
     
 then compile the java classes
 
+For PESI
+
     java -cp  $(mvn dependency:build-classpath | grep -v "\[")  org.apache.axis.wsdl.WSDL2Java "http://www.eu-nomen.eu/portal/soap.php\?wsdl\=1"  -p org.cybertaxonomy.utis.checklist.pesi -o src/main/java/
 
+For WoRMS
+
+    java -cp  $(mvn dependency:build-classpath | grep -v "\[")  org.apache.axis.wsdl.WSDL2Java "http://www.marinespecies.org/aphia.php?p=soap&wsdl=1"  -p org.cybertaxonomy.utis.checklist.worms -o src/main/java/
 
     
 ### debug the neo4j store

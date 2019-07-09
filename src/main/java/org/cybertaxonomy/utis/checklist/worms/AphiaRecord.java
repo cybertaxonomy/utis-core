@@ -16,6 +16,8 @@ public class AphiaRecord  implements java.io.Serializable {
 
     private java.lang.String authority;
 
+    private int taxonRankID;
+
     private java.lang.String rank;
 
     private java.lang.String status;
@@ -27,6 +29,8 @@ public class AphiaRecord  implements java.io.Serializable {
     private java.lang.String valid_name;
 
     private java.lang.String valid_authority;
+
+    private int parentNameUsageID;
 
     private java.lang.String kingdom;
 
@@ -66,12 +70,14 @@ public class AphiaRecord  implements java.io.Serializable {
            java.lang.String url,
            java.lang.String scientificname,
            java.lang.String authority,
+           int taxonRankID,
            java.lang.String rank,
            java.lang.String status,
            java.lang.String unacceptreason,
            int valid_AphiaID,
            java.lang.String valid_name,
            java.lang.String valid_authority,
+           int parentNameUsageID,
            java.lang.String kingdom,
            java.lang.String phylum,
            java.lang.String _class,
@@ -91,12 +97,14 @@ public class AphiaRecord  implements java.io.Serializable {
            this.url = url;
            this.scientificname = scientificname;
            this.authority = authority;
+           this.taxonRankID = taxonRankID;
            this.rank = rank;
            this.status = status;
            this.unacceptreason = unacceptreason;
            this.valid_AphiaID = valid_AphiaID;
            this.valid_name = valid_name;
            this.valid_authority = valid_authority;
+           this.parentNameUsageID = parentNameUsageID;
            this.kingdom = kingdom;
            this.phylum = phylum;
            this._class = _class;
@@ -192,6 +200,26 @@ public class AphiaRecord  implements java.io.Serializable {
      */
     public void setAuthority(java.lang.String authority) {
         this.authority = authority;
+    }
+
+
+    /**
+     * Gets the taxonRankID value for this AphiaRecord.
+     * 
+     * @return taxonRankID
+     */
+    public int getTaxonRankID() {
+        return taxonRankID;
+    }
+
+
+    /**
+     * Sets the taxonRankID value for this AphiaRecord.
+     * 
+     * @param taxonRankID
+     */
+    public void setTaxonRankID(int taxonRankID) {
+        this.taxonRankID = taxonRankID;
     }
 
 
@@ -312,6 +340,26 @@ public class AphiaRecord  implements java.io.Serializable {
      */
     public void setValid_authority(java.lang.String valid_authority) {
         this.valid_authority = valid_authority;
+    }
+
+
+    /**
+     * Gets the parentNameUsageID value for this AphiaRecord.
+     * 
+     * @return parentNameUsageID
+     */
+    public int getParentNameUsageID() {
+        return parentNameUsageID;
+    }
+
+
+    /**
+     * Sets the parentNameUsageID value for this AphiaRecord.
+     * 
+     * @param parentNameUsageID
+     */
+    public void setParentNameUsageID(int parentNameUsageID) {
+        this.parentNameUsageID = parentNameUsageID;
     }
 
 
@@ -636,6 +684,7 @@ public class AphiaRecord  implements java.io.Serializable {
             ((this.authority==null && other.getAuthority()==null) || 
              (this.authority!=null &&
               this.authority.equals(other.getAuthority()))) &&
+            this.taxonRankID == other.getTaxonRankID() &&
             ((this.rank==null && other.getRank()==null) || 
              (this.rank!=null &&
               this.rank.equals(other.getRank()))) &&
@@ -652,6 +701,7 @@ public class AphiaRecord  implements java.io.Serializable {
             ((this.valid_authority==null && other.getValid_authority()==null) || 
              (this.valid_authority!=null &&
               this.valid_authority.equals(other.getValid_authority()))) &&
+            this.parentNameUsageID == other.getParentNameUsageID() &&
             ((this.kingdom==null && other.getKingdom()==null) || 
              (this.kingdom!=null &&
               this.kingdom.equals(other.getKingdom()))) &&
@@ -708,6 +758,7 @@ public class AphiaRecord  implements java.io.Serializable {
         if (getAuthority() != null) {
             _hashCode += getAuthority().hashCode();
         }
+        _hashCode += getTaxonRankID();
         if (getRank() != null) {
             _hashCode += getRank().hashCode();
         }
@@ -724,6 +775,7 @@ public class AphiaRecord  implements java.io.Serializable {
         if (getValid_authority() != null) {
             _hashCode += getValid_authority().hashCode();
         }
+        _hashCode += getParentNameUsageID();
         if (getKingdom() != null) {
             _hashCode += getKingdom().hashCode();
         }
@@ -794,6 +846,12 @@ public class AphiaRecord  implements java.io.Serializable {
         elemField.setNillable(false);
         typeDesc.addFieldDesc(elemField);
         elemField = new org.apache.axis.description.ElementDesc();
+        elemField.setFieldName("taxonRankID");
+        elemField.setXmlName(new javax.xml.namespace.QName("", "taxonRankID"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
+        elemField.setNillable(false);
+        typeDesc.addFieldDesc(elemField);
+        elemField = new org.apache.axis.description.ElementDesc();
         elemField.setFieldName("rank");
         elemField.setXmlName(new javax.xml.namespace.QName("", "rank"));
         elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
@@ -827,6 +885,12 @@ public class AphiaRecord  implements java.io.Serializable {
         elemField.setFieldName("valid_authority");
         elemField.setXmlName(new javax.xml.namespace.QName("", "valid_authority"));
         elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
+        elemField.setNillable(false);
+        typeDesc.addFieldDesc(elemField);
+        elemField = new org.apache.axis.description.ElementDesc();
+        elemField.setFieldName("parentNameUsageID");
+        elemField.setXmlName(new javax.xml.namespace.QName("", "parentNameUsageID"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
         elemField.setNillable(false);
         typeDesc.addFieldDesc(elemField);
         elemField = new org.apache.axis.description.ElementDesc();

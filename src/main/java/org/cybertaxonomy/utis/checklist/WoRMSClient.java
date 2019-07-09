@@ -139,14 +139,20 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
 
         UtisAction searchMode = TnrMsgUtils.utisActionFrom(request.getSearchMode());
 
-        int accNameGUID = record.getValid_AphiaID();
+        int nameGUID = record.getAphiaID();
         String matchingName = record.getScientificname();
         if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
             tnrResponse.setMatchingNameString(matchingName);
         }
+        if(record.getStatus().equals("quarantined") || record.getStatus().equals("deleted")){
+            // quarantined:  hidden from public interface after decision from an editor
+            // deleted:  AphiaID should NOT be used anymore, please replace it by the valid_AphiaID
+            logger.debug("    > ignoring " + record.getAphiaID() + " with status " + record.getStatus() );
+            return null;
+        }
 
         // case when accepted name
-        if(record.getAphiaID() == accNameGUID) {
+        if(record.getValid_AphiaID() == nameGUID) {
             Taxon accName = generateTaxon(record, addClassification, request.isAddParentTaxon());
             logger.debug("    > " + accName.getTaxonName().getScientificName());
             tnrResponse.setTaxon(accName);
@@ -155,15 +161,20 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             }
         } else {
             // case when synonym
-            AphiaRecord accNameRecord = aphianspt.getAphiaRecordByID(accNameGUID);
-            Taxon accName = generateTaxon(accNameRecord, false, false);
-            tnrResponse.setTaxon(accName);
+            AphiaRecord accNameRecord = aphianspt.getAphiaRecordByID(nameGUID);
+            if(accNameRecord != null){
+                Taxon accName = generateTaxon(accNameRecord, false, false);
+                tnrResponse.setTaxon(accName);
+            } else {
+                logger.error("WoRMS has no accepted name for " + nameGUID);
+            }
             if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
                 tnrResponse.setMatchingNameType(NameType.SYNONYM);
             }
         }
 
-        AphiaRecord[] synonyms = aphianspt.getAphiaSynonymsByID(accNameGUID);
+        int offset = 1; // default is 1 in Aphia
+        AphiaRecord[] synonyms = aphianspt.getAphiaSynonymsByID(nameGUID, offset);
 
         if(request.isAddSynonymy() && synonyms != null && synonyms.length > 0) {
             generateSynonyms(synonyms, tnrResponse);
@@ -303,7 +314,9 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
                 logger.debug("nameAphiaID : " + nameAphiaID);
                 record = aphianspt.getAphiaRecordByID(nameAphiaID);
                 Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
-                query.getResponse().add(tnrResponse);
+                if(tnrResponse != null){
+                    query.getResponse().add(tnrResponse);
+                }
             } catch(NullPointerException npe) {
                 //FIXME : Workaround for NPE thrown by the aphia stub due to a,
                 //        null aphia id (Integer), when the name is not present
@@ -325,21 +338,25 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
         boolean fuzzy = false;
 
         boolean tryNextPage = true;
-        int pageIndex = 1;
+        int pageIndex = 0;
 
         try {
             while (tryNextPage) {
-                AphiaRecord[] records = aphianspt.getAphiaRecords(name + "%", true, fuzzy, false, (pageIndex++ * DEFAULT_SERVICE_PAGE_SIZE) + 1);
+                int offset = (pageIndex * DEFAULT_SERVICE_PAGE_SIZE) + 1;
+                AphiaRecord[] records = aphianspt.getAphiaRecords(name + "%", true, fuzzy, false, offset);
                 if(records != null){
-                    logger.debug("page " + (pageIndex - 1) + " has " + records.length + " records");
+                    logger.debug("page " + (pageIndex) + " has " + records.length + " records");
                     tryNextPage = records.length == DEFAULT_SERVICE_PAGE_SIZE;
                     for (AphiaRecord record : records) {
                         Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
-                        query.getResponse().add(tnrResponse);
+                        if(tnrResponse != null){
+                            query.getResponse().add(tnrResponse);
+                        }
                     }
                 }  else {
                     tryNextPage = false;
                 }
+                pageIndex++;
             }
         } catch (RemoteException e) {
             logger.error("Error in getGUID method in AphiaNameSerice", e);
@@ -360,7 +377,9 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             if(records != null){
                 for (AphiaRecord record : records) {
                     Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
-                    query.getResponse().add(tnrResponse);
+                    if(tnrResponse != null){
+                        query.getResponse().add(tnrResponse);
+                    }
                 }
             }
 
@@ -388,7 +407,9 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
                     logger.debug("page " + (pageIndex - 1) + " has " + records.length + " records");
                     for (AphiaRecord record : records) {
                         Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
-                        query.getResponse().add(tnrResponse);
+                        if(tnrResponse != null){
+                            query.getResponse().add(tnrResponse);
+                        }
                     }
                 } else {
                     tryNextPage = false;
@@ -455,7 +476,9 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
                 if(records != null){
                     for (AphiaRecord record : records) {
                         Response tnrResponse = tnrResponseFromRecord(aphianspt, record, query.getRequest(), false);
-                        query.getResponse().add(tnrResponse);
+                        if(tnrResponse != null){
+                            query.getResponse().add(tnrResponse);
+                        }
                     }
                 }
             } catch(NullPointerException npe) {
