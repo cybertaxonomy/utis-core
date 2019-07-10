@@ -17,6 +17,7 @@ import java.net.URISyntaxException;
 import java.net.URLConnection;
 
 import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.slf4j.Logger;
@@ -86,11 +87,14 @@ public class HttpClient {
     /**
      * @return
      */
-    private File tempDir() {
+    protected File tempDir() throws IOException {
         File tmpDir = new File(System.getProperty("java.io.tmpdir"));
         // the Property contextPath is set by the ContextDependentInitializer in eubon-utis
         String subFilderName = System.getProperty("contextPath", "utis");
-        return new File(tmpDir, subFilderName);
+        tmpDir = new File(tmpDir, subFilderName);
+        logger.debug(tmpDir.getAbsolutePath());
+        FileUtils.forceMkdir(tmpDir);
+        return tmpDir;
     }
 
 }

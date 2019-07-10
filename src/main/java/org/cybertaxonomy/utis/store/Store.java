@@ -24,7 +24,6 @@ import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.cybertaxonomy.utis.checklist.DRFChecklistException;
 import org.cybertaxonomy.utis.utils.HttpClient;
 import org.cybertaxonomy.utis.utils.VersionInfo;
 import org.slf4j.Logger;
@@ -117,7 +116,7 @@ public abstract class Store extends HttpClient {
                }
 
                if(ain != null){
-                   expandedFile = new File(tmpDir, GzipUtils.getUncompressedFilename(dataFile.getName()));
+                   expandedFile = new File(tempDir(), GzipUtils.getUncompressedFilename(dataFile.getName()));
                    FileOutputStream fout = new FileOutputStream(expandedFile);
                    IOUtils.copy(ain, fout);
                    fout.close();
