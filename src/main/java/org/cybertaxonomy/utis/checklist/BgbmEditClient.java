@@ -153,6 +153,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         Iterator<JSONObject> itrNameMsgs = responseBodyJson.iterator();
 
         for (Query query : queryList) {
+
             JSONArray responseArray = (JSONArray) itrNameMsgs.next().get("response");
             if(responseArray != null) {
                 Iterator<JSONObject> resIterator = responseArray.iterator();
@@ -164,6 +165,7 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                     while (atIterator.hasNext()) {
                         String acceptedTaxonId = atIterator.next();
                         boolean isAcceptedTaxonMatch = res.get("taxonConceptUuids").toString().contains(acceptedTaxonId);
+                        logger.debug("Found accepted taxon id : " + acceptedTaxonId);
                         if(!taxonIdQueryMap.containsKey(acceptedTaxonId) || isAcceptedTaxonMatch){
                             // matches for accepted taxa should be preferred here
                             // matches for synomymy or other types should never overwrite
@@ -171,7 +173,6 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
                             taxonIdQueryMap.put(acceptedTaxonId, query);
                             taxonIdMatchStringMap.put(acceptedTaxonId, matchingName);
                         }
-                        //System.out.println("Found accepted taxon id : " + accTaxonId);
                     }
                 }
             }
@@ -401,6 +402,8 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
         // for the further usage of the request object
         Query.Request request = queryList.get(0).getRequest();
 
+        PagerRange pagerRange = pagerRange(queryList.get(0));
+
         for (ServiceProviderInfo checklistInfo : getServiceProviderInfo().getSubChecklists()) {
 
             URI namesUri = queryClient.buildUriFromQueryList(queryList,
@@ -417,16 +420,30 @@ public class BgbmEditClient extends AggregateChecklistClient<RestClient> {
             List<String> taxonIdList = new ArrayList<String>(taxonIdQueryMap.keySet());
 
             if(taxonIdList.size() > 0) {
+                List<String> taxonIDPage = null;
+                if(pagerRange.low > -1 && pagerRange.high > pagerRange.low){
+                    try {
+                    taxonIDPage = taxonIdList.subList(pagerRange.low, Math.min(pagerRange.high + 1, taxonIdList.size()));
+                    } catch (IllegalArgumentException e) {
+                        // we are out of the available range, just ignore the exception
+                    }
+
+                } else {
+                    taxonIDPage = taxonIdList;
+                }
+
                 URI taxonUri = queryClient.buildUriFromQueryStringList(null,
                         SERVER_PATH_PREFIX + checklistInfo.getId() + "/name_catalogue/taxon.json",
                         null,
                         null);
-                String taxonResponseBody = queryClient.post(taxonUri, "taxonUuid", taxonIdList);
-                // buildTaxonIdMapsFromCatalogueServiceResponse(queryList, taxonResponseBody);
-                try {
-                    updateQueriesWithResponse(taxonResponseBody, checklistInfo, request, false);
-                } catch (ParseException e) {
-                    throw new DRFChecklistException("Error while parsing the response of " + namesUri, e);
+                if(taxonIDPage != null){
+                    String taxonResponseBody = queryClient.post(taxonUri, "taxonUuid", taxonIDPage);
+                    // buildTaxonIdMapsFromCatalogueServiceResponse(queryList, taxonResponseBody);
+                    try {
+                        updateQueriesWithResponse(taxonResponseBody, checklistInfo, request, false);
+                    } catch (ParseException e) {
+                        throw new DRFChecklistException("Error while parsing the response of " + namesUri, e);
+                    }
                 }
             }
         }
