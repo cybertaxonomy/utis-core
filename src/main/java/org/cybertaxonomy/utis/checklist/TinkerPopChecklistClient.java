@@ -115,5 +115,30 @@ public abstract class TinkerPopChecklistClient extends AggregateChecklistClient<
     protected abstract Response tnrResponseFromResource(Vertex v, Request request, Vertex matchNode, NameType matchType,
             ServiceProviderInfo ci, boolean b);
 
+    protected PagerRange pagerRange(Query query) {
+        Integer pageIndex = query.getRequest().getPageIndex() != null ? query.getRequest().getPageIndex().intValue() : null;
+        Integer pageSize = query.getRequest().getPageSize() != null ? query.getRequest().getPageSize().intValue() : null;
+        PagerRange pagerRange = new PagerRange();
+        if(pageIndex != null && pageSize != null){
+            pagerRange.low = pageIndex * pageSize;
+            pagerRange.high = (pageIndex + 1) * pageSize - 1;
+        }
+        return pagerRange;
+    }
+
+    static public class PagerRange{
+        int high = -1;
+        int low = -1;
+
+        public PagerRange(int high, int low){
+            this.high = high;
+            this.low = low;
+        }
+
+        public PagerRange() {
+
+        }
+    }
+
 
 }

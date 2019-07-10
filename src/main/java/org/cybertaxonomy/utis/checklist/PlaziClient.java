@@ -141,6 +141,8 @@ public class PlaziClient extends TinkerPopChecklistClient implements UpdatableSt
         // for the further usage of the request object
         Query query = singleQueryFrom(tnrMsg);
 
+        PagerRange pagerRange = pagerRange(query);
+
         String queryString = query.getRequest().getQueryString();
         logger.debug("original queryString: "+ queryString);
         queryString = QueryParser.escape(queryString);
@@ -157,7 +159,8 @@ public class PlaziClient extends TinkerPopChecklistClient implements UpdatableSt
 
         List<Vertex> vertices = new ArrayList<Vertex>();
 
-        pipe.inE(RdfSchema.CITO.property("cites")).outV().outE(RdfSchema.TRT.property("definesTaxonConcept")).inV().fill(vertices);
+        pipe.inE(RdfSchema.CITO.property("cites")).outV().outE(RdfSchema.TRT.property("definesTaxonConcept")).inV()
+            .range(pagerRange.low, pagerRange.high).fill(vertices);
 
         updateQueriesWithResponse(vertices, null, null, checklistInfo, query);
     }

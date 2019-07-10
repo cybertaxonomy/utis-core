@@ -372,14 +372,7 @@ public class EUNIS_Client extends TinkerPopChecklistClient implements UpdatableS
         // for the further usage of the request object
         Query query = singleQueryFrom(tnrMsg);
 
-        Integer pageIndex = query.getRequest().getPageIndex() != null ? query.getRequest().getPageIndex().intValue() : null;
-        Integer pageSize = query.getRequest().getPageSize() != null ? query.getRequest().getPageSize().intValue() : null;
-        int low = -1;
-        int high = -1;
-        if(pageIndex != null && pageSize != null){
-            low = pageIndex * pageSize;
-            high = (pageIndex + 1) * pageSize - 1;
-        }
+        PagerRange pagerRange = pagerRange(query);
 
         String queryString = query.getRequest().getQueryString();
         logger.debug("original queryString: "+ queryString);
@@ -404,7 +397,7 @@ public class EUNIS_Client extends TinkerPopChecklistClient implements UpdatableS
                 RdfSchema.DWC.property("subgenus"), // EUNIS has no subgenera but this is added for future compatibility
                 RdfSchema.DWC.property("genus")
                 // no taxa for higher ranks in EUNIS
-                ).range(low, high).fill(vertices);
+                ).range(pagerRange.low, pagerRange.high).fill(vertices);
 
         updateQueriesWithResponse(vertices, null, null, checklistInfo, query);
 //            profiler.end(System.err);
@@ -430,14 +423,7 @@ public class EUNIS_Client extends TinkerPopChecklistClient implements UpdatableS
         // for the further usage of the request object
         Query query = singleQueryFrom(tnrMsg);
 
-        Integer pageIndex = query.getRequest().getPageIndex() != null ? query.getRequest().getPageIndex().intValue() : null;
-        Integer pageSize = query.getRequest().getPageSize() != null ? query.getRequest().getPageSize().intValue() : null;
-        int low = -1;
-        int high = -1;
-        if(pageIndex != null && pageSize != null){
-            low = pageIndex * pageSize;
-            high = (pageIndex + 1) * pageSize - 1;
-        }
+        PagerRange pagerRange = pagerRange(query);
 
         String queryString = query.getRequest().getQueryString();
         logger.debug("original queryString: "+ queryString);
@@ -467,7 +453,7 @@ public class EUNIS_Client extends TinkerPopChecklistClient implements UpdatableS
         List<Vertex> vertices = new ArrayList<Vertex>();
         pipe = new GremlinPipeline<Graph, Vertex>(hitVs);
         Table table = new Table();
-        pipe.as("match").in(RdfSchema.DWC.property("vernacularName")).as("taxon").range(low, high).table(table).iterate();
+        pipe.as("match").in(RdfSchema.DWC.property("vernacularName")).as("taxon").range(pagerRange.low, pagerRange.high).table(table).iterate();
 
         updateQueriesWithResponse(
                 table.getColumn("taxon"), table.getColumn("match"),
