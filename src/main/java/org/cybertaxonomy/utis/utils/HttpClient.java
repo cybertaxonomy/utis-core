@@ -9,7 +9,6 @@
 package org.cybertaxonomy.utis.utils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,8 +30,6 @@ import org.slf4j.LoggerFactory;
 public class HttpClient {
 
     protected static final Logger logger = LoggerFactory.getLogger(HttpClient.class);
-
-    protected static final File tmpDir = new File(System.getProperty("java.io.tmpdir"));
 
     private static final int readTimeout = 1000 * 10;
 
@@ -58,7 +55,7 @@ public class HttpClient {
             URI inURI = new URI(fileUri);
             String archiveFileName = FilenameUtils.getName(inURI.getRawPath());
 
-            File archiveFile = new File(tmpDir, archiveFileName);
+            File archiveFile = new File(tempDir(), archiveFileName);
 
             logger.debug("downloading rdf file from " + fileUri);
 
@@ -84,6 +81,16 @@ public class HttpClient {
             throw e;
         }
 
+    }
+
+    /**
+     * @return
+     */
+    private File tempDir() {
+        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+        // the Property contextPath is set by the ContextDependentInitializer in eubon-utis
+        String subFilderName = System.getProperty("contextPath", "utis");
+        return new File(tmpDir, subFilderName);
     }
 
 }
