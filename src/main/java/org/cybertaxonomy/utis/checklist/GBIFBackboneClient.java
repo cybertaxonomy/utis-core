@@ -51,8 +51,19 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
 
     static {
         datasetMap.put("GBIF Backbone Taxonomy", UUID.fromString("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"));
-        datasetMap.put("Paleobiology Database", UUID.fromString("bb5b30b4-827e-4d5e-a86a-825d65cb6583"));
-        datasetMap.put("Naturgucker", UUID.fromString("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"));
+        datasetMap.put("International Plant Names Index", UUID.fromString("046bbc50-cae2-47ff-aa43-729fbf53f7c5"));
+        datasetMap.put("The Plant List with literature", UUID.fromString("d9a4eedb-e985-4456-ad46-3df8472e00e8"));
+
+        datasetMap.put("GBIF Type Specimen Names", UUID.fromString("6cfd67d6-4f9b-400b-8549-1933ac27936f"));
+        datasetMap.put("Integrated Taxonomic Information System (ITIS)", UUID.fromString("9ca92552-f23a-41a8-a140-01abaa31c931"));
+        datasetMap.put("TAXREF", UUID.fromString("0e61f8fe-7d25-4f81-ada7-d970bbb2c6d6"));
+        datasetMap.put("Global Names Usage Bank", UUID.fromString("34a96ebe-e51c-4222-9d08-5c2043c39dec"));
+
+        datasetMap.put("Index Fungorum", UUID.fromString("bf3db7c9-5e5d-4fd0-bd5b-94539eaf9598"));
+        datasetMap.put("The Paleobiology Database", UUID.fromString("c33ce2f2-c3cc-43a5-a380-fe4526d63650"));
+        datasetMap.put("ZooBank", UUID.fromString("c8227bb4-4143-443f-8cb2-51f9576aff14"));
+
+        // The Interim Register of Marine and Nonmarine Genera
     }
 
     public static final EnumSet<SearchMode> SEARCH_MODES = EnumSet.of(SearchMode.scientificNameExact, SearchMode.scientificNameLike);
