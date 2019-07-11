@@ -384,7 +384,7 @@ public abstract class AbstractCdmServerClient extends AggregateChecklistClient<R
 
             if(taxonIdList.size() > 0) {
                 List<String> taxonIDPage = null;
-                if(pagerRange.low > -1 && pagerRange.high > pagerRange.low){
+                if(pagerRange.isDefinedRange()){
                     try {
                     taxonIDPage = taxonIdList.subList(pagerRange.low, Math.min(pagerRange.high + 1, taxonIdList.size()));
                     } catch (IllegalArgumentException e) {

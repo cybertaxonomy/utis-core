@@ -3,9 +3,11 @@ package org.cybertaxonomy.utis.checklist;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -43,7 +45,6 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
     public static final String LABEL = "GBIF Checklist Bank";
     public static final String URL = "http://uat.gbif.org/developer/species";
     public static final String DATA_AGR_URL = "http://data.gbif.org/tutorial/datauseagreement";
-    private static final String MAX_PAGING_LIMIT = "1000";
     private static final String VERSION = "v1";
 
     private static Map<String, UUID> datasetMap = new HashMap<>();
@@ -108,8 +109,6 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
         uriBuilder.setHost(HTTP_HOST.getHostName());
         uriBuilder.setPath("/" + VERSION + "/dataset/search");
         uriBuilder.setParameter("type", "CHECKLIST");
-        uriBuilder.setParameter("limit", MAX_PAGING_LIMIT);
-        uriBuilder.setParameter("offset", Integer.toString(offset));
         uri = uriBuilder.build();
         return uri;
     }
@@ -163,12 +162,13 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
             checklistInfo = validateSubChecklist(checklistInfo);
             Map<String, String> paramMap = new HashMap<String, String>();
             paramMap.put("datasetKey", checklistInfo.getId());
-            paramMap.put("limit", MAX_PAGING_LIMIT);
-            if(likeMode){
-                paramMap.put("verbose", "true");
-            }
+//            if(likeMode){
+//                paramMap.put("verbose", "true");
+//            }
 
-            URI namesUri = queryClient.buildUriFromQuery(query, "/" + VERSION + "/species" + (likeMode? "/match" : ""),	"name", paramMap);
+            String queryKey = likeMode ? "q" : "name";
+
+            URI namesUri = queryClient.buildUriFromQuery(query, "/" + VERSION + "/species" + (likeMode? "/suggest" : ""),	queryKey, paramMap);
 
             String responseBody = queryClient.get(namesUri);
             if(likeMode){
@@ -219,8 +219,10 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
         JSONObject jsonResponse = JSONUtils.parseJsonToObject(response);
         JSONArray results = (JSONArray) jsonResponse.get("results");
 
+        List<JSONObject> resultsPage = extractResultPage(query, results);
+
         if(results != null) {
-            Iterator<JSONObject> resIterator = results.iterator();
+            Iterator<JSONObject> resIterator = resultsPage.iterator();
             while (resIterator.hasNext()) {
                 JSONObject taxonRecord = resIterator.next();
                 addTaxon(query, ci, taxonRecord);
@@ -228,19 +230,44 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
         }
     }
 
+    /**
+     * @param query
+     * @param results
+     * @return
+     */
+    private List<JSONObject> extractResultPage(Query query, JSONArray results) {
+        PagerRange pagerRange = pagerRange(query);
+        List<JSONObject> resultsPage = new ArrayList<>(0);
+        if(pagerRange.isDefinedRange()){
+            try {
+            resultsPage = results.subList(pagerRange.low, Math.min(pagerRange.high + 1, results.size()));
+            } catch (IllegalArgumentException e) {
+                // we are out of the available range, just ignore the exception
+            }
+
+        } else {
+            resultsPage = results.subList(0, results.size());
+        }
+        return resultsPage;
+    }
+
     private void updateQueryWithLikeResponse(Query query, String response, ServiceProviderInfo ci) throws DRFChecklistException {
 
-        JSONObject jsonResponse = JSONUtils.parseJsonToObject(response);
+//        JSONObject jsonResponse = JSONUtils.parseJsonToObject(response);
+//
+//        if(jsonResponse.containsKey("usageKey")){
+//            // gbif has added a goot match which is not always the case
+//            addTaxon(query, ci, jsonResponse);
+//        }
+//
+//        JSONArray alternatives = (JSONArray) jsonResponse.get("alternatives");
+//
+        JSONArray taxonRecords =  JSONUtils.parseJsonToArray(response);
 
-        if(jsonResponse.containsKey("usageKey")){
-            // gbif has added a goot match which is not always the case
-            addTaxon(query, ci, jsonResponse);
-        }
+        List<JSONObject> resultsPage = extractResultPage(query, taxonRecords);
 
-        JSONArray alternatives = (JSONArray) jsonResponse.get("alternatives");
-
-        if(alternatives != null) {
-            Iterator<JSONObject> resIterator = alternatives.iterator();
+        if(resultsPage != null) {
+            Iterator<JSONObject> resIterator = resultsPage.iterator();
             while (resIterator.hasNext()) {
                 JSONObject taxonRecord = resIterator.next();
                 addTaxon(query, ci, taxonRecord);
@@ -256,38 +283,40 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
      */
     private void addTaxon(Query query, ServiceProviderInfo ci, JSONObject taxonRecord) throws DRFChecklistException {
         String accTaxonId = "";
-        Number acceptedKey = (Number)taxonRecord.get("acceptedKey");
-        boolean synonym = (Boolean)taxonRecord.get("synonym");
+
+        boolean synonymFlag = (Boolean)taxonRecord.get("synonym");
 
         Response tnrResponse = TnrMsgUtils.tnrResponseFor(ci);
 
         // case when accepted name
-        if(!synonym && (acceptedKey == null)) {
+        if(!synonymFlag) {
             Long key = (Long)taxonRecord.get("key");
-            if(key == null){
-                // the response objects in the like search are sightly different
-                key = (Long)taxonRecord.get("usageKey");
-            }
+//            if(key == null){
+//                // the response objects in the like search are sightly different
+//                key = (Long)taxonRecord.get("usageKey");
+//            }
             accTaxonId = key.toString();
 
             Taxon accName = generateTaxon(taxonRecord, false);
             tnrResponse.setTaxon(accName);
 
-        } else
-        // case when synonym
-        if(synonym && (acceptedKey != null)) {
-            Long key = (Long)taxonRecord.get("acceptedKey");
-            accTaxonId = key.toString();
-
-            URI taxonUri = queryClient.buildUriFromQuery(query, "/" + VERSION + "/species/" + accTaxonId, null);
-            String responseBody = queryClient.get(taxonUri);
-
-            JSONObject taxon = JSONUtils.parseJsonToObject(responseBody);
-            Taxon accName = generateTaxon(taxon, false);
-            tnrResponse.setTaxon(accName);
-
         } else {
-            throw new DRFChecklistException("Name is neither accepted nor a synonym");
+            Long acceptedKey = (Long)taxonRecord.get("acceptedKey");
+            if(acceptedKey != null){
+                accTaxonId = acceptedKey.toString();
+
+                URI taxonUri = queryClient.buildUriFromQuery(query, "/" + VERSION + "/species/" + accTaxonId, null);
+                String responseBody = queryClient.get(taxonUri);
+
+                JSONObject taxon = JSONUtils.parseJsonToObject(responseBody);
+                Taxon accName = generateTaxon(taxon, false);
+                tnrResponse.setTaxon(accName);
+            } else {
+                logger.warn("no acceptedKey supplied, adding the sysnonym (TODO implement other way to get the accepted name)");
+                Taxon synName = generateTaxon(taxonRecord, false);
+                tnrResponse.setTaxon(synName);
+            }
+
         }
 
 
@@ -298,23 +327,23 @@ public class GBIFBackboneClient extends AggregateChecklistClient<RestClient> {
 
         Map<String, String> paramMap = new HashMap<String, String>();
         paramMap.put("datasetKey", ci.getId());
-        paramMap.put("limit", MAX_PAGING_LIMIT);
 
         boolean endOfRecords = false;
 
-        do {
-            paramMap.put("offset", Integer.toString(offset));
+        if(accTaxonId != null && !accTaxonId.isEmpty()){
+            do {
+                paramMap.put("offset", Integer.toString(offset));
 
-            URI synonymsUri = queryClient.buildUriFromQuery(query, "/" + VERSION + "/species/" + accTaxonId + "/synonyms", paramMap);
-            String synResponse = queryClient.get(synonymsUri);
+                URI synonymsUri = queryClient.buildUriFromQuery(query, "/" + VERSION + "/species/" + accTaxonId + "/synonyms", paramMap);
+                String synResponse = queryClient.get(synonymsUri);
 
-            JSONObject pagedSynonyms = JSONUtils.parseJsonToObject(synResponse);
-            generateSynonyms(pagedSynonyms, tnrResponse);
+                JSONObject pagedSynonyms = JSONUtils.parseJsonToObject(synResponse);
+                generateSynonyms(pagedSynonyms, tnrResponse);
 
-            endOfRecords = (Boolean) pagedSynonyms.get("endOfRecords");
+                endOfRecords = (Boolean) pagedSynonyms.get("endOfRecords");
 
-            offset = offset + Integer.parseInt(MAX_PAGING_LIMIT);
-        } while(!endOfRecords);
+            } while(!endOfRecords);
+        }
     }
 
     private Taxon generateTaxon(JSONObject taxon, boolean addClassification) {

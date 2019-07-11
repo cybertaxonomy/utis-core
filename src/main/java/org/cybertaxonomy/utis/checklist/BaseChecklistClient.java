@@ -271,6 +271,14 @@ public abstract class BaseChecklistClient<QC extends IQueryClient> extends Abstr
         public PagerRange() {
 
         }
+
+        /**
+         *
+         * @return true if <code>low > -1 && high > low</code>
+         */
+        public boolean isDefinedRange(){
+            return low > -1 && high > low;
+        }
     }
 
 
