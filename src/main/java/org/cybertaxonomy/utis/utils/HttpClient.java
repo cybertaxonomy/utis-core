@@ -92,8 +92,8 @@ public class HttpClient {
         // the Property contextPath is set by the ContextDependentInitializer in eubon-utis
         String subFilderName = System.getProperty("contextPath", "utis");
         tmpDir = new File(tmpDir, subFilderName);
-        logger.debug(tmpDir.getAbsolutePath());
         FileUtils.forceMkdir(tmpDir);
+        logger.info("using temp dir: " + tmpDir.getAbsolutePath());
         return tmpDir;
     }
 
