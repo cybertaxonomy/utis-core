@@ -365,7 +365,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             while (tryNextPage) {
                 switch(searchMode){
                 case scientificNameLike:
-                    records = aphianspt.getAphiaRecords(name + "%", true, fuzzy, false, offset);
+                    records = aphianspt.getAphiaRecords(name, true, fuzzy, false, offset);
                     break;
                 case vernacularNameLike:
                     records = aphianspt.getAphiaRecordsByVernacular(name, true, offset);
