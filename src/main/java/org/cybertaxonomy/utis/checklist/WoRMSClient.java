@@ -9,7 +9,6 @@ import java.util.List;
 
 import javax.xml.rpc.ServiceException;
 
-import org.apache.http.HttpHost;
 import org.cybertaxonomy.utis.checklist.worms.AphiaNameServiceLocator;
 import org.cybertaxonomy.utis.checklist.worms.AphiaNameServicePortType;
 import org.cybertaxonomy.utis.checklist.worms.AphiaRecord;
@@ -36,8 +35,6 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
 
     private static final Logger logger = LoggerFactory.getLogger(WoRMSClient.class);
 
-
-    private static final HttpHost HTTP_HOST = new HttpHost("http://www.marinespecies.org",80);
     public static final String ID = "worms";
     public static final String LABEL = "WoRMS";
     public static final String URL = "http://www.marinespecies.org/index.php";
@@ -110,7 +107,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
     private AphiaNameServicePortType getAphiaNameService() throws DRFChecklistException {
         AphiaNameServicePortType aphianspt;
 
-        AphiaNameServiceLocator aphiansl = new AphiaNameServiceLocator();
+        AphiaNameServiceLocator aphiansl = aphiaServiceLocator();
 
         try {
             aphianspt = aphiansl.getAphiaNameServicePort();
@@ -119,6 +116,14 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             throw new DRFChecklistException("Error in accessing AphiaNameService");
         }
         return aphianspt;
+    }
+
+    /**
+     * @return
+     */
+    protected AphiaNameServiceLocator aphiaServiceLocator() {
+        AphiaNameServiceLocator aphiansl = new AphiaNameServiceLocator();
+        return aphiansl;
     }
 
     /**

@@ -10,6 +10,7 @@ import java.util.Map;
 import org.cybertaxonomy.utis.checklist.BaseChecklistClient;
 import org.cybertaxonomy.utis.checklist.BgbmEditClient;
 import org.cybertaxonomy.utis.checklist.DRFChecklistException;
+import org.cybertaxonomy.utis.checklist.DiatomBaseClient;
 import org.cybertaxonomy.utis.checklist.GBIFBackboneClient;
 import org.cybertaxonomy.utis.checklist.PESIClient;
 import org.cybertaxonomy.utis.checklist.Species2000ColClient;
@@ -42,6 +43,9 @@ public class ServiceProviderInfoUtils {
 
         WoRMSClient worms = new WoRMSClient();
         cilist.add(worms.getServiceProviderInfo());
+
+        DiatomBaseClient diatomBase = new DiatomBaseClient();
+        cilist.add(diatomBase.getServiceProviderInfo());
 
         BaseChecklistClient<RestClient> bec = new BgbmEditClient();
         cilist.add(bec.getServiceProviderInfo());
@@ -111,6 +115,13 @@ public class ServiceProviderInfoUtils {
                                 WoRMSClient.URL,
                                 WoRMSClient.DATA_AGR_URL,
                                 WoRMSClient.SEARCH_MODES);
+                    }
+                    if(key.equals(DiatomBaseClient.ID)) {
+                        ci = new ServiceProviderInfo(DiatomBaseClient.ID,
+                                DiatomBaseClient.LABEL,
+                                DiatomBaseClient.URL,
+                                DiatomBaseClient.DATA_AGR_URL,
+                                DiatomBaseClient.SEARCH_MODES);
                     }
                     if(ci != null) {
                         ciMap.put(key, ci);
