@@ -51,10 +51,12 @@ public class PhycobankClient extends AbstractCdmServerClient {
 
         ServiceProviderInfo checklistInfo = new ServiceProviderInfo(ID,LABEL,DOC_URL,COPYRIGHT_URL, getSearchModes());
 
-        ServiceProviderInfo phycobank = new ServiceProviderInfo("phycobank",
-                "Phycobank (EDIT - name catalogue end point)",
-                "http://cybertaxonomy.eu/cdmlib/rest-api-name-catalogue.html",
-                "http://www.catalogueoflife.org/col/info/copyright", ServiceProviderInfo.DEFAULT_SEARCH_MODE);
+        ServiceProviderInfo phycobank = new ServiceProviderInfo(
+                "phycobank", // id
+                "PhycoBank", // label
+                "http://www.phycobank.org", // "http://cybertaxonomy.eu/cdmlib/rest-api-name-catalogue.html"
+                "http://www.catalogueoflife.org/col/info/copyright",
+                ServiceProviderInfo.DEFAULT_SEARCH_MODE);
         //phycobank.setDefaultClassificationId("----- NA ----"); // no suitable default classification in phycobank
         phycobank.getSupportedActions().addAll(SEARCH_MODES);
         phycobank.getSupportedActions().addAll(CLASSIFICATION_ACTION);
