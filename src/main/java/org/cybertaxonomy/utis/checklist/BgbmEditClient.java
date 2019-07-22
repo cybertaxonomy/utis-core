@@ -1,6 +1,8 @@
 package org.cybertaxonomy.utis.checklist;
 
 
+import java.util.UUID;
+
 import org.apache.http.HttpHost;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
 
@@ -58,6 +60,15 @@ public class BgbmEditClient extends AbstractCdmServerClient {
 
         return checklistInfo;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String generateTaxonURL(UUID taxonUUID, ServiceProviderInfo subChecklist) {
+        return HTTP_HOST.toString() + "/" + subChecklist.getId() + " /taxon/" + taxonUUID.toString();
+    }
+
 
 
 

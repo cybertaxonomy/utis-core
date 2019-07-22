@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.http.HttpHost;
 import org.cybertaxonomy.utis.client.ServiceProviderInfo;
@@ -226,30 +227,37 @@ public abstract class AbstractCdmServerClient extends AggregateChecklistClient<R
 
             }
 
-    private Taxon generateTaxon(JSONObject taxon, boolean addClassification, boolean addParentTaxon, ServiceProviderInfo ci, String taxonUuid)
+    private Taxon generateTaxon(JSONObject taxonJSON, boolean addClassification, boolean addParentTaxon, ServiceProviderInfo ci, String taxonUuid)
             throws DRFChecklistException {
                 Taxon accTaxon = new Taxon();
                 TaxonName taxonName = new TaxonName();
 
-                String resName = (String) taxon.get("name");
+                String resName = (String) taxonJSON.get("name");
                 taxonName.setScientificName(resName);
                 NameParser ecatParser = new NameParser();
                 String nameCanonical = ecatParser.parseToCanonical(resName);
                 taxonName.setCanonicalName(nameCanonical);
 
-                taxonName.setRank((String) taxon.get("rank"));
-                String lsid = (String) taxon.get("lsid");
+                taxonName.setRank((String) taxonJSON.get("rank"));
+                String lsid = (String) taxonJSON.get("lsid");
 
-                JSONObject scrutinyjs = (JSONObject)taxon.get("taxonomicScrutiny");
+                JSONObject scrutinyjs = (JSONObject)taxonJSON.get("taxonomicScrutiny");
                 String accordingTo = (String) scrutinyjs.get("accordingTo");
                 String modified = (String) scrutinyjs.get("modified");
 
                 accTaxon.setTaxonName(taxonName);
-                accTaxon.setTaxonomicStatus((String)taxon.get("taxonStatus"));
+                accTaxon.setTaxonomicStatus((String)taxonJSON.get("taxonStatus"));
                 accTaxon.setAccordingTo(accordingTo);
                 accTaxon.setIdentifier(lsid);
+                try {
+                    UUID taxonUUID = UUID.fromString(taxonUuid);
+                    accTaxon.setUrl(generateTaxonURL(taxonUUID, ci));
+                } catch (IllegalArgumentException e){
+                    logger.debug("Cannot create uuid from " + taxonUuid, e);
+                }
 
-                JSONObject sourcejs = (JSONObject)taxon.get("source");
+
+                JSONObject sourcejs = (JSONObject)taxonJSON.get("source");
                 String sourceUrl = (String) sourcejs.get("url");
                 String sourceDatasetID =  (String) sourcejs.get("datasetID");
                 String sourceDatasetName = (String) sourcejs.get("datasetName");
@@ -263,7 +271,7 @@ public abstract class AbstractCdmServerClient extends AggregateChecklistClient<R
                 accTaxon.getSources().add(source);
 
                 if(addClassification || addParentTaxon) {
-                    addClassification(taxon, accTaxon, ci, taxonUuid);
+                    addClassification(taxonJSON, accTaxon, ci, taxonUuid);
                 }
                 if(addParentTaxon) {
                     if(accTaxon.getHigherClassification().size() > 1) {
@@ -279,6 +287,12 @@ public abstract class AbstractCdmServerClient extends AggregateChecklistClient<R
                 }
                 return accTaxon;
             }
+
+    /**
+     * @param taxonJSON
+     * @return
+     */
+    abstract protected String generateTaxonURL(UUID taxonUUID, ServiceProviderInfo subChecklist);
 
     private void addClassification(JSONObject taxon, Taxon accTaxon, ServiceProviderInfo ci, String taxonUuid) throws DRFChecklistException {
 
