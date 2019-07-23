@@ -159,7 +159,7 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
             }
         } else {
             // case when synonym
-            AphiaRecord accNameRecord = aphianspt.getAphiaRecordByID(nameGUID);
+            AphiaRecord accNameRecord = aphianspt.getAphiaRecordByID(record.getValid_AphiaID());
             if(accNameRecord != null){
                 Taxon accName = generateTaxon(accNameRecord, false, false);
                 tnrResponse.setTaxon(accName);
