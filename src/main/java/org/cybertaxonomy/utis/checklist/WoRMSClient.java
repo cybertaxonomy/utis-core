@@ -142,6 +142,9 @@ public class WoRMSClient extends BaseChecklistClient<SoapClient> {
 
         int nameGUID = record.getAphiaID();
         String matchingName = record.getScientificname();
+        if(record.getAuthority() != null) {
+            matchingName += " " + record.getAuthority();
+        }
         if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
             tnrResponse.setMatchingNameString(matchingName);
         }

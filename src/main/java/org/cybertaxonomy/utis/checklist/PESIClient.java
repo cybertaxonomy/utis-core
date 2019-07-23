@@ -502,7 +502,11 @@ public class PESIClient extends BaseChecklistClient<SoapClient> {
 
         String taxonGUID = record.getValid_guid();
         if(SCIENTIFICNAME_SEARCH_MODES.contains(searchMode)){
-            tnrResponse.setMatchingNameString(record.getScientificname());
+            String scientificname = record.getScientificname();
+            if(record.getAuthority() != null){
+                scientificname += " " + record.getAuthority();
+            }
+            tnrResponse.setMatchingNameString(scientificname);
         }
 
         if(taxonGUID != null){
