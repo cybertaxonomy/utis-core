@@ -227,7 +227,7 @@ public abstract class AbstractCdmServerClient extends AggregateChecklistClient<R
 
             }
 
-    private Taxon generateTaxon(JSONObject taxonJSON, boolean addClassification, boolean addParentTaxon, ServiceProviderInfo ci, String taxonUuid)
+    private Taxon generateTaxon(JSONObject taxonJSON, boolean addClassification, boolean addParentTaxon, ServiceProviderInfo ci, String taxonUuid, String nameUuid)
             throws DRFChecklistException {
                 Taxon accTaxon = new Taxon();
                 TaxonName taxonName = new TaxonName();
@@ -253,9 +253,15 @@ public abstract class AbstractCdmServerClient extends AggregateChecklistClient<R
                     UUID taxonUUID = UUID.fromString(taxonUuid);
                     accTaxon.setUrl(generateTaxonURL(taxonUUID, ci));
                 } catch (IllegalArgumentException e){
-                    logger.debug("Cannot create uuid from " + taxonUuid, e);
+                    logger.debug("Cannot create taxon uuid from " + taxonUuid, e);
                 }
 
+                try {
+                    UUID nameUUID = UUID.fromString(nameUuid);
+                    accTaxon.setUrl(generateTaxonURL(nameUUID, ci));
+                } catch (IllegalArgumentException e){
+                    logger.debug("Cannot create name uuid from " + nameUuid, e);
+                }
 
                 JSONObject sourcejs = (JSONObject)taxonJSON.get("source");
                 String sourceUrl = (String) sourcejs.get("url");
@@ -626,8 +632,12 @@ public abstract class AbstractCdmServerClient extends AggregateChecklistClient<R
                             tnrResponse.setMatchingNameString(matchingName);
                             tnrResponse.setMatchingNameType(matchingName.equals(jsonTaxon.get("name").toString()) ? NameType.TAXON : NameType.SYNONYM);
                         }
+                        String nameUuid = null;
+                        if(jsonTaxon.get("nameUuid") != null){
+                            nameUuid = (String)jsonTaxon.get("nameUuid");
+                        }
 
-                        Taxon taxon = generateTaxon(jsonTaxon, addClassification, request.isAddParentTaxon(), ci, taxonUuid);
+                        Taxon taxon = generateTaxon(jsonTaxon, addClassification, request.isAddParentTaxon(), ci, taxonUuid, nameUuid);
                         tnrResponse.setTaxon(taxon);
 
                         if(request.isAddSynonymy()){
